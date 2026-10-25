@@ -79,3 +79,19 @@ describe("the Gemini (Google sign-in, Antigravity) engine", () => {
 		assert.equal(seen.permission.ours, "allow", "the app's own tools are allowed");
 	});
 });
+
+describe("Gemini error messages", () => {
+	it("names the models the plan has when the chat's model is not on it", async () => {
+		const { geminiErrorText } = await import("../src/agent/antigravity.ts");
+		const text = geminiErrorText(
+			`Model 'gemini-3.1-pro-preview' is not available for the current authentication method.: {"modelId":"gemini-3.1-pro-preview","availableModels":["gemini-3.8-flash-high","gemini-3.8-flash-low","gemini-3.8-flash-medium"]}`,
+		);
+		assert.doesNotMatch(text, /sign in/i);
+		assert.match(text, /gemini-3\.8-flash-high, gemini-3\.8-flash-low, gemini-3\.8-flash-medium/);
+	});
+
+	it("still gives the sign-in hint for a real sign-in failure", async () => {
+		const { geminiErrorText } = await import("../src/agent/antigravity.ts");
+		assert.match(geminiErrorText("Token expired, please log in"), /sign in with Google/);
+	});
+});

@@ -60,6 +60,22 @@ export const ANTIGRAVITY_PROVIDER_ID = "antigravity";
 export const ANTIGRAVITY_API = "antigravity-acp";
 export const ANTIGRAVITY_VERSION = "1.4.3";
 
+/** What the learner reads when a Gemini turn fails. A model the Google plan
+ *  doesn't include is NOT a sign-in problem (the server's refusal mentions
+ *  "authentication method"), so it gets its own message naming the models
+ *  the account has. Real sign-in trouble still gets the sign-in hint. */
+export function geminiErrorText(message: string): string {
+	const refused = /is not available for the current authentication method/.exec(message);
+	if (refused) {
+		const list = /"availableModels":\[([^\]]*)\]/.exec(message)?.[1];
+		const models = list ? list.split(",").map((m) => m.trim().replace(/"/g, "")).filter(Boolean) : [];
+		const choice = models.length ? ` Your Google plan has: ${models.join(", ")}.` : "";
+		return `That Gemini model isn't on your Google plan.${choice} Pick one of those in the model menu for this chat, then send again.`;
+	}
+	return /auth|login|credential|sign.?in|token/i.test(message) ? `${LOGIN_HINT} (${message})` : message;
+}
+
+
 /** Antigravity's own system prompt is written for a coding assistant, and
  *  the server only lets us APPEND to it. This opens the append with the
  *  teacher's role and the tool reality, so Gemini doesn't drift into a
@@ -524,7 +540,7 @@ async function run(
 		if (options?.signal?.aborted) fail("aborted");
 		else {
 			const message = err instanceof Error ? err.message : String(err);
-			fail("error", /auth|login|credential|sign.?in|token/i.test(message) ? `${LOGIN_HINT} (${message})` : message);
+			fail("error", geminiErrorText(message));
 		}
 	} finally {
 		options?.signal?.removeEventListener("abort", onAbort);
