@@ -35,6 +35,7 @@ import { StatsBar } from "@/components/stats-bar";
 import { useServerEvent, useServerResync } from "@/components/server-events";
 import {
 	isProviderKeyRefusal,
+	isReconnecting,
 	firstSourceTextParts,
 	messageAnchorId,
 	textPartMessageId,
@@ -1592,6 +1593,16 @@ export function Chat({
 									<Shimmer duration={1}>
 										THINKING…
 									</Shimmer>
+								</span>
+							)}
+							{/* Quiet reconnect (owner, 2026-10-27): the connection
+							    dropped mid-reply and the engine is redoing it
+							    (src/agent/reconnect.ts) — the half-reply is gone,
+							    this line holds its place until the fresh one streams. */}
+							{isReconnecting(nativeMessages.at(-1)) && (
+								<span className="flex items-center gap-2 font-ui text-xs font-medium uppercase tracking-wide text-muted-foreground" data-testid="reconnecting">
+									<BrailleSpinner label="Reconnecting" />
+									<Shimmer duration={1}>RECONNECTING…</Shimmer>
 								</span>
 							)}
 							{error && (

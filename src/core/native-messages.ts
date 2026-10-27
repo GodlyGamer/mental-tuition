@@ -98,6 +98,12 @@ export function asAgentMessages(messages: readonly MtMessage[]): AgentMessage[] 
 	return messages as unknown as AgentMessage[];
 }
 
+/** The streaming placeholder a dropped connection leaves while the engine
+ *  redoes the reply (src/agent/reconnect.ts): views show "Reconnecting…". */
+export function isReconnecting(message: unknown): boolean {
+	return !!message && typeof message === "object" && (message as { reconnecting?: unknown }).reconnecting === true;
+}
+
 // ─── id minting ──────────────────────────────────────────────────────────────
 
 /** The app-wide message id shape (same as the UIMessage-era mint). */

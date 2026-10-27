@@ -8,6 +8,7 @@ import {
 	type StreamFunction,
 } from "@earendil-works/pi-ai";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
+import { withReconnect } from "./reconnect.ts";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { type ModelRole } from "../../config.ts";
 import { DEFAULT_THINKING_ORDER } from "../core/settings.ts";
@@ -120,11 +121,16 @@ export function piEngineForSpec(spec: ResolvedModelSpec): PiEngine {
 		// bound streamSimple: the agent loop forwards state.thinkingLevel as
 		// `reasoning` (undefined = off on pi-ai's scale); the clamp above keeps
 		// the pin honest even when config or settings drift off the map.
-		streamFn: (requestModel, context, options) =>
+		// maxRetries: pi-ai defaults to 0, so a request that failed to connect
+		// surfaced at once; 2 is the Anthropic/OpenAI SDK default. Drops after
+		// the stream started are withReconnect's (reconnect.ts).
+		streamFn: withReconnect((requestModel, context, options) =>
 			models.streamSimple(requestModel, context, {
 				...options,
+				maxRetries: options?.maxRetries ?? 2,
 				reasoning: level === "off" ? undefined : level,
 			}),
+		),
 	};
 }
 
