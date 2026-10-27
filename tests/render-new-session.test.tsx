@@ -50,7 +50,7 @@ describe("startDraftSession — the create-on-send contract", () => {
 });
 
 describe("DraftShell — the sessionless surface", () => {
-	it("renders the composer blob, the stats bar, and the fresh-chat empty state", () => {
+	it("renders the composer slab, its tray controls, and the quiet caption", () => {
 		const html = renderToStaticMarkup(
 			<DraftShell
 				busy={false}
@@ -66,12 +66,13 @@ describe("DraftShell — the sessionless surface", () => {
 		assert.ok(html.includes('data-testid="stats-model"'));
 		// No CTA by default: a configured surface stays quiet.
 		assert.ok(!html.includes('data-testid="setup-cta"'));
-		// The same empty state a fresh chat shows.
+		// The caption, kept and restyled quietly above the slab (owner, 2026-10-27).
+		assert.ok(html.includes('data-testid="draft-caption"'));
 		assert.ok(html.includes("The teacher will open by probing what you already know."));
 		// The pointer-events pattern (953b22b): the wrapper stays inert…
 		assert.ok(html.includes("pointer-events-none"));
-		// …and the blob re-enables it.
-		assert.ok(/rounded-2xl[^>]*pointer-events-auto|pointer-events-auto[^>]*rounded-2xl/.test(html));
+		// …and the slab re-enables it.
+		assert.ok(/pointer-events-auto[^"]*mt-panel-deep/.test(html));
 	});
 
 	it("renders the setup CTA above the composer blob when passed (fix wave chunk B: /chat/new mirrors home)", () => {
@@ -94,7 +95,7 @@ describe("DraftShell — the sessionless surface", () => {
 		assert.doesNotMatch(html, /chats start after/);
 		// Above the composer: the CTA's markup precedes the blob's.
 		const cta = html.indexOf('data-testid="setup-cta"');
-		const blob = html.search(/rounded-2xl[^>]*pointer-events-auto|pointer-events-auto[^>]*rounded-2xl/);
+		const blob = html.search(/pointer-events-auto[^"]*mt-panel-deep/);
 		assert.ok(cta !== -1 && blob !== -1 && cta < blob, "CTA above the blob");
 	});
 

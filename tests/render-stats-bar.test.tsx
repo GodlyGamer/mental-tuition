@@ -1,15 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { StatsBar } from "../components/stats-bar.tsx";
-import { catalogLimits } from "../components/model-picker.tsx";
+import { SessionStats } from "../components/stats-bar.tsx";
+import { catalogLimits, ModelControl } from "../components/model-picker.tsx";
 import type { ModelCatalogEntry, ModelCatalogResponse } from "../src/core/contracts.ts";
 import { prettyModel } from "../components/usage-format.ts";
 import type { ChatSettings, TurnUsage } from "../src/core/contracts.ts";
 
-// The stats bar: folds only (no cost math in the component), the "—"
-// doctrine for absent data, honest cost (never a fake $0), and the model +
-// thinking control (components/model-picker.tsx — pi-ai catalog backed).
+// The session stats line: folds only (no cost math in the component), the
+// "—" doctrine for absent data, honest cost (never a fake $0). The model +
+// thinking control (components/model-picker.tsx — pi-ai catalog backed)
+// moved into the composer slab's tray as quiet buttons (Hot Glass).
 
 function step(inputTokens: number, outputTokens: number, over: Record<string, number | undefined> = {}) {
 	return { inputTokens, outputTokens, cacheReadTokens: undefined, cacheWriteTokens: undefined, reasoningTokens: undefined, ...over };
@@ -26,33 +27,28 @@ function turn(over: Partial<TurnUsage> = {}): TurnUsage {
 	};
 }
 
-describe("stats bar", () => {
-	it("renders NOTHING on the left when there are no turns yet (owner, wave 7 sweep)", () => {
-		const html = renderToStaticMarkup(
-			<StatsBar turns={[]} />,
-		);
-		assert.match(html, /data-testid="stats-bar"/);
-		// pre-chat: no summary button, no "—" theater (the knowledge-context
-		// slider died with the injection — the left side is simply empty)
-		assert.ok(!html.includes('data-testid="stats-summary"'), "no summary button pre-chat");
-		assert.ok(!html.includes('data-testid="stats-context"'), "no context figure pre-chat");
-		assert.ok(!html.includes('data-testid="stats-cost"'), "no cost figure pre-chat");
-		// no turns, no settings, catalog not loaded → the model label shows
-		// the subscription floor's strong model (personal fork), the
-		// thinking label "—" (no catalog entry yet to read levels from) —
-		// just the name / level, no prefix, no dot separator
-		assert.match(html, /data-testid="stats-model"[^>]*>\s*<span[^>]*>[^<—]+<\/span>/);
-		assert.match(html, /data-testid="stats-thinking"[^>]*>\s*<span[^>]*>—<\/span>/);
-		assert.ok(!html.includes("aria-hidden>·"), "no dot between the controls");
-		// the control reads as a button: pill border + dropdown chevron
-		assert.match(html, /data-testid="stats-model"[^>]*rounded-full[^>]*>/);
-		assert.match(html, /▾/);
+describe("session stats line", () => {
+	it("renders NOTHING before the first turn (owner, wave 7 sweep; Hot Glass)", () => {
+		const html = renderToStaticMarkup(<SessionStats turns={[]} />);
+		// pre-chat: no line at all — no "—" theater
+		assert.equal(html, "");
+	});
+
+	it("the model + thinking control reads as two quiet tray buttons", () => {
+		const html = renderToStaticMarkup(<ModelControl />);
+		// no settings, catalog not loaded → the model label shows the
+		// subscription floor's strong model (personal fork), the thinking
+		// label "—" (no catalog entry yet to read levels from) — just the
+		// name / level, no prefix
+		assert.match(html, /data-testid="stats-model"[^>]*>\s*<span>[^<—]+<\/span>/);
+		assert.match(html, /data-testid="stats-thinking"[^>]*>\s*<span>—<\/span>/);
+		// the quiet text button: mono caps (mt-quiet), round, a chevron
+		assert.match(html, /data-testid="stats-model"[^>]*mt-quiet[^>]*rounded-full|class="mt-quiet[^"]*rounded-full[^"]*"[^>]*data-testid="stats-model"/);
+		assert.match(html, /lucide-chevron-down/);
 	});
 
 	it("folds context + cost from the turns log (core/prices, no local math)", () => {
-		const html = renderToStaticMarkup(
-			<StatsBar turns={[turn(), turn()]} />,
-		);
+		const html = renderToStaticMarkup(<SessionStats turns={[turn(), turn()]} />);
 		// last turn's last call: 10k in + 1k out = 11k. The LIMIT is the
 		// live catalog's — and the bar doesn't hold the index yet (the
 		// catalog join lands with the UI chunk), so the meter renders
@@ -61,16 +57,12 @@ describe("stats bar", () => {
 		// pi catalog price 0.15/0.5 per 1M (drifted in pi-ai 0.87.1):
 		// each turn 10k×0.15 + 1k×0.5 = $0.002 → two = $0.0040
 		assert.match(html, /data-testid="stats-cost">\$0\.0040</);
-		// model button label: SSR (record fetch not run yet) reads the
-		// subscription floor's strong model; the turn log below still folds
-		// the ACTUAL models billed
-		assert.match(html, /data-testid="stats-model"[^>]*>\s*<span[^>]*>[^<—]+<\/span>/);
+		// one centered mono line under the slab
+		assert.match(html, /data-testid="stats-bar"[^>]*class="[^"]*justify-center[^"]*font-mono|class="[^"]*justify-center[^"]*font-mono[^"]*"[^>]*data-testid="stats-bar"/);
 	});
 
 	it("shows — for cost when every turn is unpriceable, never a fake $0", () => {
-		const html = renderToStaticMarkup(
-			<StatsBar turns={[turn({ model: "nope/unknown" })]} />,
-		);
+		const html = renderToStaticMarkup(<SessionStats turns={[turn({ model: "nope/unknown" })]} />);
 		assert.match(html, /data-testid="stats-cost">—</);
 		// unknown model: no catalog limit exists, but the footprint is
 		// still an honest reading — usage-only (never "—" theater over

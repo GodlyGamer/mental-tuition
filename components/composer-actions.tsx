@@ -31,14 +31,17 @@ export function NodePickerControl({ count, onOpen, onClear }: {
 				type="button"
 				data-testid="practice-props-chip"
 				onClick={onOpen}
+				// Glass chips above the slab (Hot Glass, owner 2026-10-27): picked
+				// is the glass chip; the empty "Pick nodes" invitation stays
+				// dashed and quiet, with the rim.
 				className={
-					"flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-ui text-xs transition-colors " +
+					"flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 font-ui text-xs " +
 					(count > 0
-						? "border-border bg-card text-foreground hover:bg-accent"
-						: "border-dashed border-border/80 bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground")
+						? "mt-btn border"
+						: "mt-iri border border-dashed border-border/80 bg-transparent text-muted-foreground transition-colors hover:text-foreground")
 				}
 			>
-				<DumbbellIcon aria-hidden="true" className="size-3.5 text-muted-foreground" />
+				<DumbbellIcon aria-hidden="true" className="size-3.5" />
 				{count > 0 ? `${count} ${count === 1 ? "node" : "nodes"} selected` : "Pick nodes"}
 			</button>
 			{count > 0 && (
@@ -46,7 +49,7 @@ export function NodePickerControl({ count, onOpen, onClear }: {
 					type="button"
 					data-testid="practice-props-clear"
 					onClick={onClear}
-					className="cursor-pointer rounded-full px-2 py-1 font-ui text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					className="mt-iri h-8 cursor-pointer rounded-full px-3 font-ui text-xs text-muted-foreground transition-colors hover:text-foreground"
 				>
 					Clear
 				</button>

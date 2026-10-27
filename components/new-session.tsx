@@ -5,14 +5,13 @@ import { stashFirstMessagePhotos, useChatPhotos, type ChatPhoto } from "@/compon
 import { ModulePicker, useStudyModule } from "@/components/module-picker";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Conversation, ConversationContent, ConversationEmptyState } from "@/components/ai-elements/conversation";
-import { Composer } from "@/components/composer";
-import { DictationBar, joinDictation, useDictation } from "@/components/dictation";
+import { Composer, SLAB, SLAB_COLUMN } from "@/components/composer";
+import { ModelControl } from "@/components/model-picker";
+import { joinDictation, useDictation } from "@/components/dictation";
 import { useFieldCycle } from "@/components/field-cycle";
 import { SidebarToggle } from "@/components/sidebar";
 import { SetupDialog } from "@/components/setup-dialog";
 import { useStrongKeyless, useZeroKeys, ZeroKeysPill } from "@/components/setup-cta";
-import { StatsBar } from "@/components/stats-bar";
 import { ChainTableOverlay } from "@/components/chain-table.tsx";
 import { ComposerActions, NodePickerControl } from "@/components/composer-actions";
 import type { ChatSettings, GraphSnapshot } from "@/src/core";
@@ -32,8 +31,6 @@ export type DraftPick = { id: string; name: string; statement: string };
  * new-session default); the created session is stamped from it
  * server-side (per-session models, owner 2026-09-28).
  */
-
-const DOCK = "mx-auto w-full max-w-[46rem] px-4";
 
 /**
  * The draft's whole behavior as one pure seam: create the session (title =
@@ -132,7 +129,7 @@ export function DraftShell({
 }) {
 	// Voice dictation (STT wave, 2026-09-17): finals append at the end of the
 	// draft text (via the parent's onChange — the truth lives there); the
-	// strip lives in the stats bar's middle slot.
+	// Dictate pill lives in the slab's tray.
 	// Tab navigates INTO the composer (owner, keyboard round 2026-10-06):
 	// the only text field on this surface — the cycle's whole chain.
 	const cycleComposer = useCallback((): readonly HTMLElement[] =>
@@ -189,28 +186,30 @@ export function DraftShell({
 					    pointer-events-none so nothing here blocks the empty-state
 					    area; the blob and the stats row re-enable it themselves. */}
 					<div className="pointer-events-none sticky bottom-0 mt-auto w-full">
-						<Conversation className="h-full min-w-0 flex-1" initial="instant">
-							<ConversationContent className="min-h-full gap-0 p-0">
-								<ConversationEmptyState
-									title={mode === "practice" ? "New practice session" : "New session"}
-									description={
-										mode === "practice"
-											? "Pick nodes from your knowledge graph, describe what you want to practice, or bring your own problem."
-											: "The teacher will open by probing what you already know."
-									}
-								/>
-							</ConversationContent>
-						</Conversation>
+						{/* The draft has no transcript yet — the caption above the slab
+						    carries the orientation the empty state used to. */}
+						<div className="min-w-0 flex-1" />
 						<div className="h-24 bg-gradient-to-t from-background via-background/85 to-transparent" />
-						<div className="bg-background pb-4">
-							<div className={DOCK}>
+						<div className="bg-background pb-9">
+							<div className={SLAB_COLUMN}>
 								<ComposerActions
 									picker={(picks.length > 0 || mode === "practice") && (
 										<NodePickerControl count={picks.length} onOpen={onOpenPicker} onClear={onClearPicks} />
 									)}
 									setup={setupCta}
 								/>
-								<div className="pointer-events-auto overflow-hidden rounded-2xl border bg-card shadow-lg">
+								{/* The caption (owner, 2026-10-27: kept, restyled quietly) —
+								    one mono line just above the slab. */}
+								<p className="mb-3 px-2 text-center font-mono text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground/70" data-testid="draft-caption">
+									{mode === "practice" ? "New practice session" : "New session"}
+									<span aria-hidden> · </span>
+									<span className="normal-case tracking-normal">
+										{mode === "practice"
+											? "Pick nodes from your knowledge graph, describe what you want to practice, or bring your own problem."
+											: "The teacher will open by probing what you already know."}
+									</span>
+								</p>
+								<div className={`pointer-events-auto overflow-hidden ${SLAB}`}>
 									<Composer
 										busy={busy}
 										value={text}
@@ -230,13 +229,17 @@ export function DraftShell({
 										// started yet, so the composer must not read like one is in
 										// flight.
 										placeholder={mode === "practice" ? "What do you want to practice?" : "What do you want to learn?"}
+										dictation={dictation}
+										sendLabel="Start session"
+										tray={
+											<>
+												{moduleSlot}
+												{/* No chatId: the strong slot — the new-session default. */}
+												<ModelControl />
+											</>
+										}
 									/>
 								</div>
-								<StatsBar
-									dictationSlot={<DictationBar dictation={dictation} />}
-									turns={[]}
-									leadingSlot={moduleSlot}
-								/>
 							</div>
 						</div>
 					</div>

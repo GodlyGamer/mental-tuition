@@ -10,7 +10,8 @@ describe("the composer's + button", () => {
 	it("shows when the page accepts photos, with a hidden multi-image picker", () => {
 		const html = renderToStaticMarkup(<Composer {...base} onAddPhotos={() => {}} />);
 		assert.match(html, /data-testid="composer-plus"/);
-		assert.match(html, /aria-label="Add photos and more"/);
+		// The slab tray's round glass paperclip (Hot Glass).
+		assert.match(html, /aria-label="Attach files or photos"/);
 		assert.match(html, /type="file" accept="image\/\*" multiple/);
 	});
 

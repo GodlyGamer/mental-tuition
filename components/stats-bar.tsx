@@ -1,53 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { contextWindow, sessionCost, turnCost, type ChatSettings, type TurnUsage } from "@/src/core";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { contextWindow, sessionCost, turnCost, type TurnUsage } from "@/src/core";
 import { formatTokens, formatUsd, prettyModel } from "@/components/usage-format";
-import { ModelControl, catalogLimits, useModelCatalog } from "@/components/model-picker";
+import { catalogLimits, useModelCatalog } from "@/components/model-picker";
 
 /**
- * The below-composer stats bar (wave 4 observability): the session's
- * money/context footprint as one quiet row beneath the composer —
- * LEFT-aligned: context window + session cost; RIGHT-aligned: model +
- * thinking level. Clicking the left side opens the per-turn detail popover.
+ * The session stats line (wave 4 observability; Hot Glass, owner
+ * 2026-10-27): the session's money/context footprint as ONE faint mono line
+ * centered under the composer slab — context window · session cost. Click
+ * opens the per-turn detail popover. The model and thinking controls moved
+ * into the slab's tray, and the dictation strip became the tray's Dictate
+ * pill, so nothing else rides here.
  *
- *  Pre-chat views (home, /chat/new) render NO left side at all (owner,
- *  wave 7 sweep: the knowledge-context budget slider that used to live
- *  there died with the injection; a "— · —" summary over an empty
- *  popover is pure noise) — the dictation strip's middle simply widens.
+ * Sessions only: before the first turn (and on home and the draft) it
+ * renders nothing — a "— · —" summary over an empty popover is noise.
  *
  * All folds come from core/prices.ts (sessionCost, contextWindow, turnCost)
  * — no cost math lives here. Absent data renders "—", never zero (the
- * doctrine): no turns yet → every figure is "—"; turns the price table
- * can't price count as unpriced, shown in the popover, never folded into
- * a fake $0. The RIGHT side is the model + thinking control (components/
- * model-picker.tsx): one controller for the conversation agents, backed by
- * pi-ai's catalog; the buttons show the EFFECTIVE model (the record's
- * settings, else config's pin), while the left-side figures still fold the
- * turn log's actual billed models.
+ * doctrine); turns the price table can't price count as unpriced, shown in
+ * the popover, never folded into a fake $0.
  */
-export function StatsBar({
-	turns,
-	dictationSlot,
-	chatId,
-	leadingSlot,
-}: {
-	turns: TurnUsage[];
-	/** The bound session (per-session models, owner 2026-09-28): present
-	 *  on the in-session bar — the model control binds THE SESSION'S own
-	 *  record; absent on the draft surfaces, where it binds the strong
-	 *  slot (the new-session default). */
-	chatId?: string;
-	/** The dictation strip (STT wave, 2026-09-17): the row's middle is dead
-	 *  space between the session data and the model control — the mic
-	 *  button lives there, and while recording the meter unfurls to fill
-	 *  whatever width the row has (owner placement). */
-	dictationSlot?: ReactNode;
-	/** The row's LEFT edge (practice sessions, 2026-10-04): the home
-	 *  composer's teach | practice switch rides here — before the session
-	 *  data (which renders nothing pre-chat on that surface). */
-	leadingSlot?: ReactNode;
-}) {
+export function SessionStats({ turns }: { turns: TurnUsage[] }) {
 	const [open, setOpen] = useState(false);
 	// Same dropdown discipline as the model control (owner, df4433f treatment,
 	// stats round 1): close on any pointerdown outside the bar or on Escape.
@@ -90,27 +64,16 @@ export function StatsBar({
 	const costLabel = pricedCount > 0 ? formatUsd(cost) : "—";
 	const lastModel = turns.at(-1)?.model;
 
+	if (turns.length === 0) return null;
 	return (
 		<div
 			data-testid="stats-bar"
-			// pointer-events-auto: the sticky composer wrapper is pointer-events-none
-			// (so its transparent gradient area never blocks scrolling) — this row
-			// must re-enable events or every control on it is dead (the model-
-			// control wave caught this live: buttons rendered, clicks never landed).
-			className="pointer-events-auto relative flex items-center justify-between gap-3 px-3 pt-2 text-xs text-muted-foreground"
+			// pointer-events-auto: the dock wrapper is pointer-events-none (so its
+			// transparent gradient never blocks scrolling) — this line must
+			// re-enable events or the summary button is dead.
+			className="pointer-events-auto relative flex justify-center pt-2 font-mono text-[10.5px] tracking-[0.06em] text-muted-foreground/70"
 		>
-			{/* The summary button + its popover: the popover anchors to this
-			    wrapper, CENTERED over the button itself (owner, stats round 2)
-			    — not over the whole bar row, which made it line up oddly. The
-			    outside-close ref anchors HERE too (owner, round 3): on the whole
-			    bar it wrapped the model control, so clicking model/thinking never
-			    counted as outside — the asymmetry the owner observed. */}
-			{/* The leading slot (2026-10-04): the leftmost control surface —
-			    the home composer's mode switch. */}
-			{leadingSlot}
-			{/* The left side: the session-data summary — only once a session
-			    exists (turns). Pre-chat renders nothing (see the header). */}
-			{turns.length > 0 && (
+			{/* The summary button + its popover, centered over the button. */}
 			<div ref={barRef} className="relative">
 				{/* No tooltip — the numbers describe themselves and the popover
 			    speaks on click (owner, subtlety round 2026-09-25). */}
@@ -130,7 +93,7 @@ export function StatsBar({
 				{open && (
 					<div
 						data-testid="stats-detail"
-						className="absolute bottom-full left-1/2 z-40 mb-1.5 w-72 -translate-x-1/2 rounded-xl border bg-card p-3 text-xs shadow-xl"
+						className="absolute bottom-full left-1/2 z-40 mb-1.5 w-72 -translate-x-1/2 rounded-xl border bg-card p-3 font-ui text-xs tracking-normal shadow-xl"
 					>
 						<div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 							Session stats
@@ -179,17 +142,6 @@ export function StatsBar({
 					</div>
 				)}
 			</div>
-			)}
-			{/* The middle slot: dictation (owner, 2026-09-17). flex-1 lets the
-			    meter expand into the row's free width; justify-center keeps the
-			    lone idle mic button visually centered. */}
-			{dictationSlot && (
-				<div className="flex min-w-0 flex-1 items-center justify-center">{dictationSlot}</div>
-			)}
-			{/* The model + thinking control — one controller for the conversation
-			    agents (prober/teacher); the record's `turns` above still folds
-			    the ACTUAL models billed, regardless of what the picker says. */}
-			<ModelControl chatId={chatId} />
 		</div>
 	);
 }

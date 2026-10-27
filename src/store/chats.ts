@@ -182,6 +182,20 @@ function renameChat(id: string, title: string): ChatRecord {
 	return record;
 }
 
+/** Change the study module a session logs to (Hot Glass composer, owner
+ *  2026-10-27): null untags it. The turn handler reads the record's module
+ *  every turn, so logging moves from the next turn on; what was already
+ *  logged stays where it was. Not conversation activity — updatedAt stays. */
+function setChatModule(id: string, module: string | null): ChatRecord {
+	const record = getChat(id);
+	if (!record) throw new Error(`Chat not found: ${id}`);
+	if (module) record.module = module;
+	else delete record.module;
+	writeChat(record);
+	emit("chats-changed", {});
+	return record;
+}
+
 /** Delete the session record file entirely (session-deletion wave 6,
  *  owner 2026-09-22). False when the id is unknown — the route turns that
  *  into a 404. The record's graph traces and jobs are the route's
@@ -214,6 +228,7 @@ export const chatStore: ChatStore = {
 	saveTree,
 	saveSettings,
 	renameChat,
+	setChatModule,
 	deleteChat,
 	appendTurnUsage,
 	appendExtractionUsage,

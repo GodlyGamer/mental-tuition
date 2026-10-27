@@ -44,6 +44,23 @@ describe("chat store events (S6: the silence law)", () => {
 		off();
 	});
 
+	it("setChatModule tags, retags and untags a session, announcing each (Hot Glass, 2026-10-27)", () => {
+		const chat = chatStore.createChat("Module fixture");
+		let announces = 0;
+		const off = subscribe((e) => {
+			if (e.type === "chats-changed") announces++;
+		});
+		const before = chatStore.getChat(chat.id)!.updatedAt;
+		assert.equal(chatStore.setChatModule(chat.id, "1M1").module, "1M1");
+		assert.equal(chatStore.setChatModule(chat.id, "2P3").module, "2P3");
+		assert.equal(chatStore.setChatModule(chat.id, null).module, undefined, "null untags — the field goes");
+		assert.equal(chatStore.getChat(chat.id)!.module, undefined, "persisted");
+		assert.equal(chatStore.getChat(chat.id)!.updatedAt, before, "not conversation activity: sidebar order stays");
+		assert.equal(announces, 3);
+		off();
+		chatStore.deleteChat(chat.id);
+	});
+
 	it("deleteChat on a missing id stays silent", () => {
 		let announces = 0;
 		const off = subscribe((e) => {

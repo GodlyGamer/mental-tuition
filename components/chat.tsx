@@ -23,15 +23,17 @@ import { Separator } from "@/components/ui/separator";
 import { AnsweredCard } from "@/components/answered-card";
 import { artifactRenderers } from "@/components/artifacts";
 import { SubagentSteerCard } from "@/components/artifacts/steer-card";
-import { Composer } from "@/components/composer";
+import { Composer, SLAB, SLAB_COLUMN } from "@/components/composer";
+import { ModelControl } from "@/components/model-picker";
+import { ModulePicker } from "@/components/module-picker";
 import { useEnterSubmits } from "@/components/enter-submits";
 import { blurAfterPointerClick } from "@/components/focus-hygiene";
 import { dockStateKey } from "@/components/dock-state-key";
 import { QueuedSteersBody, type QueuedSteerLine } from "@/components/queued-steers";
-import { DictationBar, finishDictation, joinDictation, useDictation } from "@/components/dictation";
+import { finishDictation, joinDictation, useDictation } from "@/components/dictation";
 import { useFieldCycle } from "@/components/field-cycle";
 import { ArtifactPlacementContext, JobsContext, artifactPlacement } from "@/components/jobs-context";
-import { StatsBar } from "@/components/stats-bar";
+import { SessionStats } from "@/components/stats-bar";
 import { useServerEvent, useServerResync } from "@/components/server-events";
 import {
 	isProviderKeyRefusal,
@@ -86,12 +88,13 @@ import { useSettingsSaved } from "@/components/settings-signal";
 /**
  * Width tokens (wave-5 reskin, owner decision): the teaching PROSE spans the
  * full session width with a thin px-6 margin; the composer/question DOCK is
- * deliberately narrower (~46rem centered) per the reference. Same ELEMENT,
- * same place — width polish only.
+ * deliberately narrower — the Hot Glass slab column, 820px of slab (owner,
+ * 2026-10-27: the same width as home, so nothing shifts when a session
+ * starts). Same ELEMENT, same place — width polish only.
  */
 const COLUMN = "mx-auto w-full max-w-none px-6";
-const DOCK = "mx-auto w-full max-w-[46rem] px-4";
-// The DOCK container's fixed width (46rem) and the plan marginalia's
+const DOCK = SLAB_COLUMN;
+// The DOCK container's fixed width (the slab + its side padding) and the plan marginalia's
 // geometry (owner, plan-placement round): the bare diagram sits in the
 // dock band's RIGHT flank — MARGIN_GAP from the DOCK container's edge and
 // the same from the column's right edge. The box width is pure CSS, so
@@ -99,7 +102,7 @@ const DOCK = "mx-auto w-full max-w-[46rem] px-4";
 // the fade floor (owner, resize round) — below it the marginalia fades
 // out over the normal transition instead of popping away, and it stays
 // mounted while the question owns the band so widening fades it back.
-const DOCK_W = 46 * 16;
+const DOCK_W = 852;
 const MARGIN_GAP = 16;
 const MARGIN_MIN_W = 220;
 // The dock overlay's gradient band (h-24) — part of the reserved tail.
@@ -203,9 +206,13 @@ export function Chat({
 	initiallyInFlight,
 	initiallyCompacting = false,
 	initialConfigured = false,
+	initialModule = null,
 	kind = "teach",
 }: {
 	chatId: string;
+	/** The study module this session logs to (null = none) — the composer
+	 *  tray's module button shows and changes it (owner, 2026-10-27). */
+	initialModule?: string | null;
 	title: string;
 	initialMessages: MtMessage[];
 	/** The session kind (practice sessions, owner 2026-10-04): practice
@@ -230,6 +237,27 @@ export function Chat({
 	// settled terminal's callback — a stable ref assigned below, once
 	// syncFromServer exists (refs, not closures: no stale capture).
 	const reattachSettledRef = useRef<() => void>(() => {});
+
+	// The session's study module (the tray's module button, owner
+	// 2026-10-27): optimistic, put back if the record refuses the change.
+	// Logging moves from the next turn — the handler reads the record.
+	const [sessionModule, setSessionModule] = useState<string | null>(initialModule);
+	const changeModule = useCallback(
+		(code: string | null) => {
+			const previous = sessionModule;
+			setSessionModule(code);
+			void fetch(`/api/chats/${encodeURIComponent(chatId)}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ module: code }),
+			})
+				.then((res) => {
+					if (!res.ok) setSessionModule(previous);
+				})
+				.catch(() => setSessionModule(previous));
+		},
+		[chatId, sessionModule],
+	);
 
 	// THE SESSION HOOK (Wave D, owner-approved 2026-09-26): the app-owned
 	// replacement for useChat + the AI-SDK transport. The record is native
@@ -1595,13 +1623,11 @@ export function Chat({
 					practice={activeProblem}
 					compactionRunning={compacting}
 					onSubmitThinking={submitThinking}
-					chatId={chatId}
 					plan={hasPlan ? <PlanMarginalia messages={messages} /> : undefined}
 					onOpenPlan={() => setPlanOpen(true)}
 					phase={phases.at(-1) ?? "probe"}
 					turns={turns}
 					onReserve={setDockReserve}
-					dictationSlot={<DictationBar dictation={dictation} />}
 					dictationCancel={dictation.cancel}
 					queuedSteers={visibleQueuedSteers(steerQueue, nativeMessages)}
 					setupCta={
@@ -1646,6 +1672,13 @@ export function Chat({
 							onAddPhotos={addPhotos}
 							onRemovePhoto={removePhoto}
 							photoError={photoError}
+							dictation={dictation}
+							tray={
+								<>
+									<ModulePicker value={sessionModule} onChange={changeModule} />
+									<ModelControl chatId={chatId} />
+								</>
+							}
 						/>
 					}
 					onSubmitAnswer={(output) => {
@@ -1817,11 +1850,9 @@ function DockOverlay({
 	turns,
 	composer,
 	onSubmitAnswer,
-	chatId,
 	onReserve,
 	plan,
 	onOpenPlan,
-	dictationSlot,
 	dictationCancel,
 	setupCta,
 	queuedSteers,
@@ -1842,8 +1873,6 @@ function DockOverlay({
 	turns: TurnUsage[];
 	composer: React.ReactNode;
 	onSubmitAnswer: (output: QuestionAnswerData) => void;
-	/** The model control's pass-through (the stats bar hosts it). */
-	chatId: string;
 	/** Reports the dock's settled height (block + gradient) — ChatView's
 	 *  dockReserve state feeds the transcript's spacer from it. */
 	onReserve: (h: number) => void;
@@ -1852,11 +1881,8 @@ function DockOverlay({
 	plan?: React.ReactNode;
 	/** Opens the full-DAG popup (the marginalia + chip share it). */
 	onOpenPlan: () => void;
-	/** The dictation strip (STT wave): rendered in the stats bar's middle
-	 *  slot — the mic button + live meter (components/dictation.tsx). */
-	dictationSlot?: React.ReactNode;
-	/** Esc in a pending question's field stops dictation (the strip is the
-	 *  stats bar's; the stop belongs to the page-owned hook, threaded down). */
+	/** Esc in a pending question's field stops dictation (the pill is the
+	 *  composer's; the stop belongs to the page-owned hook, threaded down). */
 	dictationCancel?: () => void;
 	/** The queued-steer indicator's lines (composer steering, 2026-10-03):
 	 *  already filtered by visibleQueuedSteers — only undrained steers. */
@@ -2215,7 +2241,7 @@ function DockOverlay({
 					    rounding starts, truncated, no background, no container. A
 					    line dies when its card lands (visibleQueuedSteers). */}
 					<QueuedSteersBody steers={queuedSteers} />
-					<div ref={shellRef} className="pointer-events-auto overflow-hidden rounded-2xl border bg-card shadow-lg">
+					<div ref={shellRef} className={`pointer-events-auto overflow-hidden ${SLAB}`}>
 						<div
 						ref={contentRef}
 						key={mode}
@@ -2251,14 +2277,11 @@ function DockOverlay({
 							)}
 						</div>
 					</div>
-					{/* The stats row: beneath the composer/question shell, not
-					    flush to the screen bottom — static height, outside the
-					    morphing shell so it never joins a height animation. */}
-					<StatsBar
-						turns={turns}
-						dictationSlot={dictationSlot}
-						chatId={chatId}
-					/>
+					{/* The stats line (owner, 2026-10-27): one faint mono line
+					    centered under the slab — outside the morphing shell so it
+					    never joins a height animation. Nothing before the first
+					    turn. */}
+					<SessionStats turns={turns} />
 					{/* The scroll-down disc (moved here from the Conversation,
 					    owner refinement round 2026-09-24): anchored to the BLOCK's
 					    top edge — above the composer shell AND the stats row, in

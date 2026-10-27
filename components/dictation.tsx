@@ -438,134 +438,84 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 	};
 }
 
+/** The five meter bars' resting heights, px (Composer.html). */
+const PILL_BARS = [7, 12, 16, 10, 6];
+
 /**
- * The stats-bar dictation slot (owner placement, round 1): the row's middle
- * is one strip that is always the full free width —
+ * The Dictate pill (Hot Glass composer, SPEC §7 — replaces the stats-bar
+ * strip): a glass pill in the slab's tray, mic + label + a 5-bar level
+ * meter.
  *
- *   idle      a wide, quiet "Dictate" button (mic + label, grayed out — the
- *             whole middle is the affordance, per the owner).
- *   active    optimistic from the CLICK: red stop pill + the fixed-width
- *             meter (no interim text ever shifts it). Spinner while
- *             the local transcription runs (with its status line).
- *   error     the wide button again, label swapped for the failure reason
- *             (full text in the tooltip), cleared on the next click.
+ *   idle       "Dictate", grey, the bars resting at 30%.
+ *   recording  "Listening…": the label brightens, the rim is held on
+ *              (mt-held — the hover state, spinning), and the bars follow
+ *              the live input level (60ms samples of the level ref).
+ *   stopping   the transcription status ("Transcribing…" or the first-run
+ *              download) with a spinner.
+ *   error      the failure reason as the label (full text in the tooltip),
+ *              cleared on the next click.
+ *
+ * Click toggles (stop keeps the transcript); Esc cancels from the fields.
  */
-export function DictationBar({ dictation }: { dictation: Dictation }) {
+export function DictatePill({ dictation }: { dictation: Dictation }) {
 	const { phase, error, status, levelRef, toggle, active } = dictation;
-	const [levels, setLevels] = useState<number[]>(() => new Array(METER_CELLS).fill(0));
-	const recording = phase === "recording" || phase === "stopping";
-	/** Adaptive cell count (owner round 2): derived from the meter's
-	 *  measured width — narrow rows show fewer bars instead of
-	 *  overflowing under neighbors. */
-	const [cellCount, setCellCount] = useState(METER_CELLS);
-	const meterRef = useRef<HTMLDivElement | null>(null);
+	const [levels, setLevels] = useState<number[]>(() => PILL_BARS.map(() => 0));
+	const recording = phase === "recording";
 
 	// The meter's own heartbeat — 60ms samples of the level ref into a
-	// rolling ring. Only THIS strip re-renders; the page never does.
+	// five-bar ring. Only THIS pill re-renders; the page never does.
 	useEffect(() => {
-		if (!active) return;
-		setLevels(new Array(METER_CELLS).fill(0));
+		if (!recording) {
+			setLevels(PILL_BARS.map(() => 0));
+			return;
+		}
 		const id = setInterval(() => {
-			setLevels((ring) => {
-				const next = ring.slice(1);
-				next.push(rmsToMeter(levelRef.current));
-				return next;
-			});
+			setLevels((ring) => [...ring.slice(1), rmsToMeter(levelRef.current)]);
 		}, METER_TICK_MS);
 		return () => clearInterval(id);
-	}, [active, levelRef]);
+	}, [recording, levelRef]);
 
-	// Fit the cell count to the available width (4px pitch per cell:
-	// 2px bar + 2px gap, clamped 8..48). The meter div's width is set by
-	// the row's free space — cells carry no minimum width — so measuring
-	// it once per activation + on resize keeps the strip honest in the
-	// draft/home rows where the slider leaves little middle.
-	useEffect(() => {
-		if (!active) return;
-		const el = meterRef.current;
-		if (!el) return;
-		const fit = () => {
-			const w = el.clientWidth;
-			setCellCount(Math.max(8, Math.min(METER_CELLS, Math.floor(w / 4))));
-		};
-		fit();
-		const ro = new ResizeObserver(fit);
-		ro.observe(el);
-		return () => ro.disconnect();
-	}, [active]);
-
-	if (!active) {
-		return (
-			<Hint
-				// Errored: the button span truncates the line — the tooltip is its
-				// full reveal. Otherwise the quiet label + the live ⌘D binding.
-				label={error ?? "Dictate"}
-				action={error ? undefined : "toggle-dictation"}
-				side="top"
-			>
-				<button
-					type="button"
-					onClick={toggle}
-					aria-label={error ? `Dictation failed: ${error}` : "Start dictation"}
-					data-testid="dictation-toggle"
-				// Same blurring as the floating chrome (owner, fix wave round 3),
-			// but lower opacity — the mic stays quieter than the model pills.
-			className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-border/50 bg-card/50 text-xs text-muted-foreground/70 shadow-lg backdrop-blur transition-colors hover:border-border hover:text-muted-foreground"
-			>
-					<MicIcon className="size-3.5" />
-					<span className="max-w-full truncate">{error ?? "Dictate"}</span>
-				</button>
-			</Hint>
-		);
-	}
-
+	const label =
+		phase === "stopping" ? (status ?? "Transcribing…") : recording ? "Listening…" : (error ?? "Dictate");
 	return (
-		<div className="flex w-full min-w-0 items-center gap-2" data-testid="dictation-bar">
-			<Hint
-				// The owner flagged this copy good ("Stop dictation (Esc)") —
-				// kept verbatim; only the machinery moved to the styled tooltip.
-				label="Stop dictation (Esc)"
-				side="top"
-			>
-				<button
-					type="button"
-					onClick={toggle}
-					disabled={phase === "stopping"}
-					aria-label="Stop dictation"
+		<Hint
+			label={active ? "Stop dictation (Esc)" : (error ?? "Dictate")}
+			action={active || error ? undefined : "toggle-dictation"}
+			side="top"
+		>
+			<button
+				type="button"
+				onClick={toggle}
+				disabled={phase === "stopping"}
+				aria-pressed={active}
+				aria-label={active ? "Stop dictation" : error ? `Dictation failed: ${error}` : "Start dictation"}
 				data-testid="dictation-toggle"
-				className="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-destructive/10 px-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
+				className={`mt-btn flex h-10 min-w-[200px] max-w-[260px] shrink items-center justify-start gap-2 rounded-full px-4 text-[13.5px] ${active ? "mt-held" : ""}`}
+				style={{ color: active ? "var(--mt-dictate-on-ink)" : "var(--mt-dictate-ink)" }}
 			>
 				{phase === "stopping" ? (
-					<Loader2Icon className="size-3.5 animate-spin" />
+					<Loader2Icon className="size-4 shrink-0 animate-spin" />
 				) : (
-					<MicIcon className="size-3.5" />
+					<MicIcon className="size-4 shrink-0" strokeWidth={1.5} />
 				)}
-					Stop
-				</button>
-			</Hint>
-			{phase === "stopping" && status ? (
-				<span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" data-testid="dictation-status">
-					{status}
+				<span className="min-w-0 truncate" data-testid={phase === "stopping" ? "dictation-status" : undefined}>
+					{label}
 				</span>
-			) : (
-				<span className="size-1.5 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />
-			)}
-			{/* Fixed width while recording — nothing ever appends text beside it
-			    (no interims, owner round 1). Cells carry no minimum width; the
-			    COUNT adapts to the measured row space (owner round 2). */}
-			<div
-				ref={meterRef}
-				className={`h-4 min-w-0 flex-1 items-center gap-[2px] ${phase === "stopping" && status ? "hidden" : "flex"}`}
-				data-testid="dictation-meter"
-			>
-				{levels.slice(-cellCount).map((v, i) => (
-					<span
-						key={i}
-						className="min-w-0 flex-1 rounded-full bg-foreground/40"
-						style={{ height: `${2 + Math.round(v * 14)}px` }}
-					/>
-				))}
-			</div>
-		</div>
+				<span className="ml-auto flex h-4 shrink-0 items-center gap-[2px]" aria-hidden data-testid="dictation-meter">
+					{PILL_BARS.map((h, i) => (
+						<i
+							key={i}
+							className="block w-[2.5px] rounded-[2px] bg-current"
+							style={{
+								height: `${h}px`,
+								opacity: recording ? 1 : 0.75,
+								transform: `scaleY(${recording ? Math.max(0.3, levels[i] ?? 0) : 0.3})`,
+								transition: "transform 60ms linear",
+							}}
+						/>
+					))}
+				</span>
+			</button>
+		</Hint>
 	);
 }

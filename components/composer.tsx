@@ -1,19 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRightIcon, CornerDownLeftIcon, ImageIcon, PlusIcon, SquareIcon, XIcon } from "lucide-react";
+import { ArrowRightIcon, CornerDownLeftIcon, ImageIcon, PaperclipIcon, PlusIcon, SquareIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/ui/hint";
+import { DictatePill, type Dictation } from "@/components/dictation";
 import type { ChatPhoto } from "@/components/photo-utils";
 
 /**
- * The chat composer — content row ONLY (the persistent rounded shell lives in
- * the chat view's overlay, so the shell can later morph chat → question
- * without remounting).
+ * The composer slab's shell (Hot Glass, SPEC §7): the darker glass panel,
+ * 820px max, radius 30 (the 820px placement on Sidebar.html). Home and the
+ * draft wrap the Composer in it; the session's dock shell wears it too, so
+ * the question and practice docks morph inside the same slab.
+ */
+export const SLAB = "mt-panel-deep rounded-[30px]";
+/** The slab's column: an 820px slab inside 16px side padding, centered
+ *  (home, draft and session alike — owner, 2026-10-27: nothing shifts when
+ *  a session starts). chat.tsx's DOCK_W mirrors the 852. */
+export const SLAB_COLUMN = "mx-auto w-full max-w-[852px] px-4";
+
+/**
+ * The composer — the slab's CONTENT (the shell lives with the caller, so
+ * the session's shell can morph chat → question without remounting):
  *
- * Corner-radius math (concentric with the shell): shell rounded-2xl (16px) −
- * row padding p-1.5 (6px) = button rounded-[10px] = 25% of the 40px button.
+ *   top   the caret bar (blinks in the empty slab until focus) and the big
+ *         thin input — Geist 300 at 22px.
+ *   tray  Attach (round glass, paperclip) · Dictate (the glass pill with
+ *         the level meter) · spacer · the caller's quiet buttons (module,
+ *         model, thinking — and Teach/Practice on home) · Send (round
+ *         white; busy and empty, a glass stop square).
  */
 /** What one Enter press does, in precedence order: stop a busy stream,
  *  otherwise send the message, otherwise — practice sessions only — fire
@@ -56,6 +72,9 @@ export function Composer({
 	onAddPhotos,
 	onRemovePhoto,
 	photoError,
+	dictation,
+	tray,
+	sendLabel,
 }: {
 	busy: boolean;
 	value: string;
@@ -89,6 +108,13 @@ export function Composer({
 	/** Why the last photo couldn't be attached (e.g. a format the browser
 	 *  can't decode, such as HEIC). */
 	photoError?: string | null;
+	/** The dictation the tray's Dictate pill drives (absent = no pill). */
+	dictation?: Dictation;
+	/** The tray's quiet buttons, right of the spacer (module · model ·
+	 *  thinking, and Teach/Practice on home). */
+	tray?: ReactNode;
+	/** The submit button's label ("Start session" before a session exists). */
+	sendLabel?: string;
 }) {
 	const act = () => {
 		const action = enterAction({ busy, canSend, nextProblem });
@@ -98,10 +124,11 @@ export function Composer({
 	};
 	const [dragging, setDragging] = useState(false);
 	const imageFiles = (list: FileList | null | undefined) => Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
+	const stop = busy && !canSend;
 	return (
 		<form
 			data-testid="composer"
-			className={cn("flex flex-col p-1.5", dragging && "rounded-2xl ring-2 ring-ring/60")}
+			className={cn("flex flex-col", dragging && "rounded-[30px] ring-2 ring-ring/60")}
 			onSubmit={(e) => {
 				e.preventDefault();
 				act();
@@ -120,14 +147,20 @@ export function Composer({
 				onAddPhotos(files);
 			}}
 		>
-			{photos && photos.length > 0 && <PhotoStrip photos={photos} onRemove={onRemovePhoto} testid="composer-photos" />}
+			{photos && photos.length > 0 && (
+				<div className="px-6 pt-4">
+					<PhotoStrip photos={photos} onRemove={onRemovePhoto} testid="composer-photos" />
+				</div>
+			)}
 			{photoError && (
-				<p className="px-2 pb-1 text-xs text-destructive" data-testid="composer-photo-error">
+				<p className="px-7 pt-2 text-xs text-destructive" data-testid="composer-photo-error">
 					Couldn&apos;t attach that photo ({photoError}). Try a JPEG or PNG.
 				</p>
 			)}
-			<div className="flex items-end gap-1.5">
-			{onAddPhotos && <PlusMenu onAddPhotos={onAddPhotos} />}
+			{/* The top: the caret bar blinks while the slab is empty and
+			    unfocused (focus-within hides it — the real caret takes over). */}
+			<div className="group/top flex items-center gap-3.5 px-7 pb-5 pt-[22px]">
+			{!value && <span className="mt-caret group-focus-within/top:hidden" aria-hidden />}
 			<textarea
 				ref={inputRef}
 				value={value}
@@ -161,8 +194,14 @@ export function Composer({
 				placeholder={placeholder}
 				autoFocus={autoFocus}
 				rows={1}
-				className="field-sizing-content mt-input max-h-48 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
+				className="field-sizing-content mt-slab-input max-h-48 min-h-[29px] min-w-0 flex-1 resize-none bg-transparent p-0 outline-none"
 			/>
+			</div>
+			<div className="mt-tray mx-2 mb-2 flex items-center gap-2 rounded-[24px] p-[9px]">
+			{onAddPhotos && <PlusMenu onAddPhotos={onAddPhotos} variant="attach" />}
+			{dictation && <DictatePill dictation={dictation} />}
+			<span className="grow" />
+			{tray}
 			{/* The button follows the text (owner report 2026-10-03): while
 				 a turn runs WITH text typed it stays the SEND affordance
 				 (click = steer — steering must be clickable, not Enter-only);
@@ -182,24 +221,26 @@ export function Composer({
 						type="submit"
 						data-testid="next-problem-button"
 						aria-label="Next problem"
-						className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[10px] bg-green-600 px-4 font-ui text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-green-500"
+						className="mt-iri flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-green-600 px-4 font-ui text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-green-500"
 					>
 						Next problem
 						<ArrowRightIcon className="size-4" />
 					</button>
 				) : (
+					// Ready: the round WHITE primary with the return glyph (steer
+					// while busy with text is a send too). Busy and empty: the
+					// glass stop square (owner, 2026-10-27) — running reads
+					// differently from ready-to-send.
 					<button
 						type="submit"
-						aria-label={busy && !canSend ? "Stop" : "Send"}
+						aria-label={stop ? "Stop" : (sendLabel ?? "Send")}
 						disabled={!busy && !canSend}
 						className={cn(
-							"flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-colors",
-							busy && !canSend
-								? "bg-secondary text-foreground hover:bg-accent"
-								: "bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40",
+							"flex size-10 shrink-0 items-center justify-center rounded-full disabled:opacity-40",
+							stop ? "mt-btn" : "mt-btn-primary",
 						)}
 					>
-						{busy && !canSend ? <SquareIcon className="size-4" /> : <CornerDownLeftIcon className="size-5" />}
+						{stop ? <SquareIcon className="size-3.5 fill-current" /> : <CornerDownLeftIcon className="size-[18px]" strokeWidth={1.6} />}
 					</button>
 				)}
 			</div>
@@ -241,8 +282,17 @@ export function PhotoStrip({
 /** The + button (Claude-style): a round ghost button left of the text
  *  field; its menu opens upward with "Add photos". The file picker takes
  *  several at once; paste and drag-and-drop work without the menu.
- *  `size` "sm" fits the question dock's footer row. */
-export function PlusMenu({ onAddPhotos, size = "md" }: { onAddPhotos: (files: File[]) => void; size?: "md" | "sm" }) {
+ *  `size` "sm" fits the question dock's footer row; `variant` "attach" is
+ *  the slab tray's round glass paperclip (Hot Glass, SPEC §7). */
+export function PlusMenu({
+	onAddPhotos,
+	size = "md",
+	variant = "plus",
+}: {
+	onAddPhotos: (files: File[]) => void;
+	size?: "md" | "sm";
+	variant?: "plus" | "attach";
+}) {
 	const [open, setOpen] = useState(false);
 	/* The menu renders in a portal at the page root, fixed above the
 	 * button: the composer shells clip their overflow (the dock's height
@@ -296,22 +346,36 @@ export function PlusMenu({ onAddPhotos, size = "md" }: { onAddPhotos: (files: Fi
 					if (files.length) onAddPhotos(files);
 				}}
 			/>
-			<Hint label="Add photos" side="top">
-				<button
-					ref={buttonRef}
-					type="button"
-					aria-label="Add photos and more"
-					aria-expanded={open}
-					data-testid="composer-plus"
-					onClick={() => setOpen((o) => !o)}
-					className={cn(
-						"flex items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-all hover:bg-accent hover:text-foreground",
-						size === "sm" ? "size-8" : "size-10",
-						open && "bg-accent text-foreground",
-					)}
-				>
-					<PlusIcon className={cn("transition-transform duration-200", size === "sm" ? "size-4" : "size-5", open && "rotate-45")} />
-				</button>
+			<Hint label={variant === "attach" ? "Attach photos" : "Add photos"} side="top">
+				{variant === "attach" ? (
+					<button
+						ref={buttonRef}
+						type="button"
+						aria-label="Attach files or photos"
+						aria-expanded={open}
+						data-testid="composer-plus"
+						onClick={() => setOpen((o) => !o)}
+						className={cn("mt-btn flex size-10 items-center justify-center rounded-full", open && "mt-held")}
+					>
+						<PaperclipIcon className="size-[18px]" strokeWidth={1.5} />
+					</button>
+				) : (
+					<button
+						ref={buttonRef}
+						type="button"
+						aria-label="Add photos and more"
+						aria-expanded={open}
+						data-testid="composer-plus"
+						onClick={() => setOpen((o) => !o)}
+						className={cn(
+							"mt-iri flex items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-all hover:bg-accent hover:text-foreground",
+							size === "sm" ? "size-8" : "size-10",
+							open && "bg-accent text-foreground",
+						)}
+					>
+						<PlusIcon className={cn("transition-transform duration-200", size === "sm" ? "size-4" : "size-5", open && "rotate-45")} />
+					</button>
+				)}
 			</Hint>
 			{open &&
 				anchor &&

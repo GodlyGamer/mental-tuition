@@ -1,21 +1,87 @@
 "use client";
 
-import { PhotoStrip, PlusMenu } from "@/components/composer";
+import { Composer, SLAB, SLAB_COLUMN } from "@/components/composer";
 import { stashFirstMessagePhotos, useChatPhotos } from "@/components/photo-utils";
 import { ModulePicker, useStudyModule } from "@/components/module-picker";
+import { ModelControl } from "@/components/model-picker";
+import { MenuShell } from "@/components/menu-shell";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownLeftIcon, DumbbellIcon } from "lucide-react";
+import { ChevronDownIcon, DumbbellIcon } from "lucide-react";
 import { GraphView } from "@/components/graph-view";
 import { MinimalHome } from "@/components/minimal-home";
 import { SetupDialog } from "@/components/setup-dialog";
 import { ComposerActions, NodePickerControl } from "@/components/composer-actions";
 import { useStrongKeyless, useZeroKeys, ZeroKeysPill } from "@/components/setup-cta";
-import { DictationBar, joinDictation, useDictation } from "@/components/dictation";
+import { joinDictation, useDictation } from "@/components/dictation";
 import { useFieldCycle } from "@/components/field-cycle";
 import { SidebarToggle } from "@/components/sidebar";
-import { StatsBar } from "@/components/stats-bar";
-import { MAX_CHAT_IMAGES, type TurnUsage } from "@/src/core";
+import { MAX_CHAT_IMAGES } from "@/src/core";
+
+/** The tray's Teach / Practice button (owner, 2026-10-27): a quiet text
+ *  button like its neighbours, opening a two-item menu. Practice creates a
+ *  kind:"practice" session. */
+function ModeSwitch({ mode, onChange }: { mode: "teach" | "practice"; onChange: (m: "teach" | "practice") => void }) {
+	const [open, setOpen] = useState(false);
+	const ref = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!open) return;
+		// The menu is portaled (MenuShell): inside = the trigger or the menu.
+		const onDown = (e: PointerEvent) => {
+			const t = e.target as Element;
+			if (!ref.current?.contains(t) && !t.closest?.('[data-testid="home-mode-menu"]')) setOpen(false);
+		};
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Escape") return;
+			e.stopPropagation();
+			setOpen(false);
+		};
+		document.addEventListener("pointerdown", onDown);
+		document.addEventListener("keydown", onKey, true);
+		return () => {
+			document.removeEventListener("pointerdown", onDown);
+			document.removeEventListener("keydown", onKey, true);
+		};
+	}, [open]);
+	return (
+		<div ref={ref} className="relative" data-testid="home-mode-switch">
+			<button
+				type="button"
+				onClick={() => setOpen((o) => !o)}
+				aria-expanded={open}
+				title="Teach or practice"
+				className="mt-quiet flex h-8 items-center gap-1.5 rounded-full px-2.5"
+			>
+				<span>{mode === "practice" ? "Practice" : "Teach"}</span>
+				<ChevronDownIcon aria-hidden="true" className="size-2.5" strokeWidth={2} />
+			</button>
+			{open && (
+				<MenuShell
+					anchorRef={ref}
+					testid="home-mode-menu"
+					preferredSide="up"
+					menuClass="flex w-44 flex-col gap-0.5 rounded-xl border bg-card p-2 text-xs shadow-xl"
+				>
+					{(["teach", "practice"] as const).map((m) => (
+						<button
+							key={m}
+							type="button"
+							data-testid={`home-mode-${m}`}
+							onClick={() => {
+								onChange(m);
+								setOpen(false);
+							}}
+							className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent ${mode === m ? "bg-accent text-foreground" : "text-muted-foreground"}`}
+						>
+							{m === "practice" ? <DumbbellIcon aria-hidden="true" className="size-3" /> : <span className="size-3" />}
+							{m === "teach" ? "Teach" : "Practice"}
+						</button>
+					))}
+				</MenuShell>
+			)}
+		</div>
+	);
+}
 
 /**
  * Home — the knowledge graph is the main view, full-bleed edge to edge
@@ -55,7 +121,7 @@ export function Home({
 	const strongKeyless = useStrongKeyless();
 	const [setupOpen, setSetupOpen] = useState(false);
 	// Voice dictation (STT wave, 2026-09-17): finals append at the end of the
-	// topic draft; the strip lives in the stats bar's middle slot.
+	// topic draft; the Dictate pill lives in the slab's tray.
 	const dictation = useDictation({
 		// Ref-first: the join reads the mirror so the send resuming after
 		// `await finish()` sees the dictated tail.
@@ -71,10 +137,8 @@ export function Home({
 	 * dictation target IS this textarea, so no case-split is needed. */
 	const topicInputRef = useRef<HTMLTextAreaElement>(null);
 	// Tab navigates INTO the topic composer (owner, keyboard round
-	// 2026-10-06): the only text field on this surface — and home's
-	// composer is its OWN textarea, not the shared Composer component,
-	// so the chain is the ref itself (the smoke caught a selector that
-	// matched nothing here).
+	// 2026-10-06): the only text field on this surface — the chain is the
+	// ref itself (the shared Composer's textarea, handed inputRef).
 	const cycleTopicField = useCallback(
 		(): readonly HTMLElement[] => (topicInputRef.current ? [topicInputRef.current] : []),
 		[],
@@ -213,12 +277,12 @@ export function Home({
 				</div>
 			</header>
 
-			{/* New session — same floating blob as the chat composer, docked
-			    OVER the graph (no gradient: the graph runs clean under it to the
-			    bottom edge). Matches chat.tsx's DOCK geometry (max-w-[46rem]
-			    px-4) so nothing shifts when a session starts (owner). */}
-			<div className="pointer-events-none absolute inset-x-0 bottom-0 pb-5">
-				<div className="pointer-events-auto mx-auto w-full max-w-[46rem] px-4">
+			{/* New session — the Hot Glass slab (SPEC §7), docked OVER the graph
+			    bottom-centre (no gradient: the graph runs clean under it to the
+			    bottom edge). The same 820px slab column as the session's dock,
+			    so nothing shifts when a session starts (owner). */}
+			<div className="pointer-events-none absolute inset-x-0 bottom-0 pb-9">
+				<div className={`pointer-events-auto ${SLAB_COLUMN}`}>
 					{/* The pick bar (owner vision, 2026-10-04): the chain
 					    table's selection is PERSISTENT — picked
 					    propositions show here as a count + Clear in EITHER
@@ -249,105 +313,40 @@ export function Home({
 							)
 						)}
 					/>
-					<form
-						className="flex flex-col rounded-2xl border bg-card p-1.5 shadow-lg"
-					onSubmit={(e) => {
-						e.preventDefault();
-						void start();
-					}}
-					onDragOver={(e) => {
-						if (Array.from(e.dataTransfer.items).some((i) => i.type.startsWith("image/"))) e.preventDefault();
-					}}
-					onDrop={(e) => {
-						const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
-						if (files.length === 0) return;
-						e.preventDefault();
-						homePhotos.add(files);
-					}}
-				>
-					{homePhotos.photos.length > 0 && <PhotoStrip photos={homePhotos.photos} onRemove={homePhotos.remove} testid="home-photos" />}
-					{homePhotos.error && (
-						<p className="px-2 pb-1 text-xs text-destructive">Couldn&apos;t attach that photo ({homePhotos.error}). Try a JPEG or PNG.</p>
-					)}
-					<div className="flex items-end gap-1.5">
-					<PlusMenu onAddPhotos={homePhotos.add} />
-					<textarea
-						ref={topicInputRef}
-						value={topic}
-						onChange={(e) => {
-							topicRef.current = e.target.value;
-							setTopic(e.target.value);
-						}}
-						onKeyDown={(e) => {
-							// Esc ends dictation (the dictate decisions: click-again or
-							// Esc) — stopPropagation claims it (keyboard wave A) so
-							// the window chain doesn't also abort a turn.
-							if (e.key === "Escape" && dictation.active) {
-								e.preventDefault();
-								e.stopPropagation();
-								dictation.cancel();
-								return;
+					<div className={SLAB}>
+						<Composer
+							// "busy" is a running turn (the stop square); home has none —
+							// a session being created just disables the send.
+							busy={false}
+							value={topic}
+							onChange={(v) => {
+								topicRef.current = v;
+								setTopic(v);
+							}}
+							onSend={start}
+							onStop={() => {}}
+							canSend={!busy && (topic.trim().length > 0 || dictation.active || homePhotos.photos.length > 0)}
+							inputRef={topicInputRef}
+							autoFocus
+							onEscape={dictation.active ? dictation.cancel : undefined}
+							placeholder={mode === "practice" ? "What do you want to practice?" : "What do you want to learn?"}
+							photos={homePhotos.photos}
+							onAddPhotos={homePhotos.add}
+							onRemovePhoto={homePhotos.remove}
+							photoError={homePhotos.error}
+							dictation={dictation}
+							sendLabel="Start session"
+							tray={
+								<>
+									<ModeSwitch mode={mode} onChange={setMode} />
+									<ModulePicker value={studyModule} onChange={setStudyModule} />
+									{/* No chatId: the strong slot — the new-session default
+									    (fix wave: the triggers write /api/settings/models). */}
+									<ModelControl />
+								</>
 							}
-							if (e.key === "Enter" && !e.shiftKey) {
-								e.preventDefault();
-								void start();
-							}
-						}}
-						onPaste={(e) => {
-							const files = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
-							if (files.length === 0) return;
-							e.preventDefault();
-							homePhotos.add(files);
-						}}
-						placeholder={mode === "practice" ? "What do you want to practice?" : "What do you want to learn?"}
-						autoFocus
-						rows={1}
-						className="field-sizing-content mt-input max-h-48 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
-					/>
-					{/* No tooltip on the start square — the ↵ glyph is the
-					    affordance (owner, subtlety round 2026-09-25). */}
-					<button
-						type="submit"
-						aria-label="Start session"
-						disabled={(!topic.trim() && !dictation.active && homePhotos.photos.length === 0) || busy}
-						className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
-					>
-						<CornerDownLeftIcon className="size-5" />
-					</button>
+						/>
 					</div>
-					</form>
-					{/* Same as the chat view's under-composer stats bar (owner) — no
-					    session yet, so the LEFT side renders nothing (wave 7 sweep)
-					    while the RIGHT keeps the strong-slot control (fix wave: the
-					    pills write /api/settings/models). */}
-					<StatsBar
-						dictationSlot={<DictationBar dictation={dictation} />}
-						turns={[] as TurnUsage[]}
-						leadingSlot={
-							<div className="flex items-center gap-1.5">
-							<div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background p-0.5" data-testid="home-mode-switch">
-								{(["teach", "practice"] as const).map((m) => (
-									<button
-										key={m}
-										type="button"
-										data-testid={`home-mode-${m}`}
-										onClick={() => setMode(m)}
-										className={
-											"flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] uppercase tracking-wider transition-colors " +
-											(mode === m
-												? "bg-accent text-foreground"
-												: "text-muted-foreground hover:text-foreground")
-										}
-									>
-										{m === "practice" ? <DumbbellIcon aria-hidden="true" className="size-3" /> : null}
-										{m === "teach" ? "Teach" : "Practice"}
-									</button>
-								))}
-							</div>
-							<ModulePicker value={studyModule} onChange={setStudyModule} />
-							</div>
-						}
-					/>
 				</div>
 			</div>
 

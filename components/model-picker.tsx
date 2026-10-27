@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDownIcon } from "lucide-react";
 import { withDefaultSlots, type ChatSettings, type ModelCatalogEntry, type ModelCatalogResponse, type ModelsSettings, type UserSettings } from "@/src/core";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { prettyModel } from "@/components/usage-format";
@@ -322,7 +323,7 @@ export function ModelControl({ chatId }: { chatId?: string }) {
 	};
 
 	return (
-		<div ref={containerRef} className="relative flex items-center gap-1.5" data-testid="model-control">
+		<div ref={containerRef} className="relative flex items-center gap-2" data-testid="model-control">
 			<Hint
 				// Trimmed (owner, subtlety round 2026-09-25): "Model selector"
 				// — the long sentence was way too much. ⌘K opens this same
@@ -336,14 +337,11 @@ export function ModelControl({ chatId }: { chatId?: string }) {
 				data-testid="stats-model"
 				onClick={() => openMenu("model")}
 				aria-expanded={open === "model"}
-				// Chrome look (owner, fix wave round 3): matches the graph
-				// view's floating top-right buttons (import notes, gear,
-				// coverage) — blurred, fuller opacity, shadowed — so the
-				// graph no longer bleeds through these pills.
-				className="flex items-center gap-1.5 rounded-full border bg-card/85 px-2.5 py-1 shadow-lg backdrop-blur transition-colors hover:border-border hover:bg-muted"
+				// The slab tray's quiet text button (Hot Glass, SPEC §7).
+				className="mt-quiet flex h-8 items-center gap-1.5 rounded-full px-2.5"
 			>
-				<span className="text-card-foreground">{effectiveId ? prettyModel(effectiveId) : "—"}</span>
-				<span aria-hidden className="text-xs text-muted-foreground">▾</span>
+				<span>{effectiveId ? prettyModel(effectiveId) : "—"}</span>
+				<ChevronDownIcon aria-hidden className="size-2.5" strokeWidth={2} />
 			</button>
 			</Hint>
 			<Hint
@@ -364,18 +362,12 @@ export function ModelControl({ chatId }: { chatId?: string }) {
 					openMenu("thinking");
 				}}
 				aria-expanded={open === "thinking"}
-				// Chrome look (owner, fix wave round 3): matches the graph
-				// view's floating top-right buttons (import notes, gear,
-				// coverage) — blurred, fuller opacity, shadowed — so the
-				// graph no longer bleeds through these pills.
-				className="flex items-center gap-1.5 rounded-full border bg-card/85 px-2.5 py-1 shadow-lg backdrop-blur transition-colors hover:border-border hover:bg-muted"
+				className="mt-quiet flex h-8 items-center gap-1.5 rounded-full px-2.5"
 			>
 				{/* Just the level — the button reads like the model button reads
 				   the model name (owner, stats-control round 1). */}
-				<span className="text-card-foreground">
-					{effectiveLevel === undefined ? "—" : (THINKING_LABEL[effectiveLevel] ?? effectiveLevel)}
-				</span>
-				<span aria-hidden className="text-xs text-muted-foreground">▾</span>
+				<span>{effectiveLevel === undefined ? "—" : (THINKING_LABEL[effectiveLevel] ?? effectiveLevel)}</span>
+				<ChevronDownIcon aria-hidden className="size-2.5" strokeWidth={2} />
 			</button>
 			</Hint>
 

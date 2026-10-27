@@ -1,4 +1,5 @@
-import { compactionInFlight, deleteChatSession, getChat, isTurnRunning, sessionCoverage, stores, type ChatDeleteMode } from "@/src/server";
+import { isModuleCode } from "@/src/core";
+import { compactionInFlight, deleteChatSession, getChat, isTurnRunning, moduleExists, sessionCoverage, stores, type ChatDeleteMode } from "@/src/server";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
@@ -33,7 +34,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 	if (!getChat(id)) return Response.json({ error: "Not found" }, { status: 404 });
-	const body = (await req.json().catch(() => null)) as { title?: unknown } | null;
+	const body = (await req.json().catch(() => null)) as { title?: unknown; module?: unknown } | null;
+	// The session's study module (the composer's module button, owner
+	// 2026-10-27): a module code that exists, or null to untag.
+	if (body && "module" in body) {
+		const code = body.module;
+		if (code !== null && (typeof code !== "string" || !isModuleCode(code) || !moduleExists(code))) {
+			return Response.json({ error: "module must be an existing module code or null" }, { status: 400 });
+		}
+		const record = stores.chatStore.setChatModule(id, code);
+		return Response.json({ module: record.module ?? null });
+	}
 	if (typeof body?.title !== "string" || body.title.trim() === "") {
 		return Response.json({ error: "title must be a non-empty string" }, { status: 400 });
 	}
