@@ -38,6 +38,9 @@ export interface ChatRecord {
 	/** The study module this session logs to (personal fork: the
 	 *  practice-paper pipeline) — absent = no study logging. */
 	module?: string;
+	/** Pinned to the top of the sidebar (Hot Glass, owner 2026-10-27) —
+	 *  absent = not pinned. Lives on the record so it syncs with the workspace. */
+	pinned?: boolean;
 	/** The session's plan tree (vision §2) — written by plan tools via saveTree. */
 	tree?: PlanTree;
 	/** Append-only usage log (observability, 2026-09): one entry per model
@@ -274,8 +277,13 @@ export interface ChatSummary {
 	/** An unanswered quiz/ask question is waiting for the learner. */
 	pendingQuestion: boolean;
 	/** Practice sessions (2026-10-04): a posed problem with no conclude —
-	 *  the sidebar meta's "Problem waiting". Absent on teaching sessions. */
+	 *  the sidebar meta's "Waiting for you". Absent on teaching sessions. */
 	pendingProblem: boolean;
+	/** The study module the session logs to (absent = none) — the sidebar's
+	 *  MODULE grouping. */
+	module?: string;
+	/** Pinned to the top of the sidebar (absent = not pinned). */
+	pinned?: boolean;
 	/** The record's model-control settings — rides the list payload via the
 	 *  summary spread (the picker never needs it from here; the full record
 	 *  is its source). */

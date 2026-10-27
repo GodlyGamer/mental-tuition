@@ -384,6 +384,21 @@ export interface CompactionSettings {
 	thresholdTokens?: number;
 }
 
+/** The sidebar's remembered choices (Hot Glass, owner 2026-10-27: synced
+ *  through the workspace settings file, not per computer). */
+export const SIDEBAR_GROUPINGS = ["time", "module"] as const;
+export type SidebarGrouping = (typeof SIDEBAR_GROUPINGS)[number];
+export const SIDEBAR_KIND_FILTERS = ["all", "teach", "practice"] as const;
+export type SidebarKindFilter = (typeof SIDEBAR_KIND_FILTERS)[number];
+export interface SidebarSettings {
+	/** TIME (pinned / yesterday / this week …) or MODULE grouping. Default time. */
+	grouping?: SidebarGrouping;
+	/** ALL · TEACH · PRACTICE. Default all. */
+	kindFilter?: SidebarKindFilter;
+	/** Module codes whose session group is folded in MODULE grouping. */
+	collapsedModules?: string[];
+}
+
 /** THE record. Every section optional (delta); unknown top-level keys are
  *  preserved verbatim by the sanitizer (forward-compat with newer records). */
 export interface UserSettings {
@@ -395,6 +410,7 @@ export interface UserSettings {
 	appearance?: AppearanceSettings;
 	graph?: GraphSettings;
 	compaction?: CompactionSettings;
+	sidebar?: SidebarSettings;
 	[key: string]: unknown;
 }
 
@@ -628,6 +644,16 @@ function sanitizeCompaction(raw: Record<string, unknown>): CompactionSettings {
 	return out;
 }
 
+function sanitizeSidebar(raw: Record<string, unknown>): SidebarSettings {
+	const out: SidebarSettings = {};
+	if ((SIDEBAR_GROUPINGS as readonly unknown[]).includes(raw.grouping)) out.grouping = raw.grouping as SidebarGrouping;
+	if ((SIDEBAR_KIND_FILTERS as readonly unknown[]).includes(raw.kindFilter)) out.kindFilter = raw.kindFilter as SidebarKindFilter;
+	if (Array.isArray(raw.collapsedModules)) {
+		out.collapsedModules = [...new Set(raw.collapsedModules.filter((c): c is string => typeof c === "string" && c.length > 0))];
+	}
+	return out;
+}
+
 /**
  * Coerce arbitrary JSON (disk file, network body) into a valid delta record:
  * known fields validated strictly (invalid ones drop/clamp per module doc),
@@ -658,6 +684,9 @@ export function sanitizeUserSettings(raw: unknown): UserSettings | null {
 		if (r.compaction !== undefined && r.compaction !== null && typeof r.compaction === "object") {
 			out.compaction = sanitizeCompaction(r.compaction as Record<string, unknown>);
 		}
+	}
+	if (r.sidebar !== null && typeof r.sidebar === "object" && !Array.isArray(r.sidebar)) {
+		out.sidebar = sanitizeSidebar(r.sidebar as Record<string, unknown>);
 	}
 	// Unknown top-level keys ride along untouched (forward-compat). One
 	// known-DEAD key is stripped instead of riding: `chat` (the old

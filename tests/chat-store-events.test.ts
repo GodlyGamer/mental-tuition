@@ -61,6 +61,29 @@ describe("chat store events (S6: the silence law)", () => {
 		chatStore.deleteChat(chat.id);
 	});
 
+	it("setChatPinned pins and unpins, shows on the list summary, and keeps updatedAt (Hot Glass)", () => {
+		const chat = chatStore.createChat("Pin fixture");
+		let announces = 0;
+		const off = subscribe((e) => {
+			if (e.type === "chats-changed") announces++;
+		});
+		const before = chatStore.getChat(chat.id)!.updatedAt;
+		assert.equal(chatStore.setChatPinned(chat.id, true).pinned, true);
+		assert.equal(chatStore.listChats().find((c) => c.id === chat.id)?.pinned, true, "the sidebar summary carries it");
+		assert.equal(chatStore.setChatPinned(chat.id, false).pinned, undefined, "unpin drops the field");
+		assert.equal(chatStore.getChat(chat.id)!.updatedAt, before, "not conversation activity");
+		assert.equal(announces, 2);
+		off();
+		chatStore.deleteChat(chat.id);
+	});
+
+	it("a session's module shows on its list summary (the MODULE grouping's source)", () => {
+		const chat = chatStore.createChat("Module summary fixture");
+		chatStore.setChatModule(chat.id, "1M1");
+		assert.equal(chatStore.listChats().find((c) => c.id === chat.id)?.module, "1M1");
+		chatStore.deleteChat(chat.id);
+	});
+
 	it("deleteChat on a missing id stays silent", () => {
 		let announces = 0;
 		const off = subscribe((e) => {

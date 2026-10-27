@@ -196,6 +196,18 @@ function setChatModule(id: string, module: string | null): ChatRecord {
 	return record;
 }
 
+/** Pin or unpin a session (Hot Glass, owner 2026-10-27). Like a rename,
+ *  not conversation activity: updatedAt stays so sidebar order never churns. */
+function setChatPinned(id: string, pinned: boolean): ChatRecord {
+	const record = getChat(id);
+	if (!record) throw new Error(`Chat not found: ${id}`);
+	if (pinned) record.pinned = true;
+	else delete record.pinned;
+	writeChat(record);
+	emit("chats-changed", {});
+	return record;
+}
+
 /** Delete the session record file entirely (session-deletion wave 6,
  *  owner 2026-09-22). False when the id is unknown — the route turns that
  *  into a 404. The record's graph traces and jobs are the route's
@@ -229,6 +241,7 @@ export const chatStore: ChatStore = {
 	saveSettings,
 	renameChat,
 	setChatModule,
+	setChatPinned,
 	deleteChat,
 	appendTurnUsage,
 	appendExtractionUsage,

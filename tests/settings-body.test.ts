@@ -234,12 +234,13 @@ describe("parseCompactionSettingsBody (owner round 14)", () => {
 });
 
 describe("SETTINGS_SECTIONS (the route's section map)", () => {
-	it("maps exactly the seven record sections", () => {
+	it("maps exactly the eight record sections", () => {
 		// compaction joined (owner round 14): its own section PUT — the
-		// threshold is engine behavior, not an agent-section key.
+		// threshold is engine behavior, not an agent-section key. sidebar
+		// joined with Hot Glass (2026-10-27): the sidebar's synced choices.
 		assert.deepEqual(
 			Object.keys(SETTINGS_SECTIONS),
-			["general", "chat", "agent", "appearance", "graph", "compaction", "models"],
+			["general", "chat", "agent", "appearance", "graph", "compaction", "sidebar", "models"],
 		);
 	});
 });

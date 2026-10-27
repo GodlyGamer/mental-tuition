@@ -23,8 +23,19 @@ import type {
 	GraphSettings,
 	ModelsSettings,
 	RoleModelOverride,
+	SidebarGrouping,
+	SidebarKindFilter,
+	SidebarSettings,
 } from "../core/settings.ts";
-import { APPEARANCE_MODES, BACKGROUND_MODEL_ROLES, COMPACTION_THRESHOLD_FLOOR, EXTRACTION_CHUNK_TOKENS_FLOOR, MODEL_SLOTS } from "../core/settings.ts";
+import {
+	APPEARANCE_MODES,
+	BACKGROUND_MODEL_ROLES,
+	COMPACTION_THRESHOLD_FLOOR,
+	EXTRACTION_CHUNK_TOKENS_FLOOR,
+	MODEL_SLOTS,
+	SIDEBAR_GROUPINGS,
+	SIDEBAR_KIND_FILTERS,
+} from "../core/settings.ts";
 import { WRITABLE_TOOL_KEYS } from "../core/pending.ts";
 
 /** Parsed-or-rejected — `ok: false` carries the 400's error message. */
@@ -376,6 +387,32 @@ export function parseCompactionSettingsBody(body: unknown): SettingsBodyResult<C
 	return { ok: true, settings };
 }
 
+/** sidebar: { grouping?, kindFilter?, collapsedModules? } (Hot Glass). */
+export function parseSidebarSettingsBody(body: unknown): SettingsBodyResult<SidebarSettings> {
+	const raw = asRecord(body);
+	if (!raw) return { ok: false, error: "Invalid JSON body" };
+	const settings: SidebarSettings = {};
+	if (raw.grouping !== undefined) {
+		if (!(SIDEBAR_GROUPINGS as readonly unknown[]).includes(raw.grouping)) {
+			return { ok: false, error: `grouping must be one of ${SIDEBAR_GROUPINGS.join(", ")}` };
+		}
+		settings.grouping = raw.grouping as SidebarGrouping;
+	}
+	if (raw.kindFilter !== undefined) {
+		if (!(SIDEBAR_KIND_FILTERS as readonly unknown[]).includes(raw.kindFilter)) {
+			return { ok: false, error: `kindFilter must be one of ${SIDEBAR_KIND_FILTERS.join(", ")}` };
+		}
+		settings.kindFilter = raw.kindFilter as SidebarKindFilter;
+	}
+	if (raw.collapsedModules !== undefined) {
+		if (!Array.isArray(raw.collapsedModules) || raw.collapsedModules.some((c) => typeof c !== "string" || !c)) {
+			return { ok: false, error: "collapsedModules must be an array of module codes" };
+		}
+		settings.collapsedModules = [...new Set(raw.collapsedModules as string[])];
+	}
+	return { ok: true, settings };
+}
+
 /** The section→parser map for PUT /api/settings/[section] (the route also
  *  carries the special prompts sub-resource). */
 export const SETTINGS_SECTIONS = {
@@ -385,6 +422,7 @@ export const SETTINGS_SECTIONS = {
 	appearance: parseAppearanceSettingsBody,
 	graph: parseGraphSettingsBody,
 	compaction: parseCompactionSettingsBody,
+	sidebar: parseSidebarSettingsBody,
 	models: parseModelsSettingsBody,
 } as const;
 

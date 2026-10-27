@@ -61,6 +61,8 @@ export interface ChatStore {
 	/** Change (or clear, null) the study module a session logs to; logging
 	 *  moves from the next turn. Not conversation activity. */
 	setChatModule(id: string, module: string | null): ChatRecord;
+	/** Pin or unpin a session in the sidebar. Not conversation activity. */
+	setChatPinned(id: string, pinned: boolean): ChatRecord;
 	/** Delete the session record entirely (session-deletion wave 6, owner
 	 *  2026-09-22). False when the id is unknown. The graph-ledger purge and
 	 *  job cleanup are the caller's choreography (core/graph-deletion.ts +

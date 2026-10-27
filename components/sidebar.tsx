@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MenuShell } from "@/components/menu-shell";
 import { DeleteSessionDialog } from "@/components/delete-session-dialog";
-import type { ChatDeleteMode } from "@/src/core";
-import { DumbbellIcon, FileTextIcon, LibraryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SearchIcon, SettingsIcon } from "lucide-react";
+import { groupByModule, groupByTime, type ChatDeleteMode } from "@/src/core";
+import { ChevronDownIcon, DumbbellIcon, FileTextIcon, LibraryIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SearchIcon, SettingsIcon, WaypointsIcon } from "lucide-react";
+import { useSidebarPrefs } from "@/components/sidebar-prefs";
 import { ActivitySection } from "@/components/activity-dock";
 import { CoverageMenuBlock } from "@/components/extraction-coverage";
 import { MtMark } from "@/components/mt-mark";
@@ -248,24 +249,27 @@ export function timeAgo(iso: string, now = new Date()): string {
 	return `${date.getFullYear()}-${mm}-${dd}`;
 }
 
-/** The row's second line: the state when a state exists (waiting/working),
- *  otherwise just how long ago. The message count is DROPPED (owner,
- *  typography round 5): it informed no decision — clutter. messageCount
- *  still rides the API payload, so this is a one-line flip back if it's
- *  ever wanted. */
+/** A question or a posed problem is waiting on the learner. */
+function waitingForYou(chat: ChatListItem): boolean {
+	return chat.pendingQuestion || ((chat.kind ?? "teach") === "practice" && chat.pendingProblem);
+}
+
+/** The row's second line (Hot Glass, SPEC §8): the state when a state
+ *  exists (compacting / waiting for you / working), otherwise the kind and
+ *  how long ago — "Teach · 2d". The message count stays dropped (owner,
+ *  typography round 5). */
 function sessionMeta(chat: ChatListItem): string {
 	if (chat.compacting) return `Compacting context · ${timeAgo(chat.updatedAt)}`;
-	if (chat.pendingQuestion) return `Waiting for input · ${timeAgo(chat.updatedAt)}`;
-	if ((chat.kind ?? "teach") === "practice" && chat.pendingProblem) {
-		return `Problem waiting · ${timeAgo(chat.updatedAt)}`;
-	}
+	if (waitingForYou(chat)) return `Waiting for you · ${timeAgo(chat.updatedAt)}`;
 	if (chat.busy) return "Working…";
-	return timeAgo(chat.updatedAt);
+	return `${(chat.kind ?? "teach") === "practice" ? "Practice" : "Teach"} · ${timeAgo(chat.updatedAt)}`;
 }
 
 /**
  * One session row: the status spinner (only while working), then title +
- * state-aware meta. Exported for render tests — pure function of the
+ * state-aware meta — a softly pulsing dot while the session waits on the
+ * learner, a small dumbbell on practice rows — and a "…" options button
+ * that appears on hover. Exported for render tests — pure function of the
  * list item.
  */
 export function SessionRow({
@@ -274,45 +278,59 @@ export function SessionRow({
 	onOpen,
 	kbdSelected = false,
 	onContextMenu,
+	onMore,
 }: {
 	chat: ChatListItem;
 	active: boolean;
 	onOpen: () => void;
-	/** Keyboard-cycle highlight (shortcut wave A: Alt+↑/↓ + Alt+Enter) —
-	 *  visually distinct from the active session, which stays filled. */
+	/** Keyboard-walk highlight (the search owns the walk) — visually
+	 *  distinct from the active session, which stays filled. */
 	kbdSelected?: boolean;
 	/** Right-click opens the context menu (wave 6: Rename / Delete). */
 	onContextMenu?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+	/** The hover "…" opens the same menu, anchored to itself. */
+	onMore?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
+	const practice = (chat.kind ?? "teach") === "practice";
+	const waiting = waitingForYou(chat) && !chat.compacting;
 	return (
-		<button
-			type="button"
-			onClick={onOpen}
-			onContextMenu={onContextMenu}
-			data-testid={kbdSelected ? "session-row-kbd" : "session-row"}
-			className={cn(
-				"relative mb-0.5 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent",
-				active && "bg-accent",
-				kbdSelected && !active && "bg-accent/60 ring-1 ring-border",
+		<div className="group/row relative mb-0.5">
+			<button
+				type="button"
+				onClick={onOpen}
+				onContextMenu={onContextMenu}
+				data-session-row
+				data-testid={kbdSelected ? "session-row-kbd" : "session-row"}
+				className={cn(
+					"relative flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors hover:bg-[var(--mt-quiet-hover-bg)]",
+					active && "bg-accent",
+					kbdSelected && !active && "bg-accent/60 ring-1 ring-border",
+				)}
+			>
+				<SessionStatus busy={chat.busy || chat.compacting} />
+				<span className="min-w-0 flex-1">
+					{/* Titles are the learner's/teacher's WORDS — Geist at 13.5px; the
+					    meta line below is the quiet machine data. */}
+					<span className="block truncate font-ui text-[13.5px] font-normal tracking-[-0.005em] text-foreground/90">{chat.title}</span>
+					<span className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+						{waiting && <span className="mt-wait size-1.5 shrink-0 rounded-full bg-foreground" aria-hidden="true" />}
+						{practice && !waiting && <DumbbellIcon className="size-3 shrink-0" strokeWidth={1.5} aria-label="Practice session" />}
+						<span className="truncate">{sessionMeta(chat)}</span>
+					</span>
+				</span>
+			</button>
+			{onMore && (
+				<button
+					type="button"
+					aria-label="Session options"
+					data-testid="session-more"
+					onClick={onMore}
+					className="mt-iri absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/row:opacity-100"
+				>
+					…
+				</button>
 			)}
-		>
-			<SessionStatus busy={chat.busy || chat.compacting} />
-			<span className="min-w-0 flex-1">
-				{/* Titles are the learner's/teacher's WORDS — Source Sans 3, the
-				    same voice the words were typed in (every input is mt-prose);
-				    the meta line below stays JetBrains Mono (machine data). One
-				    rule, finally applied to the picker too (owner, typography
-				    round): mono = chrome, Source Sans = human words. */}
-				<span className="block truncate font-ui text-base font-medium tracking-[-0.005em]">{chat.title}</span>
-				<span className="block text-xs text-muted-foreground">{sessionMeta(chat)}</span>
-			</span>
-			{/* The dumbbell rides the FAR RIGHT (owner round 6, 2026-10-05) —
-			    was left of the name; right-aligned keeps the titles flush with
-			    the teaching rows and reads cleaner. */}
-			{(chat.kind ?? "teach") === "practice" && (
-				<DumbbellIcon className="size-3.5 shrink-0 text-muted-foreground/70" aria-label="Practice session" />
-			)}
-		</button>
+		</div>
 	);
 }
 
@@ -370,20 +388,56 @@ export function RenameRow({ chat, onCommit, onCancel }: { chat: ChatListItem; on
  *  Teaching / All / Practice — a client-side filter over the same
  *  snapshot, persisted in localStorage, defaulting to All. */
 export type SessionKindFilter = "teach" | "all" | "practice";
-const KIND_FILTER_KEY = "mt:session-kind-filter";
+
+/** A nav row (Hot Glass, SPEC §8): the active page is a small glass pill,
+ *  hover is a faint fill. */
+function NavRow({
+	testid,
+	icon,
+	label,
+	active = false,
+	onClick,
+}: {
+	testid: string;
+	icon: React.ReactNode;
+	label: string;
+	active?: boolean;
+	onClick: () => void;
+}) {
+	return (
+		<button
+			type="button"
+			data-testid={testid}
+			onClick={onClick}
+			aria-current={active ? "page" : undefined}
+			className={cn(
+				"flex h-9 w-full items-center gap-2.5 rounded-full px-3 text-[13.5px]",
+				active ? "mt-btn text-foreground" : "text-muted-foreground transition-colors hover:bg-[var(--mt-quiet-hover-bg)] hover:text-foreground",
+			)}
+		>
+			{icon}
+			{label}
+		</button>
+	);
+}
+
+const GROUP_LABEL = "font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60";
+/** "No module" folds under this key (an empty string can't be stored). */
+const NO_MODULE_KEY = "__none__";
 
 function SessionsSidebar() {
 	const { open, toggle } = useSidebar();
 	const [chats, setChats] = useState<ChatListItem[] | null>(null);
 	const [query, setQuery] = useState("");
-	const [kindFilter, setKindFilter] = useState<SessionKindFilter>("all");
+	// Grouping, filter and folded modules sync through the settings file
+	// (sidebar-prefs.ts). Module names come from /api/study.
+	const { prefs, setGrouping, setKindFilter: setFilter, toggleModuleCollapsed } = useSidebarPrefs();
+	const kindFilter = prefs.kindFilter;
+	const [moduleNames, setModuleNames] = useState<Record<string, string | null>>({});
+	// The shortcut hints read the platform after mount (SSR can't know it).
+	const [mod, setMod] = useState("Ctrl ");
 	useEffect(() => {
-		const stored = window.localStorage.getItem(KIND_FILTER_KEY);
-		if (stored === "teach" || stored === "all" || stored === "practice") setKindFilter(stored);
-	}, []);
-	const setFilter = useCallback((f: SessionKindFilter) => {
-		setKindFilter(f);
-		window.localStorage.setItem(KIND_FILTER_KEY, f);
+		if (/Mac/i.test(navigator.platform)) setMod("⌘");
 	}, []);
 	const pathname = usePathname();
 	const router = useRouter();
@@ -398,22 +452,38 @@ function SessionsSidebar() {
 	}, [router]);
 
 	/* FUZZY (owner round 8, 2026-10-05): subsequence match ranked by
-	 * fuzzyScore — prefix beats word-boundary beats scattered. Empty query
-	 * keeps the natural list order (scores are all 0, sort is stable). */
-	const shown = useMemo(() => {
+	 * fuzzyScore — prefix beats word-boundary beats scattered. While a query
+	 * is typed the list is the flat ranked result; otherwise it is grouped
+	 * (TIME or MODULE). `shown` is the rows in DISPLAY order — what the
+	 * keyboard walk steps through (a folded module group is skipped). */
+	const filtered = useMemo(() => {
+		if (chats && kindFilter !== "all") return chats.filter((c) => (c.kind ?? "teach") === kindFilter);
+		return chats;
+	}, [chats, kindFilter]);
+	const searching = query.trim().length > 0;
+	const searchResults = useMemo(() => {
 		const q = query.trim();
-		let list = chats;
-		if (list && kindFilter !== "all") {
-			list = list.filter((c) => (c.kind ?? "teach") === kindFilter);
-		}
-		if (!list) return list;
-		if (!q) return list;
-		return list
+		if (!filtered || !q) return null;
+		return filtered
 			.map((c) => ({ c, score: fuzzyScore(q, c.title) }))
-			.filter((r): r is { c: (typeof list)[number]; score: number } => r.score !== null)
+			.filter((r): r is { c: ChatListItem; score: number } => r.score !== null)
 			.sort((a, b) => b.score - a.score)
 			.map((r) => r.c);
-	}, [chats, query, kindFilter]);
+	}, [filtered, query]);
+	const groups = useMemo(() => {
+		if (!filtered || searching) return null;
+		return prefs.grouping === "module" ? groupByModule(filtered, moduleNames) : groupByTime(filtered);
+	}, [filtered, searching, prefs.grouping, moduleNames]);
+	const isCollapsed = useCallback(
+		(key: string) => prefs.grouping === "module" && prefs.collapsedModules.includes(key || NO_MODULE_KEY),
+		[prefs.grouping, prefs.collapsedModules],
+	);
+	const shown = useMemo<ChatListItem[] | null>(() => {
+		if (!filtered) return null;
+		if (searchResults) return searchResults;
+		return (groups ?? []).flatMap((g) => (isCollapsed(g.key) ? [] : g.items));
+	}, [filtered, searchResults, groups, isCollapsed]);
+	const shownIndex = useMemo(() => new Map((shown ?? []).map((c, i) => [c.id, i])), [shown]);
 
 	const refreshInFlightRef = useRef(false);
 	const refresh = useCallback(async () => {
@@ -588,6 +658,26 @@ function SessionsSidebar() {
 		}
 	}, []);
 
+	// Pin / unpin (owner, 2026-10-27): optimistic, put back if the record
+	// refuses it. The pin lives on the chat record, so it syncs.
+	const togglePin = useCallback(async (chat: ChatListItem) => {
+		const next = !chat.pinned;
+		const patch = (pinned: boolean | undefined) =>
+			setChats((prev) => (prev ? prev.map((c) => (c.id === chat.id ? { ...c, pinned } : c)) : prev));
+		patch(next || undefined);
+		try {
+			const res = await fetch(`/api/chats/${chat.id}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ pinned: next }),
+			});
+			if (!res.ok) throw new Error(`pin failed: ${res.status}`);
+		} catch (err) {
+			console.error("pin failed:", err);
+			patch(chat.pinned);
+		}
+	}, []);
+
 	// Delete success: patch the list instantly (the poll is the backstop),
 	// navigate home if the open session died (the chat view unmounts —
 	// drafts die with it, no orphan bubbles), and announce the graph
@@ -618,8 +708,18 @@ function SessionsSidebar() {
 	// buttons, so the index matches).
 	useEffect(() => {
 		if (kbdIndex === null) return;
-		listRef.current?.querySelectorAll("button")[kbdIndex]?.scrollIntoView({ block: "nearest" });
+		listRef.current?.querySelectorAll("[data-session-row]")[kbdIndex]?.scrollIntoView({ block: "nearest" });
 	}, [kbdIndex]);
+
+	useEffect(() => {
+		if (!open || prefs.grouping !== "module") return;
+		fetch("/api/study", { cache: "no-store" })
+			.then((r) => r.json() as Promise<{ modules?: { code: string; name: string | null }[] }>)
+			.then((b) => setModuleNames(Object.fromEntries((b.modules ?? []).map((m) => [m.code, m.name]))))
+			.catch(() => {
+				// names are decoration: the codes stand alone
+			});
+	}, [open, prefs.grouping, pathname]);
 
 	useEffect(() => {
 		if (!open) return;
@@ -628,266 +728,260 @@ function SessionsSidebar() {
 		// freshness (S6) — no interval, nothing standing.
 	}, [open, pathname, refresh]);
 
+	// THE SEARCH OWNS THE WALK (owner, 2026-10-10 — the retired Alt+↑/↓/↵
+	// cycle's successor): ↑/↓ cycle the filtered rows (wrap), Enter opens the
+	// walked row — or the FIRST match when nothing is walked (the quick-open
+	// pattern) — then blurs (focus returns to the app per the Enter law; the
+	// query stays for re-searching). Esc leaves the search (owner, keyboard
+	// wave): blur back to normal, and claim the key so the window Esc chain
+	// (dictation / abort) doesn't also fire.
+	const onSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Escape") {
+			e.stopPropagation();
+			e.currentTarget.blur();
+			return;
+		}
+		// Modified keys belong to the surface (⇧↵ etc.).
+		if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+		const n = shown?.length ?? 0;
+		if (n === 0) return;
+		if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+			// The rows move, not the caret.
+			e.preventDefault();
+			const dir = e.key === "ArrowDown" ? 1 : -1;
+			setKbdIndex((i) => (i === null || i >= n ? (dir === 1 ? 0 : n - 1) : (i + dir + n) % n));
+			return;
+		}
+		if (e.key === "Enter") {
+			const target = shown![kbdIndex !== null && kbdIndex < n ? kbdIndex : 0];
+			if (!target) return;
+			e.preventDefault();
+			router.push(`/chat/${target.id}`);
+			setKbdIndex(null);
+			e.currentTarget.blur();
+		}
+	};
+
+	const renderRow = (c: ChatListItem) =>
+		renamingId === c.id ? (
+			<RenameRow key={c.id} chat={c} onCommit={(next) => void commitRename(c.id, next)} onCancel={() => setRenamingId(null)} />
+		) : (
+			<SessionRow
+				key={c.id}
+				chat={c}
+				active={pathname === `/chat/${c.id}`}
+				kbdSelected={shownIndex.get(c.id) === kbdIndex}
+				onOpen={() => {
+					setKbdIndex(null);
+					router.push(`/chat/${c.id}`);
+				}}
+				onContextMenu={(e) => openContext(e, c)}
+				onMore={(e) => openContext(e, c)}
+			/>
+		);
+
 	return (
 		<aside
-			className={cn("sidebar-motion shrink-0 overflow-hidden duration-200", open ? "w-72" : "w-0")}
+			className={cn("sidebar-motion shrink-0 overflow-hidden duration-200", open ? "w-[280px]" : "w-0")}
 			aria-hidden={!open}
 		>
-			<div className="mt-glass-pane flex h-full w-72 flex-col">
-				{/* wordmark — the owner's header; close toggle sits at the edge.
-				    Merged chrome (2026-09-17): in Electron this band is the
-				    window's drag surface and starts after the traffic lights
-				    (.mt-lights-gutter); in the browser those classes are inert. */}
+			<div className="mt-glass-pane flex h-full w-[280px] flex-col">
+				{/* The wordmark (Hot Glass, SPEC §8): the dragon mark + "Mental
+				    Tuition" in Geist light — still the home link — and the collapse
+				    button. In Electron this band is the window's drag surface and
+				    starts after the traffic lights (.mt-lights-gutter). */}
 				<div className="mt-drag mt-lights-gutter flex items-center justify-between px-4 py-3">
-					{/* The owner's mark (2026-09-17) replaces the "LH" text — still the
-					    home link, still vertically centered by the band's items-center.
-					    The 92px .mt-lights-gutter keeps it clear of the traffic lights
-					    with the lights' own edge-inset as the gap. */}
-					{/* Hover mirrors the ghost toggle buttons (owner ask, 2026-09-17):
-					    same size-9 chip geometry, same hover:bg-accent treatment. */}
 					<Hint
-						// Kept (owner, subtlety round 2026-09-25) but to the RIGHT
-						// of the logo, carrying its real shortcut: ⌘G jumps to
-						// the graph view (keyboard-shortcuts routes it to "/",
-						// the same destination as this logo).
+						// Kept to the RIGHT of the logo, carrying its real shortcut: ⌘G
+						// jumps to the graph view (keyboard-shortcuts routes it to "/").
 						label="Home"
 						action="jump-graph"
 						side="right"
 					>
-						<Link
-							href="/"
-							aria-label="Home"
-							className="mt-no-drag flex size-10 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
-						>
-							<MtMark className="size-8" />
+						<Link href="/" aria-label="Home" className="mt-no-drag flex items-center gap-2 rounded-full py-1.5 pl-1 pr-3 transition-colors hover:bg-[var(--mt-quiet-hover-bg)]">
+							<MtMark className="size-5 shrink-0" />
+							<span className="font-ui text-[15px] font-light tracking-[-0.01em]">Mental Tuition</span>
 						</Link>
 					</Hint>
 					<Hint label="Close sidebar" action="toggle-sidebar">
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label="Close sidebar"
-							onClick={toggle}
-							className="mt-no-drag"
-						>
-							<PanelLeftCloseIcon className="size-4" />
+						<Button variant="ghost" size="icon" aria-label="Close sidebar" onClick={toggle} className="mt-no-drag">
+							<PanelLeftCloseIcon className="size-4" strokeWidth={1.5} />
 						</Button>
 					</Hint>
 				</div>
 
-				{/* Two doors, STACKED (owner round 8, 2026-10-05 — was a
-				    half/half row): full-width rows read cleaner and give the
-				    labels room; teaching keeps the original draft route,
-				    practice carries its mode. */}
-				<div className="mx-3 mb-2 flex flex-col gap-1.5">
+				{/* New session (primary, with its shortcut) + the round practice
+				    button. Teaching keeps the draft route; practice carries its mode. */}
+				<div className="mx-3 mb-3 flex items-center gap-2">
 					<button
 						type="button"
 						data-testid="new-session"
 						onClick={() => void newSession()}
-						className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+						className="mt-btn-primary flex h-10 flex-1 items-center justify-center gap-2 rounded-full text-[13.5px] font-medium"
 					>
-						<PlusIcon className="size-3" />
-						Teaching
+						<PlusIcon className="size-4" strokeWidth={1.75} />
+						New session
+						<span className="ml-1 font-mono text-[10.5px] font-normal tracking-[0.06em] opacity-50" aria-hidden="true">
+							{mod === "⌘" ? "⌘N" : "Ctrl N"}
+						</span>
 						<span className="sr-only">create a new teaching session</span>
 					</button>
-					<button
-						type="button"
-						data-testid="new-session-practice"
-						onClick={() => router.push("/chat/new?mode=practice")}
-						className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-					>
-						<DumbbellIcon className="size-3" />
-						Practice
-						<span className="sr-only">create a new practice session</span>
-					</button>
-					{/* Practice papers (personal fork): the paper pipeline's
-					    section, nested under Practice — it is practice, by paper. */}
-					<button
-						type="button"
-						data-testid="practice-papers"
-						onClick={() => router.push("/papers")}
-						aria-current={pathname === "/papers" ? "page" : undefined}
-						className={`ml-4 flex w-[calc(100%-1rem)] items-center gap-1.5 rounded-md px-2 py-1.5 text-xs uppercase tracking-wider transition-colors hover:bg-accent hover:text-foreground ${
-							pathname === "/papers" ? "bg-accent text-foreground" : "text-muted-foreground"
-						}`}
-					>
-						<FileTextIcon className="size-3" />
-						Practice papers
-					</button>
-					{/* Modules (personal fork): every study module, adding one a click away. */}
-					<button
-						type="button"
-						data-testid="modules"
-						onClick={() => router.push("/modules")}
-						aria-current={pathname === "/modules" ? "page" : undefined}
-						className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs uppercase tracking-wider transition-colors hover:bg-accent hover:text-foreground ${
-							pathname === "/modules" ? "bg-accent text-foreground" : "text-muted-foreground"
-						}`}
-					>
-						<LibraryIcon className="size-3" />
-						Modules
-					</button>
-				</div>
-
-				<div className="mx-3 mb-2 flex items-center gap-2">
-					<span className="text-xs uppercase tracking-widest text-muted-foreground/70">Sessions</span>
-					<Hint label="Search sessions" action="sessions-search" side="bottom">
-					<span className="relative flex-1">
-						<Input
-							ref={searchRef}
-							data-testid="session-search"
-							value={query}
-							onChange={(e) => {
-								setQuery(e.target.value);
-								// The list reorders under the query every keystroke —
-								// a stale walk index would point at the wrong row.
-								setKbdIndex(null);
-							}}
-							// THE SEARCH OWNS THE WALK (owner, 2026-10-10 — the
-							// retired Alt+↑/↓/↵ cycle's successor): ↑/↓ cycle the
-							// filtered rows (wrap), Enter opens the walked row —
-							// or the FIRST match when nothing is walked (the
-							// quick-open pattern) — then blurs (focus returns to
-							// the app per the Enter law; the query stays for
-							// re-searching). Esc leaves the search (owner,
-							// keyboard wave): blur back to normal, and claim the
-							// key so the window Esc chain (dictation / abort)
-							// doesn't also fire.
-							onKeyDown={(e) => {
-								if (e.key === "Escape") {
-									e.stopPropagation();
-									e.currentTarget.blur();
-									return;
-								}
-								// Modified keys belong to the surface (⇧↵ etc.).
-								if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
-								const n = shown?.length ?? 0;
-								if (n === 0) return;
-								if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-									// The rows move, not the caret.
-									e.preventDefault();
-									const dir = e.key === "ArrowDown" ? 1 : -1;
-									setKbdIndex((i) =>
-										i === null || i >= n ? (dir === 1 ? 0 : n - 1) : (i + dir + n) % n,
-										);
-									return;
-								}
-								if (e.key === "Enter") {
-									const target = shown![kbdIndex !== null && kbdIndex < n ? kbdIndex : 0];
-									if (!target) return;
-									e.preventDefault();
-									router.push(`/chat/${target.id}`);
-									setKbdIndex(null);
-									e.currentTarget.blur();
-								}
-							}}
-							placeholder="Search…"
-							aria-label="Search sessions"
-							className="h-6 rounded-sm border-border bg-background pl-6 text-xs placeholder:text-muted-foreground/60"
-						/>
-						<SearchIcon className="pointer-events-none absolute left-1.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground/70" />
-					</span>
+					<Hint label="New practice session" side="bottom">
+						<button
+							type="button"
+							data-testid="new-session-practice"
+							aria-label="New practice session"
+							onClick={() => router.push("/chat/new?mode=practice")}
+							className="mt-btn flex size-10 shrink-0 items-center justify-center rounded-full"
+						>
+							<DumbbellIcon className="size-4" strokeWidth={1.5} />
+						</button>
 					</Hint>
 				</div>
 
-				{/* The three-way filter, HEADING THE LIST (owner round 8b,
-				    2026-10-05 — moved below the search): it scopes what the
-				    list shows, so it sits directly above it as a caption row;
-				    search stays the top muscle-memory target. Order: Teaching /
-				    Practice / All — the real modes first, "All" as the escape
-				    hatch on the right, mirroring the create-buttons above.
-				    Persisted client-side. */}
-				<div className="mx-3 flex items-center gap-0.5 rounded-md border border-border/60 bg-background p-0.5" data-testid="session-kind-filter">
-					{(["teach", "practice", "all"] as const).map((f) => (
+				{/* Search — session search, ⌘⇧F (owner, 2026-10-27). */}
+				<div className="mx-3 mb-3">
+					<Hint label="Search sessions" action="sessions-search" side="bottom">
+						<span className="relative block">
+							<Input
+								ref={searchRef}
+								data-testid="session-search"
+								value={query}
+								onChange={(e) => {
+									setQuery(e.target.value);
+									// The list reorders under the query every keystroke —
+									// a stale walk index would point at the wrong row.
+									setKbdIndex(null);
+								}}
+								onKeyDown={onSearchKeyDown}
+								placeholder="Search sessions"
+								aria-label="Search sessions"
+								className="h-9 rounded-full border-transparent bg-[var(--mt-quiet-hover-bg)] pl-9 pr-16 text-[13px] placeholder:text-muted-foreground/60"
+							/>
+							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/70" strokeWidth={1.5} />
+							<span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10.5px] tracking-[0.06em] text-muted-foreground/60" aria-hidden="true">
+								{mod === "⌘" ? "⌘⇧F" : "Ctrl ⇧F"}
+							</span>
+						</span>
+					</Hint>
+				</div>
+
+				{/* Pages: no indents — the active one a small glass pill. */}
+				<nav className="mx-3 mb-2 flex flex-col gap-0.5" aria-label="Pages">
+					<NavRow
+						testid="knowledge-graph"
+						icon={<WaypointsIcon className="size-4" strokeWidth={1.5} />}
+						label="Knowledge graph"
+						active={pathname === "/"}
+						onClick={() => router.push("/")}
+					/>
+					<NavRow
+						testid="modules"
+						icon={<LibraryIcon className="size-4" strokeWidth={1.5} />}
+						label="Modules"
+						active={pathname === "/modules"}
+						onClick={() => router.push("/modules")}
+					/>
+					<NavRow
+						testid="practice-papers"
+						icon={<FileTextIcon className="size-4" strokeWidth={1.5} />}
+						label="Practice papers"
+						active={pathname === "/papers"}
+						onClick={() => router.push("/papers")}
+					/>
+				</nav>
+
+				{/* SESSIONS: the TIME / MODULE switch, then ALL · TEACH · PRACTICE.
+				    Both choices are remembered in the settings file (synced). */}
+				<div className="mx-3 mb-1.5 mt-3 flex items-center justify-between">
+					<span className={GROUP_LABEL}>Sessions</span>
+					<div role="group" aria-label="Group sessions by" data-testid="session-grouping" className="mt-tray flex items-center gap-0.5 rounded-full p-0.5">
+						{(["time", "module"] as const).map((g) => (
+							<button
+								key={g}
+								type="button"
+								data-testid={`grouping-${g}`}
+								aria-pressed={prefs.grouping === g}
+								onClick={() => setGrouping(g)}
+								className={cn(
+									"rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em]",
+									prefs.grouping === g ? "mt-btn text-foreground" : "text-muted-foreground transition-colors hover:text-foreground",
+								)}
+							>
+								{g}
+							</button>
+						))}
+					</div>
+				</div>
+				<div className="mx-3 mb-1 flex items-center gap-1" data-testid="session-kind-filter">
+					{(["all", "teach", "practice"] as const).map((f) => (
 						<button
 							key={f}
 							type="button"
 							data-testid={`kind-filter-${f}`}
+							aria-pressed={kindFilter === f}
 							onClick={() => setFilter(f)}
 							className={cn(
-								"flex-1 rounded-sm px-2 py-1 text-[11px] uppercase tracking-wider transition-colors",
-								kindFilter === f
-									? "bg-accent text-foreground"
-									: "text-muted-foreground hover:text-foreground",
+								"rounded-full px-2.5 py-1 font-mono text-[10.5px] uppercase tracking-[0.1em] transition-colors",
+								kindFilter === f ? "bg-[var(--mt-quiet-hover-bg)] text-foreground" : "text-muted-foreground hover:text-foreground",
 							)}
 						>
-							{f === "teach" ? "Teaching" : f === "all" ? "All" : "Practice"}
+							{f}
 						</button>
 					))}
 				</div>
 
-				<div ref={listRef} className="flex-1 overflow-y-auto p-2">
-					{kindFilter === "practice" && (
-						<button
-							type="button"
-							onClick={() => router.push("/papers")}
-							className={`mb-1 flex w-full items-center gap-2 rounded-lg border border-dashed px-2 py-2 text-left transition-colors hover:bg-accent ${
-								pathname === "/papers" ? "bg-accent" : ""
-							}`}
-						>
-							<FileTextIcon className="size-3.5 shrink-0 text-muted-foreground" />
-							<span className="min-w-0">
-								<span className="block truncate font-ui text-base font-medium">Practice papers</span>
-								<span className="block text-xs text-muted-foreground">Generate, hand in, mark</span>
-							</span>
-						</button>
-					)}
+				<div ref={listRef} className="flex-1 overflow-y-auto px-2 pb-2">
 					{shown === null ? (
-						<div className="px-2 py-4 text-xs text-muted-foreground">Loading…</div>
-					) : shown.length === 0 ? (
-						<div className="px-2 py-4 text-xs text-muted-foreground">
-							{query.trim() ? "No sessions match." : "No sessions yet."}
-						</div>
-					) : (
-						shown.map((c, i) =>
-							renamingId === c.id ? (
-								<RenameRow
-									key={c.id}
-									chat={c}
-									onCommit={(next) => void commitRename(c.id, next)}
-									onCancel={() => setRenamingId(null)}
-								/>
-							) : (
-								<SessionRow
-									key={c.id}
-									chat={c}
-									active={pathname === `/chat/${c.id}`}
-									kbdSelected={i === kbdIndex}
-									onOpen={() => {
-										setKbdIndex(null);
-										router.push(`/chat/${c.id}`);
-									}}
-									onContextMenu={(e) => openContext(e, c)}
-								/>
-							),
+						<div className="px-3 py-4 text-xs text-muted-foreground">Loading…</div>
+					) : searching ? (
+						shown.length === 0 ? (
+							<div className="px-3 py-4 text-xs text-muted-foreground">No sessions match.</div>
+						) : (
+							shown.map(renderRow)
 						)
+					) : (groups ?? []).length === 0 ? (
+						<div className="px-3 py-4 text-xs text-muted-foreground">No sessions yet.</div>
+					) : (
+						(groups ?? []).map((g) => {
+							const folded = isCollapsed(g.key);
+							return (
+								<div key={g.key || NO_MODULE_KEY} data-testid="session-group">
+									{prefs.grouping === "module" ? (
+										<button
+											type="button"
+											data-testid={`module-group-${g.key || "none"}`}
+											aria-expanded={!folded}
+											onClick={() => toggleModuleCollapsed(g.key || NO_MODULE_KEY)}
+											className={cn(GROUP_LABEL, "flex w-full items-center gap-1.5 rounded-lg px-3 pb-1 pt-3 text-left transition-colors hover:text-foreground")}
+										>
+											<ChevronDownIcon className={cn("size-3 transition-transform", folded && "-rotate-90")} strokeWidth={1.75} />
+											{g.label} · {g.items.length}
+										</button>
+									) : (
+										<div className={cn(GROUP_LABEL, "px-3 pb-1 pt-3")}>{g.label}</div>
+									)}
+									{!folded && g.items.map(renderRow)}
+								</div>
+							);
+						})
 					)}
 				</div>
 
-					{/* Background agents (owner, sidebar round): the section is
-					    ALWAYS here — empty means empty (the header sits alone); it
-					    populates and grows when processes run. The session list is
-					    flex-1, so this pins to the bottom. Sidebar closed = the
-					    learner opted out (no ambient signal, user decision). */}
-					<ActivitySection />
-
-					{/* Settings entry (settings-app wave): same row language as
-					    New session — quiet, bottom-pinned, opens the centered
-					    dialog (also mod+, in the keyboard registry). */}
-					<div className="px-3 pb-3 pt-1">
-						<Hint label="Settings" action="open-settings" side="right">
-							<button
-								type="button"
-								onClick={() => openSettings()}
-								data-testid="settings-entry"
-								className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-							>
-								<SettingsIcon className="size-3" />
-								Settings
-							</button>
-						</Hint>
-					</div>
+				{/* RUNNING NOW: only the background agents running right now — the
+				    block is absent when none are. Settings is a nav row beneath. */}
+				<ActivitySection />
+				<div className="px-3 pb-3 pt-1">
+					<Hint label="Settings" action="open-settings" side="right">
+						<NavRow
+							testid="settings-entry"
+							icon={<SettingsIcon className="size-4" strokeWidth={1.5} />}
+							label="Settings"
+							onClick={() => openSettings()}
+						/>
+					</Hint>
 				</div>
+			</div>
 
 				{/* The context menu (wave 6 + the extraction-UX redesign): the
 				    coverage block above, then exactly two management actions
@@ -906,6 +1000,18 @@ function SessionsSidebar() {
 						    hairline — the block is info + a stateful affordance, the
 						    actions above it. Fetched on menu open (the block mounts WITH
 						    the menu); 409 = benign. Renders nothing on a failed read. */}
+						<button
+							type="button"
+							data-testid="ctx-pin"
+							onClick={() => {
+								const target = chats?.find((c) => c.id === ctxChatId);
+								if (target) void togglePin(target);
+								setCtxChatId(null);
+							}}
+							className="flex items-center rounded-lg px-2.5 py-1.5 text-left text-foreground transition-colors hover:bg-accent"
+						>
+							{chats?.find((c) => c.id === ctxChatId)?.pinned ? "Unpin" : "Pin"}
+						</button>
 						<button
 							type="button"
 							data-testid="ctx-rename"

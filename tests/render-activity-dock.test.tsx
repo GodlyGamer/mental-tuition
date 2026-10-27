@@ -186,12 +186,9 @@ describe("activity dock pure layer", () => {
 });
 
 describe("activity section render", () => {
-	it("renders the ALWAYS-PRESENT header when idle — empty means empty, nothing hides", () => {
+	it("renders NOTHING when idle — the block is absent unless an agent is running (Hot Glass)", () => {
 		const html = renderToStaticMarkup(<ActivitySection feed={{ jobs: [], extractions: [] }} />);
-		assert.match(html, /data-testid="activity-section"/);
-		assert.match(html, /Background agents/);
-		assert.doesNotMatch(html, /activity-blob-(job|extraction)/, "no rows while idle");
-		assert.doesNotMatch(html, /activity-total-cost/, "the cost span is population, not decoration");
+		assert.equal(html, "");
 	});
 
 	it("renders one blob per running process with cost, elapsed, and the abort affordance", () => {
@@ -213,7 +210,7 @@ describe("activity section render", () => {
 		assert.match(html, /activity-blob-cost[^>]*>—</);
 		assert.match(html, /data-testid="activity-abort"/, "END on the blob face, popover-independent");
 		assert.match(html, /\bEnd\b/, "the explicit END button");
-		assert.match(html, /Background agents/);
+		assert.match(html, /Running now/);
 		// Total cost: nothing priced → "—" in the header.
 		assert.match(html, /activity-total-cost[^>]*>—</);
 		// Truncation-reveals KEEP native title (tooltip wave mechanism rule):

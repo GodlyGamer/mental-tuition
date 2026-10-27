@@ -72,6 +72,9 @@
 	--mt-caret: #f4f4f6;
 	--mt-caret-glow: 0 0 8px rgba(255, 255, 255, 0.55);
 	--mt-placeholder: #4a4a4f;
+	/* The sidebar (SPEC §8). */
+	--mt-side-bg: linear-gradient(180deg, #0b0b0c, #070708);
+	--mt-side-line: rgba(255, 255, 255, 0.06);
 	--mt-quiet-ink: #7a7a80;
 	--mt-quiet-hover-ink: #ececee;
 	--mt-quiet-hover-bg: rgba(255, 255, 255, 0.05);
@@ -157,6 +160,8 @@
 	--mt-caret: #1a1a1c;
 	--mt-caret-glow: 0 0 6px rgba(0, 0, 0, 0.18);
 	--mt-placeholder: #9a9a9f;
+	--mt-side-bg: linear-gradient(180deg, #ececee, #e6e6e9);
+	--mt-side-line: rgba(0, 0, 0, 0.08);
 	--mt-quiet-ink: #6e6e74;
 	--mt-quiet-hover-ink: #1a1a1c;
 	--mt-quiet-hover-bg: rgba(0, 0, 0, 0.05);
@@ -212,6 +217,8 @@
 	--mt-caret: #eef1ff;
 	--mt-caret-glow: 0 0 8px rgba(200, 215, 255, 0.55);
 	--mt-placeholder: #5d6aa8;
+	--mt-side-bg: linear-gradient(180deg, #0a1448, #070d33);
+	--mt-side-line: rgba(180, 200, 255, 0.1);
 	--mt-quiet-ink: #8e9acb;
 	--mt-quiet-hover-ink: #eef1ff;
 	--mt-quiet-hover-bg: rgba(200, 215, 255, 0.08);
@@ -568,13 +575,31 @@ body {
 	}
 }
 
-/* The sidebar: a full-height glass pane, edge on the content side only
-   (restyled in the sidebar wave). */
+/* A softly pulsing dot: a session waiting on the learner, and the running
+   agents' header. */
+@keyframes mt-wait-pulse {
+	0%,
+	100% {
+		opacity: 0.35;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+.mt-wait {
+	animation: mt-wait-pulse 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.mt-wait {
+		animation: none;
+	}
+}
+
+/* The sidebar (SPEC §8): a shade darker than the page, a right hairline,
+   no blur — the page ground shows no further through it. */
 .mt-glass-pane {
-	border-right: 1px solid var(--line);
-	background-color: var(--glass-fill);
-	-webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
-	backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+	border-right: 1px solid var(--mt-side-line);
+	background: var(--mt-side-bg);
 }
 /* Dialog backdrops: the scrim plus a soft blur of the page. */
 .mt-scrim {

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIcon, BotIcon, FileTextIcon, PenToolIcon, PlayIcon, SearchIcon, SquareIcon, WaypointsIcon } from "lucide-react";
+import { BotIcon, FileTextIcon, PenToolIcon, PlayIcon, SearchIcon, SquareIcon, WaypointsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CallUsage, JobKind, JobRecord } from "@/src/core";
 import { isModelsRefusal, isProviderKeyRefusal, jobCost } from "@/src/core";
@@ -339,20 +339,19 @@ export function ActivitySection({ feed: feedProp }: { feed?: ActivityFeed }) {
 	// Sidebar-native skin (owner, sidebar round): part of the sidebar's
 	// surface, not a floating card — the border-t separator matches the
 	// sidebar's own edge line, the header matches the "Sessions" label, the
-	// rows match the session rows' hover. Empty means empty: the header sits
-	// alone (the cost span is population, not decoration).
+	// rows match the session rows' hover. HOT GLASS (owner, 2026-10-27): only
+	// the agents running RIGHT NOW — nothing running, no block at all.
+	if (blobs.length === 0) return null;
 	return (
 		<section data-testid="activity-section" className="border-t border-border px-3 pb-3 pt-2">
-			<div className="mb-1 flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground/70">
-				<ActivityIcon className="size-3" />
-				Background agents
-				{blobs.length > 0 && (
-					<span className="ml-auto tabular-nums" data-testid="activity-total-cost" title="Total running cost (inferred)">
-						{totalCost === null ? "—" : formatUsd(totalCost)}
+			<div className="mb-1 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+				<span className="mt-wait size-1.5 rounded-full bg-foreground" aria-hidden="true" />
+				Running now
+				<span className="ml-auto tabular-nums" data-testid="activity-total-cost" title="Total running cost (inferred)">
+					{totalCost === null ? "—" : formatUsd(totalCost)}
 				</span>
-				)}
 			</div>
-			{blobs.length > 0 && (
+			{(
 				<div className="flex max-h-[40dvh] flex-col gap-1 overflow-y-auto">
 					{blobs.map((blob) => (
 						<ActivityBlobRow

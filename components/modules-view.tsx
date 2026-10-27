@@ -15,6 +15,7 @@ import { SidebarToggle, useSidebar } from "@/components/sidebar";
 
 interface ModuleInfo {
 	code: string;
+	name: string | null;
 	materials: Record<string, number>;
 	sessions: number;
 	hasTaxonomy: boolean;
@@ -67,6 +68,17 @@ export function ModulesView() {
 		try {
 			await api("/api/study", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) });
 			setDraft("");
+			await refresh();
+		} catch (e) {
+			setError(String(e));
+		}
+	};
+
+	// The module's display name (Hot Glass, owner 2026-10-27): shown in the
+	// sidebar's MODULE grouping; empty clears it.
+	const saveName = async (code: string, name: string) => {
+		try {
+			await api(`/api/study/${code}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: name.trim() || null }) });
 			await refresh();
 		} catch (e) {
 			setError(String(e));
@@ -138,6 +150,21 @@ export function ModulesView() {
 								return (
 									<section key={m.code} className={card} data-testid="module-card">
 										<h2 className="font-title text-2xl">{m.code}</h2>
+										<input
+											key={`${m.code}:${m.name ?? ""}`}
+											defaultValue={m.name ?? ""}
+											placeholder="Name (shown in the sidebar)"
+											aria-label={`Name for ${m.code}`}
+											data-testid="module-name"
+											maxLength={80}
+											onBlur={(e) => {
+												if (e.target.value.trim() !== (m.name ?? "")) void saveName(m.code, e.target.value);
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") e.currentTarget.blur();
+											}}
+											className="mt-2 h-8 w-full rounded-full border bg-background px-3 text-xs outline-none placeholder:text-muted-foreground"
+										/>
 										<dl className="mt-3 grid grid-cols-3 gap-2">
 											<Stat value={materials} name="materials" />
 											<Stat value={m.sessions} name="sessions" />

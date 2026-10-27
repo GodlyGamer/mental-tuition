@@ -7,6 +7,7 @@ The tutor app and the `.claude/` skills `/make-papers` and `/mark-attempts` shar
 ```
 study/modules/<CODE>/                 CODE = module code, e.g. 1M1 (gitignored: personal materials)
   materials/past_papers/ mark_schemes/ lecture_notes/ spec/ problem_sheets/
+  module.json                         optional { "name" }, shown in the sidebar's module grouping; written by the app (Modules page), never by a skill
   taxonomy.json                       topic and sub-skill ids; written by /make-papers, read by the tutor
   sessions/<session_id>.json          one per module-tagged tutor session (session_id = the app's chat id)
   papers/<PAIR_ID>/                   PDFs, questions.json, verification.md   (PAIR_ID = YYYY-MM-DD_<CODE>_<n>)

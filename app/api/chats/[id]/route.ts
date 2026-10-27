@@ -34,7 +34,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 	if (!getChat(id)) return Response.json({ error: "Not found" }, { status: 404 });
-	const body = (await req.json().catch(() => null)) as { title?: unknown; module?: unknown } | null;
+	const body = (await req.json().catch(() => null)) as { title?: unknown; module?: unknown; pinned?: unknown } | null;
+	// Pin / unpin (the sidebar's "…" menu, owner 2026-10-27).
+	if (body && "pinned" in body) {
+		if (typeof body.pinned !== "boolean") return Response.json({ error: "pinned must be a boolean" }, { status: 400 });
+		const record = stores.chatStore.setChatPinned(id, body.pinned);
+		return Response.json({ pinned: record.pinned === true });
+	}
 	// The session's study module (the composer's module button, owner
 	// 2026-10-27): a module code that exists, or null to untag.
 	if (body && "module" in body) {

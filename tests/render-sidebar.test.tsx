@@ -54,12 +54,34 @@ describe("SessionRow", () => {
 		}
 	});
 
-	it("a pending question renders NO indicator — resting state, carried by the meta text", () => {
+	it("a pending question waits with a softly pulsing dot and the meta text, no spinner (Hot Glass)", () => {
 		const html = render(item({ phase: "teach", pendingQuestion: true }));
-		assert.ok(!html.includes("session-dot"), "no dots");
+		assert.ok(html.includes("mt-wait"), "the pulsing dot");
 		assert.ok(!html.includes("braille-spinner"), "motion is reserved for working");
-		assert.ok(html.includes("Waiting for input"), "the meta line's text");
-		assert.ok(!html.includes("Waiting for your answer"), "old wording is gone");
+		assert.ok(html.includes("Waiting for you"), "the meta line's text");
+		assert.ok(!html.includes("Waiting for input"), "old wording is gone");
+		assert.ok(!render(item({ phase: "teach" })).includes("mt-wait"), "no dot when nothing waits");
+	});
+
+	it("a posed practice problem waits the same way", () => {
+		const html = render(item({ kind: "practice", pendingProblem: true }));
+		assert.ok(html.includes("mt-wait") && html.includes("Waiting for you"));
+	});
+
+	it("idle rows read 'Teach · ago' / 'Practice · ago', practice with the dumbbell", () => {
+		const teach = render(item({ kind: "teach", updatedAt: "2026-01-02T01:00:00.000Z" }));
+		assert.ok(teach.includes("Teach · 2026-01-02"));
+		assert.ok(!teach.includes("lucide-dumbbell"));
+		const practice = render(item({ kind: "practice", updatedAt: "2026-01-02T01:00:00.000Z" }));
+		assert.ok(practice.includes("Practice · 2026-01-02"));
+		assert.ok(practice.includes("lucide-dumbbell"), "the small dumbbell");
+	});
+
+	it("the options button exists only when the caller hands one (hover-revealed)", () => {
+		assert.ok(!render(item({})).includes("session-more"));
+		const html = renderToStaticMarkup(<SessionRow chat={item({})} active={false} onOpen={() => {}} onMore={() => {}} />);
+		assert.match(html, /data-testid="session-more"[^>]*>…</);
+		assert.ok(html.includes("opacity-0") && html.includes("group-hover/row:opacity-100"), "hidden until the row is hovered");
 	});
 
 	it("a working session (turn in flight) renders the braille spinner — the ONLY indicator", () => {
@@ -83,7 +105,7 @@ describe("SessionRow", () => {
 
 	it("the meta line: state replaces the count when the state is the useful fact", () => {
 		const awaiting = render(item({ pendingQuestion: true, updatedAt: "2026-01-02T01:00:00.000Z" }));
-		assert.ok(awaiting.includes("Waiting for input · 2026-01-02"), "awaiting meta keeps the existing date");
+		assert.ok(awaiting.includes("Waiting for you · 2026-01-02"), "awaiting meta keeps the existing date");
 		assert.ok(!awaiting.includes("messages"), "count yields to the state");
 		assert.ok(!awaiting.includes("braille-spinner"), "…and the spinner stays off");
 
@@ -102,8 +124,8 @@ describe("SessionRow", () => {
 		for (const kind of ["teach", "practice"] as const) {
 			for (const updatedAt of [new Date().toISOString(), "2025-06-02T12:00:00.000Z"]) {
 				const html = render(item({ kind, pendingQuestion: true, updatedAt }));
-				assert.ok(html.includes(`Waiting for input · ${timeAgo(updatedAt)}`));
-				assert.ok(!html.includes("Waiting for your answer"));
+				assert.ok(html.includes(`Waiting for you · ${timeAgo(updatedAt)}`));
+				assert.ok(!html.includes("Waiting for input"));
 			}
 		}
 	});
@@ -111,7 +133,7 @@ describe("SessionRow", () => {
 	it("compacting retains priority over pending input", () => {
 		const html = render(item({ compacting: true, pendingQuestion: true }));
 		assert.match(html, /Compacting context ·/);
-		assert.doesNotMatch(html, /Waiting for input/);
+		assert.doesNotMatch(html, /Waiting for you/);
 	});
 
 	it("active row is visually marked by the background alone (owner, round 5: no weight change)", () => {
@@ -161,6 +183,6 @@ describe("SessionRow practice badge (practice sessions, 2026-10-04)", () => {
 
 	it("a practice row with a posed problem says the problem is waiting", () => {
 		const html = render(item({ kind: "practice", pendingProblem: true }));
-		assert.match(html, /Problem waiting ·/);
+		assert.match(html, /Waiting for you ·/);
 	});
 });

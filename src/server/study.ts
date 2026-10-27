@@ -98,6 +98,25 @@ export function ensureModule(code: string): void {
 	for (const f of ["sessions", "papers", "attempts", "marking"]) fs.mkdirSync(path.join(root, f), { recursive: true });
 }
 
+/** The module's optional display name (Hot Glass, owner 2026-10-27):
+ *  study/modules/<CODE>/module.json { "name" } — shown in the sidebar's
+ *  MODULE grouping ("1M1 · Mechanics · 4"). Absent = the code alone. */
+export function moduleName(code: string): string | null {
+	const raw = readJson<{ name?: unknown }>(path.join(moduleDir(code), "module.json"));
+	return typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim() : null;
+}
+
+/** Set (or, with an empty name, clear) the module's display name. */
+export function setModuleName(code: string, name: string | null): void {
+	const file = path.join(moduleDir(code), "module.json");
+	const trimmed = name?.trim() ?? "";
+	if (!trimmed) {
+		fs.rmSync(file, { force: true });
+		return;
+	}
+	writeJsonAtomic(file, { name: trimmed });
+}
+
 export function listModuleCodes(): string[] {
 	return listDirs(modulesDir()).filter(isModuleCode).sort();
 }
@@ -189,6 +208,8 @@ export interface PairInfo {
 
 export interface ModuleInfo {
 	code: string;
+	/** The display name from module.json, or null. */
+	name: string | null;
 	materials: Record<(typeof MATERIAL_FOLDERS)[number], number>;
 	sessions: number;
 	hasTaxonomy: boolean;
@@ -259,6 +280,7 @@ export function moduleInfo(code: string): ModuleInfo {
 	) as ModuleInfo["materials"];
 	return {
 		code,
+		name: moduleName(code),
 		materials,
 		sessions: listFiles(path.join(root, "sessions")).filter((f) => f.endsWith(".json")).length,
 		hasTaxonomy: fs.existsSync(path.join(root, "taxonomy.json")),
