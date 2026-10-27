@@ -91,7 +91,7 @@ Your own built-in tools (reading and writing files, the terminal, the browser) a
 /** What Antigravity offers on a Google sign-in. A Google AI Plus account
  *  gets Gemini 3.8 Flash; other tiers may list more (session/new reports
  *  them), and a model the tier lacks fails with the server's own message. */
-const ANTIGRAVITY_MODEL_IDS = ["gemini-3.8-flash", "gemini-3.1-pro-preview"];
+export const ANTIGRAVITY_MODEL_IDS = ["gemini-3.8-flash", "gemini-3.1-pro-preview"];
 
 const LOGIN_HINT =
 	"Gemini isn't signed in on this computer. Open Settings → This computer, sign in with Google, then try again.";
@@ -549,6 +549,107 @@ async function run(
 			void server.request("session/close", { sessionId }).catch(() => {});
 		}
 		await toolServer?.close();
+		fs.rmSync(cwd, { recursive: true, force: true });
+	}
+}
+
+// ─── a whole agent run (the paper pipeline, 2026-10-27) ─────────────────────
+
+/** What one full Antigravity run is given: unlike the teaching stream above
+ *  (one model step, tool calls captured and handed to pi), Antigravity runs
+ *  its OWN loop here, calling the app's tools at `mcpUrl` (an MCP server
+ *  named "mt" — the only tools the permission rule allows) until it is done. */
+export interface AntigravityRun {
+	model: string;
+	/** Appended to Antigravity's own system prompt. */
+	systemAppend: string;
+	prompt: string;
+	mcpUrl: string;
+	thinking?: "low" | "medium" | "high";
+	signal?: AbortSignal;
+	/** The run's reply text as it streams (progress lines). */
+	onText?: (chunk: string) => void;
+	/** True while one of the app's tools is working for this run (a long
+	 *  build, a subagent): that silence is not the run stalling. */
+	busy?: () => boolean;
+}
+
+/** How long a run may go silent, with none of its tools working. */
+const RUN_IDLE_LIMIT_MS = 15 * 60_000;
+
+/** A spent Google plan doesn't fail the request: Antigravity REPLIES with
+ *  a short notice ("Usage Limit Reached", live 2026-10-27) — and then may
+ *  never end the turn. */
+const isLimitNotice = (text: string) => text.trim().length < 300 && /usage limit|rate limit|quota|resource.?exhausted/i.test(text);
+
+/** Run one Antigravity session to completion; returns its reply text.
+ *  Throws (with the sign-in hint where it applies) when the run fails. */
+export async function runAntigravityAgent(run: AntigravityRun): Promise<{ text: string; stopReason: string }> {
+	if (!antigravityInstalled()) throw new Error("Gemini isn't installed on this computer.");
+	if (!process.env.MT_ANTIGRAVITY_ACP && !antigravitySignedIn()) throw new Error(LOGIN_HINT);
+	const server = acpServer();
+	await server.ready;
+	const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "mt-agy-run-"));
+	let sessionId: string | null = null;
+	let text = "";
+	let lastActivity = Date.now();
+	let watchdog: ReturnType<typeof setInterval> | undefined;
+	const onAbort = () => {
+		if (sessionId) server.notify("session/cancel", { sessionId });
+	};
+	run.signal?.addEventListener("abort", onAbort, { once: true });
+	try {
+		const session = (await server.request("session/new", {
+			cwd,
+			mcpServers: [{ type: "http", name: "mt", url: run.mcpUrl, headers: [] }],
+			_meta: { antigravity: { systemPrompt: { append: run.systemAppend } } },
+		})) as { sessionId?: string };
+		if (!session.sessionId) throw new Error("Antigravity did not start a session");
+		const sid = session.sessionId;
+		sessionId = sid;
+		server.register(sid, {
+			onUpdate: (update) => {
+				lastActivity = Date.now();
+				if (update.sessionUpdate !== "agent_message_chunk") return;
+				const content = update.content as { type?: string; text?: string } | undefined;
+				if (content?.type !== "text" || !content.text) return;
+				text += content.text;
+				run.onText?.(content.text);
+			},
+		});
+		await server.request("session/set_config_option", { sessionId: sid, configId: "model", value: run.model });
+		if (run.thinking) await server.request("session/set_config_option", { sessionId: sid, configId: "thinking_level", value: run.thinking }).catch(() => {});
+		const limitError = () => new Error(`Gemini's usage limit is reached on your Google plan (${text.trim()}).`);
+		// The watchdog: a lone limit notice followed by silence, or a run
+		// silent for RUN_IDLE_LIMIT_MS with none of its tools working, is
+		// over — cancel it rather than leave the job running forever.
+		const stalled = new Promise<never>((_, reject) => {
+			watchdog = setInterval(() => {
+				if (run.busy?.()) lastActivity = Date.now();
+				const idle = Date.now() - lastActivity;
+				const limited = isLimitNotice(text) && idle > 15_000;
+				if (!limited && idle < RUN_IDLE_LIMIT_MS) return;
+				clearInterval(watchdog);
+				server.notify("session/cancel", { sessionId: sid });
+				reject(limited ? limitError() : new Error("Gemini stopped responding (nothing for 15 minutes)."));
+			}, 5_000);
+		});
+		const result = (await Promise.race([server.request("session/prompt", { sessionId: sid, prompt: [{ type: "text", text: run.prompt }] }), stalled])) as { stopReason?: string };
+		if (run.signal?.aborted) throw new Error("Cancelled.");
+		if (result.stopReason === "refusal") throw new Error("Gemini declined this request.");
+		// The notice can also end the turn normally: still no result.
+		if (isLimitNotice(text)) throw limitError();
+		return { text, stopReason: result.stopReason ?? "end_turn" };
+	} catch (err) {
+		if (run.signal?.aborted) throw new Error("Cancelled.");
+		throw new Error(geminiErrorText(err instanceof Error ? err.message : String(err)));
+	} finally {
+		clearInterval(watchdog);
+		run.signal?.removeEventListener("abort", onAbort);
+		if (sessionId) {
+			server.unregister(sessionId);
+			void server.request("session/close", { sessionId }).catch(() => {});
+		}
 		fs.rmSync(cwd, { recursive: true, force: true });
 	}
 }

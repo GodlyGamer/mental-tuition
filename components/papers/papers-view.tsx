@@ -61,11 +61,19 @@ interface StudyJob {
 	module: string;
 	pair: string | null;
 	status: "running" | "done" | "error";
+	/** The engine running (or that ran) it (src/server/study-jobs.ts). */
+	engine: "claude" | "gemini" | "anthropic-key" | null;
 	startedAt: string;
 	endedAt: string | null;
 	progress: string[];
 	result: string | null;
 }
+
+const ENGINE_LABEL: Record<NonNullable<StudyJob["engine"]>, string> = {
+	claude: "on Claude",
+	gemini: "on Gemini",
+	"anthropic-key": "on the Anthropic API key",
+};
 
 const MATERIAL_LABELS: Record<string, string> = {
 	past_papers: "Past papers",
@@ -338,7 +346,8 @@ function JobStatus({ job, onCancel }: { job: StudyJob; onCancel: () => void }) {
 					<XIcon className="size-3.5 text-destructive" />
 				)}
 				<span className="font-medium">
-					{job.kind === "make-papers" ? "Generating papers" : "Marking"} · {job.status === "running" ? `${elapsed} min so far` : job.status}
+					{job.kind === "make-papers" ? "Generating papers" : "Marking"}
+					{job.engine ? ` ${ENGINE_LABEL[job.engine]}` : ""} · {job.status === "running" ? `${elapsed} min so far` : job.status}
 				</span>
 				{job.status === "running" && (
 					<button type="button" onClick={onCancel} className="ml-auto text-muted-foreground underline hover:text-foreground">
@@ -388,7 +397,8 @@ function GeneratePanel({
 			<h2 className={label}>New paper pair</h2>
 			<p className="mt-2 text-sm text-muted-foreground">
 				Paper 1 drills what your sessions and markings show you get wrong; Paper 2 is a mock in the style of the past papers. Each
-				comes with a mark scheme. A run takes a while and uses a good share of your Claude plan&apos;s limits.
+				comes with a mark scheme. A run takes a while and uses a good share of your Claude plan&apos;s limits; if Claude
+				can&apos;t run it, it moves to Gemini on your Google login, then to your Anthropic API key.
 			</p>
 			<div className="mt-3 flex flex-wrap items-center gap-2">
 				<input

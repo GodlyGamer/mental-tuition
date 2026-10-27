@@ -152,7 +152,7 @@ function run(cmd: string, args: string[]): { ok: boolean; out: string } {
 
 /** A working Python 3: the py launcher first (the bare `python` on Windows
  *  can be the Microsoft Store stub). */
-function findPython(): [string, ...string[]] | null {
+export function findPython(): [string, ...string[]] | null {
 	const candidates: [string, ...string[]][] = process.platform === "win32" ? [["py", "-3"], ["python"]] : [["python3"], ["python"]];
 	for (const cmd of candidates) {
 		const r = run(cmd[0], [...cmd.slice(1), "-c", "import sys; print(sys.version_info[0])"]);
