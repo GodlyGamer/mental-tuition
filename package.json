@@ -1,13 +1,20 @@
 {
-	"name": "learnharness",
+	"name": "mentaltuition",
 	"version": "0.3.8",
 	"license": "AGPL-3.0-only",
 	"author": {
-		"name": "Amos Blomqvist",
-		"email": "255718537+amosblomqvist@users.noreply.github.com"
+		"name": "Youssouf Diallo",
+		"email": "GodlyGamer@users.noreply.github.com"
 	},
-	"homepage": "https://github.com/amosblomqvist/learnharness",
-	"desktopName": "learnharness.desktop",
+	"contributors": [
+		{
+			"name": "Amos Blomqvist",
+			"email": "255718537+amosblomqvist@users.noreply.github.com",
+			"url": "https://github.com/amosblomqvist/learnharness"
+		}
+	],
+	"homepage": "https://github.com/GodlyGamer/MentalTuition",
+	"desktopName": "mentaltuition.desktop",
 	"description": "An agent harness for learning: adaptive teaching, practice, and a persistent knowledge graph.",
 	"type": "module",
 	"private": true,

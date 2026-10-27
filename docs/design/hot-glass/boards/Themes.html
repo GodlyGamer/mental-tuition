@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Heat across themes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;family=Source+Sans+3:wght@400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+.panel{position:relative;z-index:0}
+.lg{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border:0;border-radius:999px;font-family:'Geist',sans-serif;font-size:14px;line-height:1;cursor:pointer;user-select:none;color:var(--ink);text-shadow:var(--tsh);background:var(--lgbg);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:var(--lgsh);transition:transform 320ms cubic-bezier(.2,.7,.2,1)}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+.lg::before,.lg::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;background:conic-gradient(from calc(var(--ang) + var(--spin)),var(--s1),var(--s2),var(--s3),var(--s4),var(--s5),var(--s6),var(--s7),var(--s1));opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 700ms cubic-bezier(.2,.7,.2,1),--ang 1400ms cubic-bezier(.2,.7,.2,1)}
+.lg::before{inset:-1px;padding:1.5px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg::after{inset:-6px;filter:blur(12px);z-index:-1}
+.lg:hover::before{opacity:.9;animation-play-state:running;transition-duration:300ms,1400ms}
+.lg:hover::after{animation-play-state:running}
+.lg:active{transform:scale(.97);transition-duration:90ms}
+.lg:active::before{opacity:1;--ang:220deg;transition-duration:60ms,1400ms}
+.lg:active::after{opacity:var(--glow);--ang:220deg;transition-duration:60ms,1400ms}
+.lg.on::before{opacity:1;--ang:60deg}
+.lg.on::after{opacity:var(--glow);--ang:60deg}
+.lg.sm{height:36px;padding:0 16px;font-size:12px;cursor:default}
+.lg.pri{width:40px;height:40px;padding:0;border-radius:12px;color:var(--pink);text-shadow:none;background:var(--pribg);box-shadow:var(--prish)}
+.sheet{position:relative;border-radius:20px;padding:7px;display:flex;align-items:center;gap:6px;background:var(--pbg);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:var(--psh)}
+.ph{flex:1;min-width:0;padding:10px;font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.25;color:var(--muted)}
+.cap{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 640px; box-sizing: border-box; padding: 52px 64px; display: flex; flex-direction: column; gap: 28px; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse 110% 100% at 18% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000), #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <span class="cap" style="text-transform: uppercase; color: #9a9a9f">04 · Liquid glass and heat per theme · hover, then press each button</span>
+    <h1 style="margin: 0; font-size: 36px; font-weight: 200; letter-spacing: -0.02em; line-height: 1.15">One material, tuned to each ground.</h1>
+    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #9a9a9f; max-width: 900px">Dark uses the bright spectrum. Light glass is frosted white with a deeper, inkier spectrum so the colour doesn't wash out. Nocturne glass is tinted cobalt, with a pink caustic along the bottom edge and a pastel spectrum that matches its mist. Edges stay monochrome until you touch them.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; flex-grow: 1">
+
+    <div class="panel" style="border-radius: 28px; overflow: hidden; padding: 26px; display: flex; flex-direction: column; gap: 22px; border: 1px solid rgba(255,255,255,.1); background: radial-gradient(ellipse 120% 100% at 20% 0%, #161618, #121214, #0e0e10, #0b0b0c, #080809, #060606, #040404, #020202, #000000), #000000; --ink: rgba(255,255,255,.86); --tsh: 0 1px 0 rgba(255,255,255,.14), 0 -1px 0 rgba(0,0,0,.35), 0 0 14px rgba(255,255,255,.2); --lgbg: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.09) 22%, rgba(255,255,255,.05) 44%, rgba(255,255,255,.03) 62%, rgba(255,255,255,.05) 82%, rgba(255,255,255,.1)), rgba(28,28,32,.5); --lgsh: 0 0 0 1px rgba(0,0,0,.6), inset 0 1.5px .5px -.5px rgba(255,255,255,.8), inset 0 0 0 1px rgba(255,255,255,.09), inset 0 -1.5px 1px -.5px rgba(255,255,255,.4), inset 0 10px 14px -10px rgba(255,255,255,.24), inset 0 -12px 16px -12px rgba(255,255,255,.2), inset 0 0 16px rgba(0,0,0,.28), 0 12px 28px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.4); --s1: #ff5ad1; --s2: #ffb547; --s3: #f4ff7a; --s4: #5dffb0; --s5: #49e6ff; --s6: #6a7bff; --s7: #c86bff; --glow: .55; --pink: #141416; --pribg: linear-gradient(180deg, rgba(255,255,255,.97), rgba(244,244,246,.93) 30%, rgba(226,226,231,.9) 66%, rgba(238,238,242,.94)); --prish: 0 0 0 1px rgba(0,0,0,.6), inset 0 1.5px .5px -.5px #fff, inset 0 -1.5px 1px -.5px rgba(255,255,255,.95), inset 0 -12px 16px -12px rgba(0,0,0,.2), 0 10px 22px rgba(0,0,0,.5); --pbg: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.05) 20%, rgba(255,255,255,.025) 50%, rgba(255,255,255,.06)), rgba(18,18,21,.6); --psh: 0 0 0 1px rgba(0,0,0,.55), inset 0 2px 1px -1px rgba(255,255,255,.6), inset 0 -1.5px 1px -.5px rgba(255,255,255,.22), 0 24px 48px rgba(0,0,0,.55); --muted: #9a9a9f">
+      <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 20px; font-weight: 300; color: #f2f2f3">Dark</span><span class="cap" style="color: #9a9a9f">CLEAR GLASS</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 18px; flex-grow: 1">
+        <button type="button" class="lg">Start session</button>
+        <span class="lg sm on" aria-hidden="true">Pressed</span>
+      </div>
+      <div class="sheet"><span class="ph">What do you want to learn?</span><button type="button" class="lg pri" aria-label="Start session"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button></div>
+    </div>
+
+    <div class="panel" style="border-radius: 28px; overflow: hidden; padding: 26px; display: flex; flex-direction: column; gap: 22px; border: 1px solid rgba(0,0,0,.08); background: radial-gradient(ellipse 120% 100% at 20% 0%, #ffffff, #fbfbfb, #f5f5f5, #efefef, #e9e9ea, #e3e3e4, #dedee0, #dadadc, #d6d6d8), #e4e4e6; --ink: #1a1a1c; --tsh: 0 1px 0 rgba(255,255,255,.9); --lgbg: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.72) 26%, rgba(255,255,255,.5) 56%, rgba(255,255,255,.62) 82%, rgba(255,255,255,.85)), rgba(236,236,240,.4); --lgsh: 0 0 0 1px rgba(0,0,0,.14), inset 0 1.5px .5px -.5px #fff, inset 0 0 0 1px rgba(255,255,255,.7), inset 0 -1.5px 1px -.5px #fff, inset 0 -12px 16px -12px rgba(0,0,0,.08), inset 0 0 14px rgba(0,0,0,.05), 0 10px 24px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.08); --s1: #e0359f; --s2: #f08a00; --s3: #c9c400; --s4: #00b26e; --s5: #0098c8; --s6: #3d4fe0; --s7: #9a3ee0; --glow: .45; --pink: #f2f2f3; --pribg: linear-gradient(180deg, #3a3a3e, #26262a 30%, #1a1a1c 66%, #2a2a2e); --prish: 0 0 0 1px rgba(0,0,0,.4), inset 0 1.5px .5px -.5px rgba(255,255,255,.45), inset 0 -1.5px 1px -.5px rgba(255,255,255,.2), 0 8px 18px rgba(0,0,0,.2); --pbg: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.66) 26%, rgba(255,255,255,.55) 60%, rgba(255,255,255,.75)), rgba(245,245,247,.5); --psh: 0 0 0 1px rgba(0,0,0,.1), inset 0 2px 1px -1px #fff, inset 0 -1.5px 1px -.5px #fff, 0 20px 40px rgba(0,0,0,.1); --muted: #58585d">
+      <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 20px; font-weight: 300; color: #0e0e0f">Light</span><span class="cap" style="color: #58585d">FROSTED WHITE</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 18px; flex-grow: 1">
+        <button type="button" class="lg">Start session</button>
+        <span class="lg sm on" aria-hidden="true">Pressed</span>
+      </div>
+      <div class="sheet"><span class="ph">What do you want to learn?</span><button type="button" class="lg pri" aria-label="Start session"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button></div>
+    </div>
+
+    <div class="panel" style="border-radius: 28px; overflow: hidden; padding: 26px; display: flex; flex-direction: column; gap: 22px; border: 1px solid rgba(180,200,255,.16); background: radial-gradient(ellipse 120% 100% at 20% 0%, #1f329c, #1c2e93, #1a2b8b, #17277f, #142170, #101c5f, #0c164f, #0a1242, #070d33), #070d33; --ink: #eef1ff; --tsh: 0 1px 0 rgba(230,236,255,.18), 0 -1px 0 rgba(2,6,30,.4), 0 0 14px rgba(200,215,255,.3); --lgbg: linear-gradient(180deg, rgba(200,215,255,.22), rgba(170,190,255,.12) 22%, rgba(140,160,255,.06) 50%, rgba(150,170,255,.06) 76%, rgba(255,190,225,.14)), rgba(14,24,84,.45); --lgsh: 0 0 0 1px rgba(2,6,30,.7), inset 0 1.5px .5px -.5px rgba(230,236,255,.85), inset 0 0 0 1px rgba(200,215,255,.12), inset 0 -1.5px 1px -.5px rgba(255,190,225,.5), inset 0 10px 14px -10px rgba(220,230,255,.26), inset 0 -12px 16px -12px rgba(255,170,220,.26), inset 0 0 16px rgba(2,6,30,.3), 0 12px 28px rgba(2,6,30,.55); --s1: #ff8ad8; --s2: #ffc28a; --s3: #f6ffb0; --s4: #8affd0; --s5: #8aeaff; --s6: #a8b4ff; --s7: #d6a0ff; --glow: .6; --pink: #070d33; --pribg: linear-gradient(180deg, #f6f3fb, #ebe6f4 30%, #dcd5ea 66%, #e9e4f2); --prish: 0 0 0 1px rgba(2,6,30,.6), inset 0 1.5px .5px -.5px #fff, inset 0 -1.5px 1px -.5px rgba(255,255,255,.9), inset 0 -12px 16px -12px rgba(7,13,51,.2), 0 10px 22px rgba(2,6,30,.5); --pbg: linear-gradient(180deg, rgba(200,215,255,.14), rgba(170,190,255,.07) 22%, rgba(140,160,255,.04) 55%, rgba(255,190,225,.08)), rgba(14,24,84,.6); --psh: 0 0 0 1px rgba(2,6,30,.6), inset 0 2px 1px -1px rgba(230,236,255,.6), inset 0 -1.5px 1px -.5px rgba(255,190,225,.3), 0 24px 48px rgba(2,6,30,.55); --muted: #aeb8e6">
+      <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 20px; font-weight: 300; color: #eef1ff">Nocturne</span><span class="cap" style="color: #aeb8e6">COBALT TINT · PINK CAUSTIC</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 18px; flex-grow: 1">
+        <button type="button" class="lg">Start session</button>
+        <span class="lg sm on" aria-hidden="true">Pressed</span>
+      </div>
+      <div class="sheet"><span class="ph">What do you want to learn?</span><button type="button" class="lg pri" aria-label="Start session"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button></div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

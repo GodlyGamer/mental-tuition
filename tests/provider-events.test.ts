@@ -1,7 +1,7 @@
 /**
  * provider-events — the raw-wire recorder pins (owner, 2026-10-04).
  *
- * The recorder is env-gated debug tooling (LH_PROVIDER_EVENTS=1); these
+ * The recorder is env-gated debug tooling (MT_PROVIDER_EVENTS=1); these
  * pins hold its mechanics: off = zero surface (no observer, no file),
  * on = one JSONL per chat under data/debug/provider-events/, safe
  * degradation on non-serializable adapter payloads, and the byte cap
@@ -22,12 +22,12 @@ import {
 	providerEventsEnabled,
 } from "../src/agent/provider-events.ts";
 
-const ENV = "LH_PROVIDER_EVENTS";
+const ENV = "MT_PROVIDER_EVENTS";
 const REAL_DIR = path.join(PATHS.debug, "provider-events");
 const REAL_CAP = 20 * 1024 * 1024;
 
 function tmpDir(): string {
-	return fs.mkdtempSync(path.join(os.tmpdir(), "lh-provider-events-"));
+	return fs.mkdtempSync(path.join(os.tmpdir(), "mt-provider-events-"));
 }
 
 function readLines(dir: string, chatId: string): Array<Record<string, unknown>> {

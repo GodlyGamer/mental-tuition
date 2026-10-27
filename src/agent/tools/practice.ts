@@ -24,7 +24,7 @@ import { grepTool } from "./grep.ts";
 import { jobTools, type JobToolContext } from "./jobs.ts";
 import { proberGraphTools, type GraphToolContext } from "./graph.ts";
 import { activeProblemOf } from "../../core/native-messages.ts";
-import type { LhMessage } from "../../core/native-messages.ts";
+import type { MtMessage } from "../../core/native-messages.ts";
 import { concludeResult, invalidInputResult, problemResult } from "../tool-execute.ts";
 import { healEncodedArguments, healToolRecord } from "./heal.ts";
 
@@ -32,7 +32,7 @@ import { healEncodedArguments, healToolRecord } from "./heal.ts";
 /** The record-reading context the gates need (the plan-tools idiom). */
 export interface PracticeToolContext {
 	chatId: string;
-	chatStore: { getChat(id: string): { messages: LhMessage[]; kind?: string } | null };
+	chatStore: { getChat(id: string): { messages: MtMessage[]; kind?: string } | null };
 	/** The WHOLE-graph node list, read fresh per pose (owner round 9 — the
 	 *  mastery-trace contract): targets validate against every proposition,
 	 *  not just the session's picks, so pickless sessions and future

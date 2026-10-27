@@ -22,13 +22,13 @@
 
 import { emit } from "../core/events.ts";
 
-interface LhGlobal {
-	__lhTurnRegistry?: Map<string, number>;
+interface MtGlobal {
+	__mtTurnRegistry?: Map<string, number>;
 }
 
 function registry(): Map<string, number> {
-	const g = globalThis as typeof globalThis & LhGlobal;
-	return (g.__lhTurnRegistry ??= new Map<string, number>());
+	const g = globalThis as typeof globalThis & MtGlobal;
+	return (g.__mtTurnRegistry ??= new Map<string, number>());
 }
 
 const inFlight = registry();

@@ -121,7 +121,7 @@ function SettingsDialog({
 	// backdrop click closes, the dialog body stops propagation.
 	return createPortal(
 		<div
-			className="lh-scrim fixed inset-0 z-50 flex items-center justify-center"
+			className="mt-scrim fixed inset-0 z-50 flex items-center justify-center"
 			data-testid="settings-backdrop"
 			{...backdropDismiss}
 		>
@@ -269,7 +269,7 @@ export function SettingsDialogBody({
 			aria-modal="true"
 			aria-label="Settings"
 			data-testid="settings-dialog"
-			className="settings-dialog-pop flex h-[620px] max-h-[85vh] w-[920px] max-w-[90vw] flex-col overflow-hidden rounded-2xl lh-sheet shadow-xl"
+			className="settings-dialog-pop flex h-[620px] max-h-[85vh] w-[920px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-sheet shadow-xl"
 			onClick={(e) => e.stopPropagation()}
 		>
 			{/* Header — the app's quiet CMU title language. */}

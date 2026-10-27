@@ -24,9 +24,9 @@ import {
 	newUserMessage,
 	projectView,
 	type ChatInput,
-	type LhMarkerMessage,
-	type LhMessage,
-	type LhViewMessage,
+	type MtMarkerMessage,
+	type MtMessage,
+	type MtViewMessage,
 	type LiveExecution,
 	type QuestionAnswerData,
 } from "../src/core";
@@ -101,7 +101,7 @@ async function* sseEvents(reader: ReadableStreamDefaultReader<Uint8Array>): Asyn
 
 /** The dangling question call's tool name (the optimistic answer result's
  *  toolName — the server stamps the same from its own record scan). */
-export function pendingCallTool(messages: readonly LhMessage[], toolCallId: string): string | null {
+export function pendingCallTool(messages: readonly MtMessage[], toolCallId: string): string | null {
 	for (const m of messages) {
 		if ((m as { role?: string }).role !== "assistant") continue;
 		const content = (m as { content?: unknown }).content;
@@ -119,7 +119,7 @@ export function pendingCallTool(messages: readonly LhMessage[], toolCallId: stri
  * content, not the (local) id; only `c_`-prefixed local entries are ever
  * absorbed (live turn content is never dropped).
  */
-export function absorbed(m: LhMessage, record: readonly LhMessage[]): boolean {
+export function absorbed(m: MtMessage, record: readonly MtMessage[]): boolean {
 	if (typeof m.id !== "string" || !m.id.startsWith("c_")) return false;
 	const role = (m as { role?: string }).role;
 	if (role === "user") {
@@ -143,12 +143,12 @@ export function absorbed(m: LhMessage, record: readonly LhMessage[]): boolean {
 		// copy for the whole turn). TOTAL over roles by identity key — a
 		// marker is itself when its customType AND structured details match;
 		// types that never appear optimistically simply never reach here.
-		const marker = m as LhMarkerMessage;
+		const marker = m as MtMarkerMessage;
 		return record.some(
 			(r) =>
 				(r as { role?: string }).role === "custom" &&
-				(r as LhMarkerMessage).customType === marker.customType &&
-				sameDetails((r as LhMarkerMessage).details, marker.details),
+				(r as MtMarkerMessage).customType === marker.customType &&
+				sameDetails((r as MtMarkerMessage).details, marker.details),
 		);
 	}
 	return false;
@@ -161,8 +161,8 @@ function sameDetails(a: unknown, b: unknown): boolean {
 }
 
 export interface SessionState {
-	messages: LhViewMessage[];
-	nativeMessages: LhMessage[];
+	messages: MtViewMessage[];
+	nativeMessages: MtMessage[];
 	status: SessionStatus;
 	error: { message: string } | null;
 	/** Steers sent but not yet drained (composer steering, 2026-10-03):
@@ -184,7 +184,7 @@ export interface SteerQueueItem {
  *  question) keeps its line: honest "waiting" until the next run drains it. */
 export function visibleQueuedSteers(
 	queue: readonly SteerQueueItem[],
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 ): SteerQueueItem[] {
 	const ids = new Set(messages.map((m) => (m as { id?: string }).id));
 	return queue.filter((s) => !ids.has(s.id));
@@ -192,7 +192,7 @@ export function visibleQueuedSteers(
 
 export interface SessionModelOptions extends SessionModelDeps {
 	chatId: string;
-	initialMessages: LhMessage[];
+	initialMessages: MtMessage[];
 	/** Fires on every state change (the hook re-renders). */
 	onChange?: () => void;
 	/** The reattach settled terminal (turn-settled): no turn running, the
@@ -215,8 +215,8 @@ export class SessionModel {
 	// THE STATE: the record (server canon) + the live tail (this client's
 	// optimistic appends and the streaming turn's messages). The tail dies
 	// at every full sync; the write-ahead absorbs the optimistic entries.
-	private base: LhMessage[];
-	private tail: LhMessage[] = [];
+	private base: MtMessage[];
+	private tail: MtMessage[] = [];
 	// The live turn's execution layer (view model mid-turn states):
 	private executions = new Map<string, LiveExecution>();
 	private streamingIds = new Set<string>();
@@ -330,7 +330,7 @@ export class SessionModel {
 			case "message_start":
 			case "message_update":
 			case "message_end": {
-				const message = agent.message as LhMessage & {
+				const message = agent.message as MtMessage & {
 					role?: string;
 					id?: string;
 				};
@@ -346,7 +346,7 @@ export class SessionModel {
 					this.mutate(() => {
 						const idx = this.tail.findIndex((m) => m.id === mid);
 						this.tail =
-							idx === -1 ? [...this.tail, message as LhMessage] : this.tail.with(idx, message as LhMessage);
+							idx === -1 ? [...this.tail, message as MtMessage] : this.tail.with(idx, message as MtMessage);
 					});
 					return true;
 				}
@@ -363,7 +363,7 @@ export class SessionModel {
 				// unambiguous. An explicit message.id (if one ever appears on
 				// the wire) still wins.
 				const id = message.id ?? this.streamingMessageId ?? localId();
-				const withId = { ...message, id } as LhMessage;
+				const withId = { ...message, id } as MtMessage;
 				if (agent.type === "message_start") {
 					this.streamingMessageId = id;
 					this.streamingIds.add(id);
@@ -413,7 +413,7 @@ export class SessionModel {
 					this.tail = [
 						...this.tail,
 						...(agent.toolResults as ToolResultMessage[]).map(
-							(r) => ({ ...r, id: localId() }) as unknown as LhMessage,
+							(r) => ({ ...r, id: localId() }) as unknown as MtMessage,
 						),
 					];
 				});
@@ -498,7 +498,7 @@ export class SessionModel {
 					signal: controller.signal,
 				});
 				if (recordRes.ok) {
-					const record = (await recordRes.json()) as { messages?: LhMessage[] };
+					const record = (await recordRes.json()) as { messages?: MtMessage[] };
 					if (Array.isArray(record.messages)) {
 						this.mutate(() => {
 							this.base = record.messages!;
@@ -542,7 +542,7 @@ export class SessionModel {
 		// The optimistic appends — exactly the messages the server's
 		// write-ahead will persist (inputAppends), with LOCAL ids so
 		// adoption can tell them from the record's absorbed copies.
-		const optimistic: LhMessage[] = [];
+		const optimistic: MtMessage[] = [];
 		if (input.type === "text") optimistic.push({ ...newUserMessage(input.text, input.images), id: localId() });
 		else if (input.type === "thinking") {
 			// The practice submissions (2026-10-04): the marker lands
@@ -711,7 +711,7 @@ export class SessionModel {
 	}
 
 	/** Full snapshot swap (the idle settle sync — server canon). */
-	setMessages(record: LhMessage[]): void {
+	setMessages(record: MtMessage[]): void {
 		this.mutate(() => {
 			this.base = record;
 			this.tail = [];
@@ -726,7 +726,7 @@ export class SessionModel {
 	 * optimistic entries the record has absorbed (their server-stamped
 	 * copies just landed; without this the input bubble would double).
 	 */
-	adoptRecord(record: LhMessage[]): void {
+	adoptRecord(record: MtMessage[]): void {
 		const recordIds = new Set(record.map((m) => (m as { id?: string }).id));
 		const baseAbsorbed = this.base.some((m) => !recordIds.has((m as { id?: string }).id));
 		if (baseAbsorbed) return; // not a pure append — the idle full sync is the net

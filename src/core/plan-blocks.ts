@@ -17,7 +17,7 @@
 
 import type { PlanBlockData, PlanTree } from "./contracts.ts";
 import { derivePlanStatusesLh } from "./contracts.ts";
-import type { LhMessage } from "./native-messages.ts";
+import type { MtMessage } from "./native-messages.ts";
 import { newPlanBlockMessage } from "./native-messages.ts";
 import type { ToolResultMessage } from "@earendil-works/pi-ai";
 
@@ -34,7 +34,7 @@ export interface PlanBlockPart {
  *  EMISSION time from the transcript — the block never re-derives. Wave D:
  *  the derivation reads the NATIVE transcript (quiz CALLS only — results
  *  feed nothing, contracts/plan.ts derivePlanStatusesLh). */
-function snapshot(tree: PlanTree, messages: readonly LhMessage[]): PlanBlockData {
+function snapshot(tree: PlanTree, messages: readonly MtMessage[]): PlanBlockData {
 	const statuses = derivePlanStatusesLh(tree, messages);
 	return {
 		kind: "full",
@@ -51,7 +51,7 @@ function snapshot(tree: PlanTree, messages: readonly LhMessage[]): PlanBlockData
 
 /** The record's plan-block markers, keyed by the plan_init call they
  *  present — the idempotency set for emission. */
-export function emittedPlanBlockCalls(messages: readonly LhMessage[]): Set<string> {
+export function emittedPlanBlockCalls(messages: readonly MtMessage[]): Set<string> {
 	const out = new Set<string>();
 	for (const m of messages) {
 		if ((m as { role?: string }).role !== "custom") continue;
@@ -73,11 +73,11 @@ export function emittedPlanBlockCalls(messages: readonly LhMessage[]): Set<strin
  *  derivation reads.
  */
 export function planBlocksFor(
-	record: readonly LhMessage[],
-	newMessages: readonly LhMessage[],
+	record: readonly MtMessage[],
+	newMessages: readonly MtMessage[],
 	tree: PlanTree | null | undefined,
-	transcript: readonly LhMessage[],
-): LhMessage[] {
+	transcript: readonly MtMessage[],
+): MtMessage[] {
 	if (!tree || tree.nodes.length === 0) return [];
 	const emitted = emittedPlanBlockCalls(record);
 	let last: { toolCallId: string } | null = null;

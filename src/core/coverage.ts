@@ -22,7 +22,7 @@
 import { createHash } from "node:crypto";
 
 import type { CoverageEntry } from "./contracts/graph.ts";
-import type { LhMessage } from "./native-messages.ts";
+import type { MtMessage } from "./native-messages.ts";
 
 export type { CoverageEntry };
 
@@ -45,7 +45,7 @@ function textOf(content: unknown): string[] {
  * message id — part of the hash input, so the same prose in two messages
  * is two slots (per-message coverage).
  */
-export function messageViewLines(message: LhMessage, mid: string): string[] {
+export function messageViewLines(message: MtMessage, mid: string): string[] {
 	const lines: string[] = [];
 	if ((message as { role?: string }).role !== "assistant") return lines;
 	for (const text of textOf((message as { content: unknown }).content)) {
@@ -60,7 +60,7 @@ export function messageViewLines(message: LhMessage, mid: string): string[] {
  * doctrine survives the ruling in this one function pair), rendered
  * without the provenance prefix: plain paragraphs.
  */
-export function teacherProseBlocks(messages: ReadonlyArray<LhMessage>): string[] {
+export function teacherProseBlocks(messages: ReadonlyArray<MtMessage>): string[] {
 	const out: string[] = [];
 	for (const message of messages) {
 		if ((message as { role?: string }).role !== "assistant") continue;
@@ -79,7 +79,7 @@ export function viewTokens(lines: string[]): number {
  * teacher prose, with the message id as the tag). Changes exactly when
  * the teacher prose of the message changes — nothing else can re-open it.
  */
-export function messageFingerprint(message: LhMessage): string {
+export function messageFingerprint(message: MtMessage): string {
 	const h = createHash("sha256");
 	h.update(JSON.stringify([(message as { role?: string }).role, messageViewLines(message, message.id)]));
 	return h.digest("hex");
@@ -87,14 +87,14 @@ export function messageFingerprint(message: LhMessage): string {
 
 /** One message's coverage-relevant projection. */
 export interface CoverageSlot {
-	message: LhMessage;
+	message: MtMessage;
 	fp: string;
 	tokens: number;
 }
 
 /** Fingerprint a whole transcript, in order (used by the trigger, the run,
  *  and the coverage view — one derivation everywhere). */
-export function coverageSlots(messages: ReadonlyArray<LhMessage>): CoverageSlot[] {
+export function coverageSlots(messages: ReadonlyArray<MtMessage>): CoverageSlot[] {
 	return messages.map((message) => ({ message, fp: messageFingerprint(message), tokens: viewTokens(messageViewLines(message, message.id)) }));
 }
 
@@ -113,7 +113,7 @@ export function coveredSet(entries: ReadonlyArray<CoverageEntry>, chatId: string
  *  entirely: the extractor can never see them, so they are neither covered
  *  nor uncovered. */
 export function coverageOf(
-	messages: ReadonlyArray<LhMessage>,
+	messages: ReadonlyArray<MtMessage>,
 	entries: ReadonlyArray<CoverageEntry>,
 	chatId: string,
 ): {

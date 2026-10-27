@@ -1,5 +1,5 @@
 import type { GraphNode } from "./contracts/graph.ts";
-import type { LhViewMessage } from "./view.ts";
+import type { MtViewMessage } from "./view.ts";
 
 /** Message-granular graph links (owner, 2026-10-13). Persisted provenance and
  * native IDs already carry everything needed; only the render seam is new. */
@@ -33,7 +33,7 @@ export function textPartMessageId(partId: string | undefined): string | null {
 
 /** One DOM anchor per native teacher message, at its first non-empty prose
  * block. Empty text blocks and intervening tools/thinking do not steal it. */
-export function firstSourceTextParts(messages: readonly LhViewMessage[]): Map<string, string> {
+export function firstSourceTextParts(messages: readonly MtViewMessage[]): Map<string, string> {
 	const first = new Map<string, string>();
 	for (const message of messages) {
 		if (message.role !== "assistant") continue;

@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { BookOpenIcon, ChevronDownIcon, PlusIcon } from "lucide-react";
 import { isModuleCode } from "@/src/core";
 
-const STORAGE_KEY = "lh-study-module";
+const STORAGE_KEY = "mt-study-module";
 
 export function useStudyModule(): [string | null, (code: string | null) => void] {
 	const [module, setModule] = useState<string | null>(null);

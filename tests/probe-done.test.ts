@@ -13,7 +13,7 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 import { probeDoneTool } from "../src/agent/tools/probe.ts";
 import type { SteerMessage } from "../src/core/contracts.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { HANDOFF_TEXT } from "../src/core/contracts.ts";
 import { chatStore } from "../src/store/chats.ts";
 import { PATHS } from "../config.ts";
@@ -47,7 +47,7 @@ const ASSESSMENT = {
 
 /** A native assistant message carrying one tool call (the minimal fixture
  *  shape the scans read — role assistant, content blocks). */
-function assistantWithCall(id: string, toolName: string, args: unknown): LhMessage {
+function assistantWithCall(id: string, toolName: string, args: unknown): MtMessage {
 	return {
 		id,
 		role: "assistant",

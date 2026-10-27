@@ -11,7 +11,7 @@
  *   - The type scale below is a declared modular ladder (each --text-* token
  *     carries its own line-height); components never invent pixel sizes.
  *   - Radii ladder is 4 / 8 / 12 / 16px multiples of the 4px base.
- *   - Emphasis colors live in tokens (--lh-ink-strong / --lh-ink-italic) so a
+ *   - Emphasis colors live in tokens (--mt-ink-strong / --mt-ink-italic) so a
  *     future settings UI reassigns them (configurable per the owner).
  */
 
@@ -34,7 +34,7 @@
    first; the app's shadcn tokens (--background, --card, …) map onto them,
    so every existing utility picks the skin up with no component edits.
    Surfaces: --card is a translucent glass fill (inline cards sit straight on
-   the ground); floating surfaces add blur via .lh-glass / the floating-card
+   the ground); floating surfaces add blur via .mt-glass / the floating-card
    rule further down. */
 :root,
 :root[data-theme="dark"] {
@@ -85,14 +85,14 @@
 	--ring: var(--silver);
 	/* Emphasis inks default to the regular text color; the appearance
 	   settings override them. */
-	--lh-ink-strong: var(--foreground);
-	--lh-ink-italic: var(--foreground);
+	--mt-ink-strong: var(--foreground);
+	--mt-ink-italic: var(--foreground);
 	/* THE READING SIZE = the ladder's 16px rung (--text-lg). Can't be
 	   var()-linked: @theme inline inlines literals into utilities without
 	   emitting runtime vars — so this is the one documented duplication. */
-	--lh-prose-size: 16px;
-	--lh-prose-leading: 1.5;
-	--lh-heading-weight: 700;
+	--mt-prose-size: 16px;
+	--mt-prose-leading: 1.5;
+	--mt-heading-weight: 700;
 }
 
 :root[data-theme="light"] {
@@ -144,7 +144,7 @@
 
 /* CMU Serif bold (titles) — bundled local file, no CDN dependency. */
 @font-face {
-	font-family: "lh-cmu";
+	font-family: "mt-cmu";
 	src: url("/fonts/cmunbx.ttf") format("truetype");
 	font-weight: 700;
 	font-style: normal;
@@ -168,10 +168,10 @@
 	   distinction with no visible difference, and 10px sits at the mono
 	   legibility floor; quiet labels get their quiet from color +
 	   tracking, not a notch of size. Reading prose = the 16px rung via
-	   --lh-prose-size.) */
+	   --mt-prose-size.) */
 	/* --font-title lives in the NON-inline @theme below: inline tokens get
 	   their literal values baked into the utilities (.font-title{font-family:
-	   lh-cmu,serif}), which made the appearance "session names in serif"
+	   mt-cmu,serif}), which made the appearance "session names in serif"
 	   toggle write a runtime --font-title no consumer ever read (owner, fix
 	   wave: toggle looked dead). Non-inline emits :root { --font-title: … }
 	   and the utility reads var(--font-title) — appearance overrides win. */
@@ -241,14 +241,14 @@ body {
 /* ── Liquid glass ────────────────────────────────────────────────────────
    The ground: one faint light from above, fine grain over it (mounted once
    in app/layout.tsx). Glass surfaces blur whatever passes beneath them. */
-.lh-ground {
+.mt-ground {
 	position: fixed;
 	inset: 0;
 	z-index: -1;
 	pointer-events: none;
 	background: var(--spotlight-top), var(--void);
 }
-.lh-ground::after {
+.mt-ground::after {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -260,7 +260,7 @@ body {
 }
 
 /* A floating glass surface (docks, composer, menus, pills). */
-.lh-glass {
+.mt-glass {
 	border: 1px solid var(--glass-edge);
 	background-color: var(--glass-fill);
 	background-image: var(--glass-sheen);
@@ -268,13 +268,13 @@ body {
 	backdrop-filter: blur(var(--blur-glass)) saturate(140%);
 	box-shadow: var(--shadow-glass);
 }
-.lh-glass-sm {
+.mt-glass-sm {
 	-webkit-backdrop-filter: blur(var(--blur-glass-sm)) saturate(140%);
 	backdrop-filter: blur(var(--blur-glass-sm)) saturate(140%);
 	box-shadow: var(--shadow-glass-sm);
 }
 /* A sheet: the denser glass dialogs and big panels sit on. */
-.lh-sheet {
+.mt-sheet {
 	border: 1px solid var(--glass-edge);
 	background-color: var(--sheet);
 	background-image: var(--glass-sheen);
@@ -283,14 +283,14 @@ body {
 	box-shadow: var(--shadow-glass);
 }
 /* The sidebar: a full-height glass pane, edge on the content side only. */
-.lh-glass-pane {
+.mt-glass-pane {
 	border-right: 1px solid var(--line);
 	background-color: var(--glass-fill);
 	-webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
 	backdrop-filter: blur(var(--blur-glass)) saturate(140%);
 }
 /* Dialog backdrops: the scrim plus a soft blur of the page. */
-.lh-scrim {
+.mt-scrim {
 	background: var(--scrim);
 	-webkit-backdrop-filter: blur(6px);
 	backdrop-filter: blur(6px);
@@ -320,13 +320,13 @@ body {
 }
 
 /* The theme switch (Settings → Appearance): three swatches in a glass pill. */
-.lh-theme-switch {
+.mt-theme-switch {
 	display: inline-flex;
 	gap: 2px;
 	padding: 3px;
 	border-radius: 999px;
 }
-.lh-theme-switch button {
+.mt-theme-switch button {
 	display: grid;
 	place-items: center;
 	width: 30px;
@@ -337,53 +337,53 @@ body {
 	background: none;
 	cursor: pointer;
 }
-.lh-swatch {
+.mt-swatch {
 	width: 14px;
 	height: 14px;
 	border-radius: 50%;
 	border: 1px solid var(--line);
 	transition: transform 0.15s ease;
 }
-.lh-theme-switch button[aria-pressed="true"] .lh-swatch {
+.mt-theme-switch button[aria-pressed="true"] .mt-swatch {
 	box-shadow: 0 0 0 2px var(--void), 0 0 0 3px var(--silver);
 }
-.lh-theme-switch button:hover .lh-swatch {
+.mt-theme-switch button:hover .mt-swatch {
 	transform: scale(1.12);
 }
-.lh-swatch--dark {
+.mt-swatch--dark {
 	background: #0b0b0c;
 }
-.lh-swatch--light {
+.mt-swatch--light {
 	background: #f4f4f4;
 }
-.lh-swatch--nocturne {
+.mt-swatch--nocturne {
 	background: #1c33a6;
 }
 
-/* Teaching prose (the markdown renderer's container gets .lh-prose):
+/* Teaching prose (the markdown renderer's container gets .mt-prose):
    Source Sans 3 with the size/leading tokens; emphasis color bound to
    the settings-ready tokens. */
-.lh-prose {
+.mt-prose {
 	font-family: var(--font-prose);
-	font-size: var(--lh-prose-size);
-	line-height: var(--lh-prose-leading);
+	font-size: var(--mt-prose-size);
+	line-height: var(--mt-prose-leading);
 }
 
 /* Session names: Geist light with tight tracking (the Mentaljineer
    display register); the serif toggle swaps in CMU bold through the
-   --lh-title-* vars (components/settings/appearance.tsx). */
+   --mt-title-* vars (components/settings/appearance.tsx). */
 .font-title {
-	font-weight: var(--lh-title-weight, 300);
-	letter-spacing: var(--lh-title-tracking, -0.02em);
+	font-weight: var(--mt-title-weight, 300);
+	letter-spacing: var(--mt-title-tracking, -0.02em);
 }
 
-.lh-prose :where(strong, b) {
-	color: var(--lh-ink-strong);
+.mt-prose :where(strong, b) {
+	color: var(--mt-ink-strong);
 	font-weight: 700;
 }
 
-.lh-prose :where(em, i) {
-	color: var(--lh-ink-italic);
+.mt-prose :where(em, i) {
+	color: var(--mt-ink-italic);
 }
 
 /* Markdown lists indent from the prose edge (owner ask, 2026-09-24):
@@ -392,7 +392,7 @@ body {
    [li_&]). 24px — the same measure as that nested-case pl-6 — pulls
    the whole list right as a block. Unlayered CSS beats the utility
    layer; :where keeps specificity zero. */
-.lh-prose :where(ul, ol) {
+.mt-prose :where(ul, ol) {
 	padding-left: 1.5rem;
 }
 
@@ -401,21 +401,21 @@ body {
    Source Sans 3 axis spans 200–900 (next/font loads the full range), so
    900 draws the real Black cut. Unlayered CSS beats the utility layer;
    :where keeps specificity zero. Chrome titles (CMU Serif) don't live
-   under .lh-prose and stay untouched. */
-.lh-prose :where(h1, h2, h3, h4, h5, h6) {
-	font-weight: var(--lh-heading-weight, 700);
+   under .mt-prose and stay untouched. */
+.mt-prose :where(h1, h2, h3, h4, h5, h6) {
+	font-weight: var(--mt-heading-weight, 700);
 }
 
-/* lh-input (owner, typography round 2): lh-prose's 1.5 READING leading
+/* mt-input (owner, typography round 2): mt-prose's 1.5 READING leading
    makes typing carets tower over the glyphs — the caret fills the line
    box (24px at 16px text, ~2× the glyph height). Inputs are not
    paragraphs: a tighter 1.25 leading brings the caret to the font-metric
    floor (~20px, as close to the glyphs as Chromium will draw it) while
    wrapped lines in growing textareas still read fine. Rendered prose keeps
    1.5 — the two share family and size, they differ only in leading. */
-.lh-input {
+.mt-input {
 	font-family: var(--font-prose);
-	font-size: var(--lh-prose-size);
+	font-size: var(--mt-prose-size);
 	line-height: 1.25;
 }
 
@@ -536,7 +536,7 @@ body {
 	   visibly lagged the 16px chat text at streamdown's 12.5px text-sm).
 	   Unlayered CSS beats the cells' own utility-layer text-sm, and the
 	   :where keeps specificity zero — the override wins on layering alone. */
-	font-size: var(--lh-prose-size);
+	font-size: var(--mt-prose-size);
 }
 [data-streamdown="table"] :where(th, td) {
 	font-size: inherit;
@@ -560,7 +560,7 @@ body {
    overriding mermaid's inline max-width cap. Later + same-specificity
    than the column rule above, so the !important tie breaks our way; the
    overlay's svg never sits under [data-streamdown="mermaid"] anyway. */
-[data-lh-overlay-chart] svg {
+[data-mt-overlay-chart] svg {
 	max-width: none !important;
 	width: 100% !important;
 	height: auto !important;
@@ -661,26 +661,26 @@ body {
    Electron merged chrome (owner, 2026-09-17). The system title bar is
    hidden (macOS hiddenInset; Windows/Linux hidden + native controls
    overlay in electron/main.cjs); the app's 60px bands are the drag surface.
-   Everything here is inert in the plain browser — it keys off <html class="lh-electron">, which
+   Everything here is inert in the plain browser — it keys off <html class="mt-electron">, which
    SidebarProvider sets after mount when it detects the Electron shell.
 
-   - .lh-drag        window-drag region — on a dedicated mask div in
+   - .mt-drag        window-drag region — on a dedicated mask div in
                        home.tsx placed FIRST in the page DOM (the mask
                        resolves by DOM order, not z-index: no-drag subtracts
                        only regions added earlier in the tree)
-   - .lh-no-drag     carve-out for interactive elements inside a drag band
+   - .mt-no-drag     carve-out for interactive elements inside a drag band
                        (native interactive elements carve out AUTOMATICALLY —
                        see the auto carve-out rule below; manual use is for
                        clickable non-natives only)
-   - .lh-lights-gutter  the sidebar LH band's traffic-light gutter: lights
+   - .mt-lights-gutter  the sidebar LH band's traffic-light gutter: lights
                        end at x≈68, the wordmark starts at 80px (5rem)
-   - .lh-closed-toggle  same gutter for the sidebar toggle when the sidebar
+   - .mt-closed-toggle  same gutter for the sidebar toggle when the sidebar
                        is closed — the lights are static, the toggle moves
    ───────────────────────────────────────────────────────────────────────── */
-.lh-electron .lh-drag {
+.mt-electron .mt-drag {
 	-webkit-app-region: drag;
 }
-.lh-electron .lh-no-drag {
+.mt-electron .mt-no-drag {
 	-webkit-app-region: no-drag;
 }
 /* THE AUTO CARVE-OUT (owner standardization ruling, 2026-09-29 night):
@@ -688,45 +688,45 @@ body {
    a no-drag island — "draggable anywhere that is not a clickable
    element" becomes structural, not per-child discipline. TopBar
    contents can differ arbitrarily; buttons/inputs/links always stay
-   clickable with zero opt-out bookkeeping. Manual .lh-no-drag remains
+   clickable with zero opt-out bookkeeping. Manual .mt-no-drag remains
    only for clickable NON-native elements (spans/divs with onClick —
    e.g. the graph chrome's control column). */
-.lh-electron .lh-drag :is(button, input, textarea, select, a, summary, [contenteditable]) {
+.mt-electron .mt-drag :is(button, input, textarea, select, a, summary, [contenteditable]) {
 	-webkit-app-region: no-drag;
 }
 /* 92px = measured lights' right edge (~75pt) + the lights' own 16px
    inset from the window edge — comfortable, symmetric air (owner).
    PHYSICAL-CONSTANT under zoom (owner round 7, 2026-10-05): ⌘±/⌘0 scale
    every CSS px by the zoomFactor while the native lights never move —
-   so these lengths DIVIDE by --lh-zoom (published by the renderer from
-   the lh:zoom IPC) to render at the same physical size at every zoom.
+   so these lengths DIVIDE by --mt-zoom (published by the renderer from
+   the mt:zoom IPC) to render at the same physical size at every zoom.
    The graph button stays glued next to the lights zoomed in; nothing
    slides under them zoomed out. Default 1 until the first push lands. */
-.lh-electron {
-	--lh-zoom: 1;
+.mt-electron {
+	--mt-zoom: 1;
 }
-.lh-electron[data-lh-platform="darwin"] .lh-lights-gutter {
-	padding-left: calc(92px / var(--lh-zoom));
+.mt-electron[data-mt-platform="darwin"] .mt-lights-gutter {
+	padding-left: calc(92px / var(--mt-zoom));
 }
-.lh-electron[data-lh-platform="darwin"] .lh-closed-toggle {
-	margin-left: calc(92px / var(--lh-zoom));
+.mt-electron[data-mt-platform="darwin"] .mt-closed-toggle {
+	margin-left: calc(92px / var(--mt-zoom));
 }
 
 /* Windows/Linux Window Controls Overlay: Chromium publishes the usable
    titlebar rectangle in CSS coordinates (including resize/zoom changes).
    Reserve the native buttons' actual right-side extent, no fixed width
    and no second zoom division. The env fallbacks make fullscreen/absent
-   overlay a zero gutter. Keep this independent of .lh-drag: rename mode
+   overlay a zero gutter. Keep this independent of .mt-drag: rename mode
    still needs to clear the native buttons when dragging is disabled. */
-.lh-electron:is([data-lh-platform="win32"], [data-lh-platform="linux"]) {
-	--lh-wco-right: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)));
+.mt-electron:is([data-mt-platform="win32"], [data-mt-platform="linux"]) {
+	--mt-wco-right: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)));
 }
-.lh-electron .lh-wco-gutter {
-	padding-right: calc(0.75rem + var(--lh-wco-right, 0px));
+.mt-electron .mt-wco-gutter {
+	padding-right: calc(0.75rem + var(--mt-wco-right, 0px));
 }
-.lh-electron .lh-wco-floating {
-	right: calc(0.5rem + var(--lh-wco-right, 0px));
-	max-width: max(0px, calc(100% - 5.5rem - var(--lh-wco-right, 0px)));
+.mt-electron .mt-wco-floating {
+	right: calc(0.5rem + var(--mt-wco-right, 0px));
+	max-width: max(0px, calc(100% - 5.5rem - var(--mt-wco-right, 0px)));
 }
 
 /* --font-title deliberately NOT @theme inline (see comment above): the
@@ -741,7 +741,7 @@ body {
    dock-variant/settings-pop taste). Nothing on update, nothing on
    unmount. Applied by the unified ThinkingBlock and the practice
    cards; honors reduced-motion by appearing. */
-@keyframes lh-card-enter {
+@keyframes mt-card-enter {
 	from {
 		opacity: 0;
 		transform: translateY(4px);
@@ -752,21 +752,21 @@ body {
 	}
 }
 
-.lh-card-enter {
-	animation: lh-card-enter 120ms ease-out;
+.mt-card-enter {
+	animation: mt-card-enter 120ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.lh-card-enter {
+	.mt-card-enter {
 		animation: none;
 	}
 }
 
 /* Source-message arrival: a brief, static theme-colored spotlight. */
-.lh-source-passage {
+.mt-source-passage {
 	scroll-margin-top: 1rem;
 }
-.lh-source-highlight {
+.mt-source-highlight {
 	background-color: var(--accent);
 	outline: 1px solid var(--border);
 	border-radius: 0.25rem;

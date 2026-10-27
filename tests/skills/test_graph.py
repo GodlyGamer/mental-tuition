@@ -11,7 +11,7 @@ import tempfile
 import unittest
 
 sys.dont_write_bytecode = True
-SCRIPTS = Path(__file__).resolve().parents[2] / "skills" / "learnharness" / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[2] / "skills" / "mentaltuition" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import graph
 
@@ -311,14 +311,14 @@ class GraphTests(unittest.TestCase):
             self.assertEqual(path.read_text(encoding="utf-8"), json.dumps(node("n_external")))
 
     def test_cli_root_options_order_missing_root_and_no_bytecode(self):
-        env = {**os.environ, "LH_DATA_DIR": str(GOLDEN)}
+        env = {**os.environ, "MT_DATA_DIR": str(GOLDEN)}
         env.pop("PYTHONDONTWRITEBYTECODE", None)
         before = snapshot(self.root)
         caches_before = set(SCRIPTS.rglob("*.pyc"))
         command = [sys.executable, str(SCRIPTS / "graph.py")]
         completed = subprocess.run([*command, "--data-dir", str(self.root), "--format", "json", "sessions"], env=env, capture_output=True, text=True, check=False)
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertEqual(json.loads(completed.stdout), {"data_dir": str(self.root.resolve()), "records": []})  # Never falls back to repo/LH_DATA_DIR.
+        self.assertEqual(json.loads(completed.stdout), {"data_dir": str(self.root.resolve()), "records": []})  # Never falls back to repo/MT_DATA_DIR.
         bad = subprocess.run([*command, "sessions", "--data-dir", str(self.root)], env=env, capture_output=True, text=True, check=False)
         self.assertNotEqual(bad.returncode, 0)
         absent = subprocess.run([*command, "--data-dir", str(self.root / "missing"), "sessions"], env=env, capture_output=True, text=True, check=False)

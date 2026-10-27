@@ -15,7 +15,7 @@ function withPayload(test: (fixture: {
 	write: (relative: string, content?: string) => void;
 	run: () => ReturnType<typeof spawnSync>;
 }) => void) {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), "lh-payload-test-"));
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "mt-payload-test-"));
 	const write = (relative: string, content = "fixture") => {
 		const target = path.join(root, relative);
 		fs.mkdirSync(path.dirname(target), { recursive: true });

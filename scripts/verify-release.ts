@@ -12,22 +12,23 @@
  * builder (app-builder-lib 26.15.3) — these are the artifacts it actually
  * emits for this repo's electron-builder.yml, not pattern guesses:
  *
- *   mac (dmg + zip, arm64; no user artifactName there):
- *     dmg    LearnHarness-<v>-arm64.dmg       + .blockmap (createBlockmap)
- *     zip    LearnHarness-<v>-arm64-mac.zip   + .blockmap (createBlockmap;
+ *   mac (dmg + zip, arm64; dmg.artifactName "MentalTuition-${version}-${arch}.${ext}",
+ *        mac.artifactName "MentalTuition-${version}-${arch}-${os}.${ext}" for the zip):
+ *     dmg    MentalTuition-<v>-arm64.dmg       + .blockmap (createBlockmap)
+ *     zip    MentalTuition-<v>-arm64-mac.zip   + .blockmap (createBlockmap;
  *            Squirrel.Mac updates from the ZIP — it IS the updater payload)
  *     feed   latest-mac.yml — files[0] is the ZIP (writeUpdateInfoFiles
  *            sorts zip first) and the legacy top-level path/sha512 point
  *            at it.
- *   win (nsis x64; artifactName "${productName}-${version}-${arch}-setup.${ext}"):
- *     exe    LearnHarness-<v>-x64-setup.exe   + .blockmap (createBlockmap)
+ *   win (nsis x64; artifactName "MentalTuition-${version}-${arch}-setup.${ext}"):
+ *     exe    MentalTuition-<v>-x64-setup.exe   + .blockmap (createBlockmap)
  *     feed   latest.yml — a single file entry, the exe.
- *   linux (AppImage + deb, x64; artifactName "${productName}-${version}-${arch}.${ext}"
+ *   linux (AppImage + deb, x64; artifactName "MentalTuition-${version}-${arch}.${ext}"
  *            is user-forced at the linux level, so it overrides BOTH targets'
  *            default name formats, and ${arch} expands per target ext:
  *            x64→x86_64 for AppImage, x64→amd64 for deb):
- *     image  LearnHarness-<v>-x86_64.AppImage (no blockmap in 26.15.3)
- *     deb    LearnHarness-<v>-amd64.deb       (no blockmap)
+ *     image  MentalTuition-<v>-x86_64.AppImage (no blockmap in 26.15.3)
+ *     deb    MentalTuition-<v>-amd64.deb       (no blockmap)
  *     feed   latest-linux.yml — the AppImage and deb entries merged by
  *            writeUpdateInfoFiles (order not deterministic; checked as a set).
  *
@@ -104,8 +105,11 @@ type Issues = Issue[];
 // Version + expected assets
 // ---------------------------------------------------------------------------
 
-/** Verified product name spelled into every artifact (electron-builder.yml productName). */
-const PRODUCT_NAME = "MentalTuition";
+/** electron-builder.yml productName (the display name, with a space). */
+const PRODUCT_NAME = "Mental Tuition";
+/** The space-free name every artifactName spells literally (2026-10-27):
+ *  GitHub rewrites spaces in asset names, which would break the feeds. */
+const ARTIFACT_PREFIX = "MentalTuition";
 
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 
@@ -119,17 +123,17 @@ export function checkVersion(version: unknown): { ok: true; version: string } | 
 /** The exact asset set the installed builder emits for this repo's config. */
 export function expectedAssets(version: string): ExpectedAssets {
 	const mac = {
-		dmg: `${PRODUCT_NAME}-${version}-arm64.dmg`,
-		zip: `${PRODUCT_NAME}-${version}-arm64-mac.zip`,
+		dmg: `${ARTIFACT_PREFIX}-${version}-arm64.dmg`,
+		zip: `${ARTIFACT_PREFIX}-${version}-arm64-mac.zip`,
 		feed: "latest-mac.yml",
 	};
 	const win = {
-		exe: `${PRODUCT_NAME}-${version}-x64-setup.exe`,
+		exe: `${ARTIFACT_PREFIX}-${version}-x64-setup.exe`,
 		feed: "latest.yml",
 	};
 	const linux = {
-		appImage: `${PRODUCT_NAME}-${version}-x86_64.AppImage`,
-		deb: `${PRODUCT_NAME}-${version}-amd64.deb`,
+		appImage: `${ARTIFACT_PREFIX}-${version}-x86_64.AppImage`,
+		deb: `${ARTIFACT_PREFIX}-${version}-amd64.deb`,
 		feed: "latest-linux.yml",
 	};
 	// Sidecar differential-update blockmaps: emitted for dmg, mac zip and
@@ -259,7 +263,7 @@ export function verifyConfigAssumptions(config: unknown, pkg: unknown): { ok: tr
 	const errors: Issues = [];
 	const bad = (message: string) => errors.push(message);
 	if (!isPlainObject(pkg) || typeof pkg.version !== "string") bad("package.json has no string version");
-	if (!isPlainObject(pkg) || pkg.name !== "learnharness") bad("package.json name is no longer \"learnharness\"");
+	if (!isPlainObject(pkg) || pkg.name !== "mentaltuition") bad("package.json name is no longer \"mentaltuition\"");
 	if (!isPlainObject(config)) {
 		return { ok: false, errors: ["electron-builder.yml did not parse to a mapping", ...errors] };
 	}
@@ -269,14 +273,19 @@ export function verifyConfigAssumptions(config: unknown, pkg: unknown): { ok: tr
 		JSON.stringify(actual) === JSON.stringify(expected);
 	if (!isPlainObject(config.mac)) bad("mac section missing");
 	else {
-		if (config.mac.artifactName != null) bad("mac.artifactName set — expected names no longer hold");
+		if (config.mac.artifactName !== "MentalTuition-${version}-${arch}-${os}.${ext}") {
+			bad(`mac.artifactName changed (${JSON.stringify(config.mac.artifactName)}) — expected names no longer hold`);
+		}
 		if (!sameTargets(config.mac.target, [{ target: "dmg", arch: ["arm64"] }, { target: "zip", arch: ["arm64"] }])) {
 			bad(`mac.target changed (${JSON.stringify(config.mac.target)}) — expected names no longer hold`);
 		}
 	}
+	if (!isPlainObject(config.dmg) || config.dmg.artifactName !== "MentalTuition-${version}-${arch}.${ext}") {
+		bad(`dmg.artifactName changed (${JSON.stringify(isPlainObject(config.dmg) ? config.dmg.artifactName : undefined)}) — expected names no longer hold`);
+	}
 	if (!isPlainObject(config.win)) bad("win section missing");
 	else {
-		if (config.win.artifactName !== "${productName}-${version}-${arch}-setup.${ext}") {
+		if (config.win.artifactName !== "MentalTuition-${version}-${arch}-setup.${ext}") {
 			bad(`win.artifactName changed (${JSON.stringify(config.win.artifactName)}) — expected names no longer hold`);
 		}
 		if (!sameTargets(config.win.target, [{ target: "nsis", arch: ["x64"] }])) {
@@ -285,7 +294,7 @@ export function verifyConfigAssumptions(config: unknown, pkg: unknown): { ok: tr
 	}
 	if (!isPlainObject(config.linux)) bad("linux section missing");
 	else {
-		if (config.linux.artifactName !== "${productName}-${version}-${arch}.${ext}") {
+		if (config.linux.artifactName !== "MentalTuition-${version}-${arch}.${ext}") {
 			bad(`linux.artifactName changed (${JSON.stringify(config.linux.artifactName)}) — expected names no longer hold`);
 		}
 		if (!sameTargets(config.linux.target, [{ target: "AppImage", arch: ["x64"] }, { target: "deb", arch: ["x64"] }])) {

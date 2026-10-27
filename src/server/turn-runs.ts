@@ -28,13 +28,13 @@
 
 import type { PiTurnHandle } from "./pi/ui-stream.ts";
 
-interface LhTurnRunsGlobal {
-	__lhTurnRuns?: Map<string, PiTurnHandle>;
+interface MtTurnRunsGlobal {
+	__mtTurnRuns?: Map<string, PiTurnHandle>;
 }
 
 function runs(): Map<string, PiTurnHandle> {
-	const g = globalThis as typeof globalThis & LhTurnRunsGlobal;
-	return (g.__lhTurnRuns ??= new Map<string, PiTurnHandle>());
+	const g = globalThis as typeof globalThis & MtTurnRunsGlobal;
+	return (g.__mtTurnRuns ??= new Map<string, PiTurnHandle>());
 }
 
 /** Register the chat's running turn (chat-handler, right after the turn

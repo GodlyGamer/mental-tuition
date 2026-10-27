@@ -27,7 +27,7 @@ import * as fs from "node:fs";
 import { after, describe, it } from "node:test";
 import { createFauxCore, fauxAssistantMessage, fauxToolCall, type FauxResponseStep, type ToolCall, type Usage } from "@earendil-works/pi-ai";
 import type { PiEngine } from "../src/agent/models.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { newPlanBlockMessage } from "../src/core/native-messages.ts";
 import { projectView as projectNative } from "../src/core/view.ts";
 import type {
@@ -137,11 +137,11 @@ interface NativeCallDesc {
 	output: unknown;
 }
 
-function user(id: string, text: string): LhMessage {
+function user(id: string, text: string): MtMessage {
 	return { id, role: "user", content: text, timestamp: Date.now() } as never;
 }
 
-function assistant(id: string, items: unknown[]): LhMessage[] {
+function assistant(id: string, items: unknown[]): MtMessage[] {
 	const content: unknown[] = [];
 	const calls: NativeCallDesc[] = [];
 	for (const item of items) {
@@ -154,7 +154,7 @@ function assistant(id: string, items: unknown[]): LhMessage[] {
 			content.push({ type: "toolCall", id: call.toolCallId, name: call.name, arguments: call.input as never });
 		}
 	}
-	const out: LhMessage[] = [
+	const out: MtMessage[] = [
 		{
 			id,
 			role: "assistant",
@@ -1039,14 +1039,14 @@ describe("the extraction pipeline (extractor → auditor → merger)", () => {
 			extractionStatuses().some((run) => run.chatId === chatId && run.phase === "extracting"),
 			"the run is registered at start",
 		);
-		const g = globalThis as { __lhExtractionRuns?: { running: Map<string, unknown> } };
-		assert.ok(g.__lhExtractionRuns?.running.has(chatId), "the registry lives on globalThis — no module-instance split can hide runs");
+		const g = globalThis as { __mtExtractionRuns?: { running: Map<string, unknown> } };
+		assert.ok(g.__mtExtractionRuns?.running.has(chatId), "the registry lives on globalThis — no module-instance split can hide runs");
 		assert.deepEqual(await observer.runExtraction(chatId), { nodes: 0, chains: 0 }, "single-flight spans pipeline instances");
 
 		release();
 		assert.deepEqual(await first, { nodes: 0, chains: 0 }, "isolated job failure — the run resolves zeros");
 		assert.ok(!extractionStatuses().some((run) => run.chatId === chatId), "the registry entry clears when the run ends (however it ends)");
-		assert.ok(!g.__lhExtractionRuns?.running.has(chatId), "nothing leaks into the global registry");
+		assert.ok(!g.__mtExtractionRuns?.running.has(chatId), "nothing leaks into the global registry");
 	});
 
 	it("throws for unknown chats", async () => {

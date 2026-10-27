@@ -6,16 +6,16 @@
     {
       "layers" : [
         {
-          "image-name" : "lh_2 2.svg",
-          "name" : "lh_2 2"
+          "image-name" : "mt_2 2.svg",
+          "name" : "mt_2 2"
         },
         {
-          "image-name" : "lh_1 2.svg",
-          "name" : "lh_1 2"
+          "image-name" : "mt_1 2.svg",
+          "name" : "mt_1 2"
         },
         {
-          "image-name" : "lh_0 2.svg",
-          "name" : "lh_0 2"
+          "image-name" : "mt_0 2.svg",
+          "name" : "mt_0 2"
         }
       ],
       "shadow" : {

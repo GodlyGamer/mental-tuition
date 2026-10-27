@@ -9,16 +9,16 @@
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { messageMarkdown, sessionMarkdown } from "../src/core/session-markdown.ts";
 import { messageViewLines } from "../src/core/coverage.ts";
 import { coverageSlots } from "../src/core/coverage.ts";
 
-function user(id: string, text: string): LhMessage {
+function user(id: string, text: string): MtMessage {
 	return { id, role: "user", content: text, timestamp: Date.now() } as never;
 }
 
-function teacher(id: string, text: string): LhMessage {
+function teacher(id: string, text: string): MtMessage {
 	return {
 		id,
 		role: "assistant",
@@ -38,7 +38,7 @@ function result(
 	toolName: string,
 	details: unknown,
 	isError = false,
-): LhMessage {
+): MtMessage {
 	return {
 		id,
 		role: "toolResult",
@@ -53,7 +53,7 @@ function result(
 
 /** An assistant message carrying one toolCall part (the practice join's
  *  call side — args live HERE, the results are bare acks). */
-function callMsg(id: string, callId: string, name: string, args: unknown): LhMessage {
+function callMsg(id: string, callId: string, name: string, args: unknown): MtMessage {
 	return {
 		id,
 		role: "assistant",
@@ -209,7 +209,7 @@ describe("sessionMarkdown", () => {
 		// session format for the future user-facing export — so parity now
 		// holds exactly for teacher prose, and everything else (learner,
 		// quiz, tool results) is markdown-only.
-		const messages: LhMessage[] = [
+		const messages: MtMessage[] = [
 			user("u1", "teach me"),
 			teacher("a1", "The chain rule multiplies local rates."),
 			result("r1", "q1", "quiz", { questionText: "Q?", correct: true, dontKnow: false }),

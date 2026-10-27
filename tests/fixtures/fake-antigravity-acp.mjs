@@ -3,7 +3,7 @@
 // way the real server does — ask permission for a BUILT-IN tool (must be
 // denied), ask permission for the app's MCP tool (must be allowed), call it
 // over the HTTP MCP server it was given, then start a "next response" that
-// the engine must cancel. Writes what it saw to LH_FAKE_AGY_REPORT for asserts.
+// the engine must cancel. Writes what it saw to MT_FAKE_AGY_REPORT for asserts.
 import { createInterface } from "node:readline";
 import fs from "node:fs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -64,16 +64,16 @@ createInterface({ input: process.stdin }).on("line", async (line) => {
 			// The app's MCP tool asks permission: the engine must allow it.
 			const ours = await ask("session/request_permission", {
 				sessionId: "s1",
-				toolCall: { toolCallId: "t1", title: "lh_quiz", _meta: { mcp: { tool: "quiz", server: "lh" }, is_mcp_tool_call: true } },
+				toolCall: { toolCallId: "t1", title: "mt_quiz", _meta: { mcp: { tool: "quiz", server: "mt" }, is_mcp_tool_call: true } },
 				options: [{ optionId: "allow", kind: "allow_once" }, { optionId: "deny", kind: "reject_once" }],
 			});
 			seen.permission.ours = ours.outcome.optionId;
-			update({ sessionUpdate: "tool_call", toolCallId: "t1", title: "lh_quiz", status: "pending" });
+			update({ sessionUpdate: "tool_call", toolCallId: "t1", title: "mt_quiz", status: "pending" });
 			const client = new Client({ name: "fake-agy", version: "0" });
 			await client.connect(new StreamableHTTPClientTransport(new URL(sessions.get("s1"))));
 			await client.callTool({ name: "quiz", arguments: { question: `Echo: ${text.slice(0, 60)}`, options: ["a", "b"] } });
 			await client.close();
-			if (process.env.LH_FAKE_AGY_REPORT) fs.writeFileSync(process.env.LH_FAKE_AGY_REPORT, JSON.stringify(seen));
+			if (process.env.MT_FAKE_AGY_REPORT) fs.writeFileSync(process.env.MT_FAKE_AGY_REPORT, JSON.stringify(seen));
 			const done = new Promise((r) => (cancelled = r));
 			update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text: "SHOULD NOT APPEAR" } });
 			await done;

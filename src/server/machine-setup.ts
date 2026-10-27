@@ -24,10 +24,10 @@ import { childEnv } from "../agent/claude-code.ts";
 
 const SETUP_FILE = () => path.join(LOCAL_ROOT, "setup.json");
 
-/** The desktop app sets LH_WORKSPACE_DIR; only there does the first-launch
+/** The desktop app sets MT_WORKSPACE_DIR; only there does the first-launch
  *  screen appear (repo work reaches /setup by hand). */
 export function machineSetupNeeded(): boolean {
-	return Boolean(process.env.LH_WORKSPACE_DIR) && !fs.existsSync(SETUP_FILE());
+	return Boolean(process.env.MT_WORKSPACE_DIR) && !fs.existsSync(SETUP_FILE());
 }
 
 export function finishMachineSetup(): void {
@@ -36,7 +36,7 @@ export function finishMachineSetup(): void {
 }
 
 export function workspaceInfo(): { folder: string; desktop: boolean } {
-	return { folder: WORKSPACE_ROOT, desktop: Boolean(process.env.LH_WORKSPACE_DIR) };
+	return { folder: WORKSPACE_ROOT, desktop: Boolean(process.env.MT_WORKSPACE_DIR) };
 }
 
 // ─── Claude ─────────────────────────────────────────────────────────────────

@@ -151,16 +151,16 @@ export function phaseTimeline(messages: readonly PhaseMessage[]): Phase3[] {
 	return out;
 }
 
-// ─── the native fold (Wave D: record-side phase over LhMessage[]) ───────────
+// ─── the native fold (Wave D: record-side phase over MtMessage[]) ───────────
 
-import type { LhMessage } from "./native-messages.ts";
+import type { MtMessage } from "./native-messages.ts";
 
 /** The phase at `upToIndex` (inclusive; default: the last message) of a
  *  NATIVE record. probe→plan advances at the probe_done call's clean
  *  toolResult; plan→teach at the assistant message carrying the first
  *  nodeId-tagged quiz CALL (mirrors the view fold — same seam, native
  *  shape). */
-export function phaseAt3Lh(messages: readonly LhMessage[], upToIndex?: number): Phase3 {
+export function phaseAt3Lh(messages: readonly MtMessage[], upToIndex?: number): Phase3 {
 	let phase: Phase3 = "probe";
 	const last = Math.min(upToIndex ?? messages.length - 1, messages.length - 1);
 	for (let i = 0; i <= last; i++) {

@@ -1,6 +1,6 @@
 # Development guide
 
-The developer README (split out of the storefront README, 2026-10-10). Everything below is for people working ON LearnHarness, not using it.
+The developer README (split out of the storefront README, 2026-10-10). Everything below is for people working ON Mental Tuition, not using it.
 
 A standalone learning app (web + Electron desktop): a **teacher agent** (Next.js; the Vercel AI SDK's `UIMessage` protocol end-to-end, LLM engine [pi-ai](docs/pi-engine-swap.md) via OpenRouter), probe→teach lessons with graded quiz/ask interactions, a formal **session plan tree** the teacher authors once (`plan_init`) and whose progress is derived from tagged quiz calls, and a persistent cross-session **knowledge graph** of what the learner knows — the graph is the app's home page.
 
@@ -46,7 +46,7 @@ Secrets and machine-specific paths only. Model choice and thinking budgets are t
 | `DEEPGRAM_API_KEY` | optional — dictation (STT token minting; audio streams browser→Deepgram, never through the server) |
 | `CHROME_PATH` | optional system Chrome fallback for demo verification; the app's own browser helper is primary (nothing is downloaded) |
 
-The packaged desktop app takes keys from `userData/auth.json` (BYOK, mode 0600, read/written directly by the server via `LH_AUTH_FILE`). PDFs render natively with pdfjs/Skia; SVGs use resvg.
+The packaged desktop app takes keys from `userData/auth.json` (BYOK, mode 0600, read/written directly by the server via `MT_AUTH_FILE`). PDFs render natively with pdfjs/Skia; SVGs use resvg.
 
 ## Architecture
 
@@ -78,7 +78,7 @@ flowchart TB
     end
 
     subgraph ROOM["MACHINE ROOM — host"]
-        HOST["Electron main → standalone Next server ·<br/>config.ts · LH_DATA_DIR · BYOK keys"]
+        HOST["Electron main → standalone Next server ·<br/>config.ts · MT_DATA_DIR · BYOK keys"]
     end
 
     LEARNER -->|"text · graded answers"| UI
@@ -142,7 +142,7 @@ src/
   store/                        fs adapters implementing the ports: chats · graph
                                 ledgers · jobs (+ render-settings, default-settings)
 electron/                       desktop launcher + security guard (spawns the standalone
-                                server; 1 IPC channel; LH_DATA_DIR + BYOK env)
+                                server; 1 IPC channel; MT_DATA_DIR + BYOK env)
 scripts/                        build-server.mjs (packaging guards), import-notes,
                                 backfill-graph, replay-layout, sync-pricing
 data/                           chats/ · graph/ (nodes/chains/sessions/coverage
@@ -172,7 +172,7 @@ All deterministic, no LLM, no network (engines are injected — pi-ai's faux pro
 2. **Server flows** — `handleChatRequest` driven end-to-end with scripted engines: persistence, liveness, steer claiming, the wake pipeline (409 retry, quiz deferral, idempotency), crash recovery, the data-dir seam (including a fresh child process).
 3. **Sub-agent loops** — researcher/demo-builder/visual-maker with fake headless APIs; the extraction pipeline end-to-end (audit drops, failure-checkpoints-nothing, single-flight, abort).
 4. **Render tests** — transcript, cards, docks, composer, sidebar, coverage via React server-side rendering.
-5. **Golden fixtures** (`tests/fixtures/golden-data/`) — a REAL data dir (real records produced by the app, never hand-edited), copied to a temp dir and read through the production paths via the `LH_DATA_DIR` seam. Pins that real data parses, flattens to a legal LLM wire, derives the graph end-to-end, covers every custom-marker kind, and that reads never write. **The fixture law:** an intentional on-disk format change updates the fixtures in the same commit — see the fixture README.
+5. **Golden fixtures** (`tests/fixtures/golden-data/`) — a REAL data dir (real records produced by the app, never hand-edited), copied to a temp dir and read through the production paths via the `MT_DATA_DIR` seam. Pins that real data parses, flattens to a legal LLM wire, derives the graph end-to-end, covers every custom-marker kind, and that reads never write. **The fixture law:** an intentional on-disk format change updates the fixtures in the same commit — see the fixture README.
 
 ## Lineage
 
@@ -180,6 +180,6 @@ The teaching methodology comes from an Obsidian-based POC (its `knowledge graph 
 
 ## Data
 
-Nothing under `data/` is ever tracked by git. Chats, graph ledgers, jobs, positions, and the settings records are plain files (JSON/JSONL) — inspect them freely; they are the canonical records. The desktop app relocates the whole directory via `LH_DATA_DIR`.
+Nothing under `data/` is ever tracked by git. Chats, graph ledgers, jobs, positions, and the settings records are plain files (JSON/JSONL) — inspect them freely; they are the canonical records. The desktop app relocates the whole directory via `MT_DATA_DIR`.
 
 **Schema stamps (2026-10-10):** chat records carry `version` (stamped at the store's write choke point; absence reads as v1 — lazy migration, no mass rewrite), and the graph family (ledgers, sources, render-settings) shares one sidecar `graph/format.json`, created on the family's first write. `positions.json` is deliberately unstamped (rebuildable). A record stamped NEWER than the running build is refused on read — honest refusal for the downgrade scenario: a read-modify-write store never rewrites what it doesn't understand.

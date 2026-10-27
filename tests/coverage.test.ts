@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import * as fs from "node:fs";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { newAnswerResult, newPlanBlockMessage, newUserMessage } from "../src/core/native-messages.ts";
 import type { ToolResultMessage } from "@earendil-works/pi-ai";
 
@@ -24,35 +24,35 @@ import type { CoverageEntry } from "../src/core/contracts/graph.ts";
  * joins a run.
  */
 
-function user(id: string, text: string): LhMessage {
+function user(id: string, text: string): MtMessage {
 	return { ...newUserMessage(text), id };
 }
 
-function teacher(id: string, text: string): LhMessage {
+function teacher(id: string, text: string): MtMessage {
 	return {
 		id,
 		role: "assistant",
 		content: [{ type: "text", text }],
-	} as unknown as LhMessage;
+	} as unknown as MtMessage;
 }
 
 /** An assistant message calling `calls` (each {id,name}) — the bond anchor. */
 function assistantWithCalls(
 	id: string,
 	calls: Array<{ id: string; name: string; args?: unknown }>,
-): LhMessage {
+): MtMessage {
 	return {
 		id,
 		role: "assistant",
 		content: calls.map((c) => ({ type: "toolCall", id: c.id, name: c.name, arguments: c.args ?? {} })),
-	} as unknown as LhMessage;
+	} as unknown as MtMessage;
 }
 
-function result(id: string, callId: string, name: string, details: unknown): LhMessage {
-	return { ...newAnswerResult(callId, name, details), id } as LhMessage;
+function result(id: string, callId: string, name: string, details: unknown): MtMessage {
+	return { ...newAnswerResult(callId, name, details), id } as MtMessage;
 }
 
-function slot(messages: ReadonlyArray<LhMessage>, id: string) {
+function slot(messages: ReadonlyArray<MtMessage>, id: string) {
 	const found = coverageSlots(messages).find((s) => s.message.id === id);
 	assert.ok(found, `slot ${id}`);
 	return found;
@@ -90,7 +90,7 @@ describe("messageFingerprint — what changes it, what never does", () => {
 			current: null,
 			nodes: [],
 			edges: [],
-		}) as LhMessage;
+		}) as MtMessage;
 		assert.deepEqual(messageViewLines(marker, marker.id), []);
 		// And the message it rides beside keeps its fingerprint untouched:
 		const before = messageFingerprint(teacher("t1", "the chain rule"));
@@ -120,7 +120,7 @@ describe("messageFingerprint — what changes it, what never does", () => {
 		const failed = {
 			...newAnswerResult("j2", "visual", { oops: true }),
 			isError: true,
-		} as LhMessage;
+		} as MtMessage;
 		assert.deepEqual(messageViewLines(failed, "r9"), []);
 	});
 

@@ -3,11 +3,11 @@ import type { Static, TSchema } from "typebox";
 import { CONCLUDE_ACK_TEXT } from "../core/contracts/chat.ts";
 
 /**
- * tool-execute — the execution machinery every server-side lh tool shares,
+ * tool-execute — the execution machinery every server-side mt tool shares,
  * expressed natively (Wave A of the pi-native migration, 2026-09-26): tools
  * are authored as pi-agent-core AgentTools (TypeBox parameters, native
- * execute), and this module owns the semantics the old LhTool wrapper
- * (lh-tool.ts, deleted) used to add around every execute:
+ * execute), and this module owns the semantics the old MtTool wrapper
+ * (mt-tool.ts, deleted) used to add around every execute:
  *
  * - the system-level per-call timeout + abort cascade (runWithAbortGuard),
  * - the authoring-refinement failure shape (invalidInputResult —

@@ -4,7 +4,7 @@
  * never migrate; "practice" marks an adaptive-practice session (the
  * practice agent + its two tools from turn 1, no extraction, no graph
  * writes). The store normalizes at the summary projection; createChat
- * stamps the marker only for practice. Runs under an isolated LH_DATA_DIR
+ * stamps the marker only for practice. Runs under an isolated MT_DATA_DIR
  * (the chat-birth-stamp discipline: the seam is set before any
  * config-loading import, so every app-module import is dynamic).
  */
@@ -16,8 +16,8 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 
 // ── the seam, BEFORE any config-loading import ──────────────────────────────
-const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "lh-chat-kind-"));
-process.env.LH_DATA_DIR = TMP_DATA;
+const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "mt-chat-kind-"));
+process.env.MT_DATA_DIR = TMP_DATA;
 
 const { chatStore } = await import("../src/store/chats.ts");
 

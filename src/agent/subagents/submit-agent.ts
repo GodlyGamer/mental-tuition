@@ -65,7 +65,7 @@ export async function runSubmitAgent<T>(opts: {
 	/** Turn budget for the loop (default 4 = retry-only; the auditor runs
 	 *  an exploration loop instead — 16). */
 	maxTurns?: number;
-	/** Debug: raw provider-event recording key (LH_PROVIDER_EVENTS=1). */
+	/** Debug: raw provider-event recording key (MT_PROVIDER_EVENTS=1). */
 	chatId?: string;
 	/** Weak-model argument heal at pi's prepareArguments seam (runs BEFORE
 	 *  TypeBox validation — the sanctioned shim point). Identity by

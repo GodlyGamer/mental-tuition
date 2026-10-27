@@ -1,4 +1,4 @@
-"""Small read-only filesystem helpers for the LearnHarness skill.
+"""Small read-only filesystem helpers for the Mental Tuition skill.
 
 No application imports, discovery scans, migrations, caches, or writes. Paths
 inside the selected data folder may not resolve outside it. Imported-note paths
@@ -25,23 +25,23 @@ def data_root(override: str | None = None) -> Path:
     """Resolve an explicit data directory or the normal desktop location.
 
     Never create a missing directory or try a different installation. For a
-    development copy or an app launched with LH_DATA_DIR, pass --data-dir.
+    development copy or an app launched with MT_DATA_DIR, pass --data-dir.
     """
     if override is not None:
         root = Path(override).expanduser()
     elif sys.platform == "darwin":
-        root = Path.home() / "Library" / "Application Support" / "LearnHarness" / "data"
+        root = Path.home() / "Library" / "Application Support" / "Mental Tuition" / "data"
     elif sys.platform == "win32":
         roaming = os.environ.get("APPDATA")
         if not roaming:
             raise DataError("APPDATA is not set; specify the learning data folder with --data-dir.")
-        root = Path(roaming) / "LearnHarness" / "data"
+        root = Path(roaming) / "Mental Tuition" / "data"
     elif sys.platform.startswith("linux"):
         configured = os.environ.get("XDG_CONFIG_HOME")
         base = Path(configured) if configured else Path.home() / ".config"
         if configured and not base.is_absolute():
             raise DataError("XDG_CONFIG_HOME is relative; specify an absolute --data-dir instead.")
-        root = base / "LearnHarness" / "data"
+        root = base / "Mental Tuition" / "data"
     else:
         raise DataError("Unknown desktop data location on this OS; specify --data-dir.")
     try:
@@ -116,7 +116,7 @@ def read_chat(root: Path, session_id: str) -> dict[str, Any]:
 
 def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     """Common CLI options precede the subcommand, as shown in SKILL.md."""
-    parser.add_argument("--data-dir", metavar="PATH", help="LearnHarness data root (contains chats/ and/or graph/); default: normal desktop location")
+    parser.add_argument("--data-dir", metavar="PATH", help="Mental Tuition data root (contains chats/ and/or graph/); default: normal desktop location")
     parser.add_argument("--format", choices=("markdown", "json"), default="markdown", help="Output format (default: markdown)")
 
 

@@ -141,7 +141,7 @@ export function DeleteNodeDialog({
 	 *  names. */
 	nodes: { id: string; name: string }[] | null;
 	onClose: () => void;
-	/** Success path — the callers announce lh:graph-revision so the
+	/** Success path — the callers announce mt:graph-revision so the
 	 *  snapshot refetches. The deleted ids ride along so
 	 *  selection-side callers can prune. */
 	onDeleted: (nodeIds: string[], graphRevision: number) => void;
@@ -217,7 +217,7 @@ export function DeleteNodeDialog({
 
 	return createPortal(
 		<div
-			className="lh-scrim fixed inset-0 z-50 flex items-center justify-center"
+			className="mt-scrim fixed inset-0 z-50 flex items-center justify-center"
 			{...backdropDismiss}
 		>
 			<DeleteNodeBody

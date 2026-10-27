@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Prism rim — corner bevels</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;family=Source+Sans+3:wght@400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+.lgp{position:relative;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.06) 16%,rgba(255,255,255,.035) 34%,rgba(255,255,255,.025) 55%,rgba(255,255,255,.03) 78%,rgba(255,255,255,.06) 100%),rgba(18,18,21,.6);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 2px 1px -1px rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1.5px 1px -.5px rgba(255,255,255,.22),inset 0 40px 60px -48px rgba(255,255,255,.18),0 30px 60px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4)}
+.lg{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:40px;padding:0 20px;border:0;border-radius:999px;font-family:'Geist',sans-serif;font-size:14px;line-height:1;cursor:pointer;user-select:none;color:rgba(255,255,255,.86);text-shadow:0 1px 0 rgba(255,255,255,.14),0 -1px 0 rgba(0,0,0,.35),0 0 14px rgba(255,255,255,.2);background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.09) 22%,rgba(255,255,255,.05) 44%,rgba(255,255,255,.03) 62%,rgba(255,255,255,.05) 82%,rgba(255,255,255,.1) 100%),rgba(28,28,32,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.09),inset 0 -1.5px 1px -.5px rgba(255,255,255,.4),inset 0 10px 14px -10px rgba(255,255,255,.24),inset 0 -12px 16px -12px rgba(255,255,255,.2),inset 0 0 16px rgba(0,0,0,.28),0 10px 22px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4);transition:transform 320ms cubic-bezier(.2,.7,.2,1)}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+.lg::before,.lg::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;background:conic-gradient(from calc(var(--ang) + var(--spin)),#ff5ad1,#ffb547,#f4ff7a,#5dffb0,#49e6ff,#6a7bff,#c86bff,#ff5ad1);opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 700ms cubic-bezier(.2,.7,.2,1),--ang 1400ms cubic-bezier(.2,.7,.2,1)}
+.lg::before{inset:-1px;padding:1.5px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg::after{inset:-6px;filter:blur(12px);z-index:-1}
+.lg:hover::before{opacity:.9;animation-play-state:running;transition-duration:300ms,1400ms}
+.lg:hover::after{animation-play-state:running}
+.lg:active{transform:scale(.97);transition-duration:90ms}
+.lg:active::before{opacity:1;--ang:220deg;transition-duration:60ms,1400ms}
+.lg:active::after{opacity:.55;--ang:220deg;transition-duration:60ms,1400ms}
+.lg.ic{width:40px;padding:0;border-radius:12px}
+.lg.pri{color:#141416;text-shadow:0 1px 0 rgba(255,255,255,.6);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(244,244,246,.93) 30%,rgba(226,226,231,.9) 66%,rgba(238,238,242,.94));box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px #ffffff,inset 0 0 0 1px rgba(255,255,255,.6),inset 0 -1.5px 1px -.5px rgba(255,255,255,.95),inset 0 -12px 16px -12px rgba(0,0,0,.2),0 10px 22px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4)}
+.ta{flex:1;min-width:0;height:40px;box-sizing:border-box;resize:none;border:0;outline:none;background:transparent;color:#f2f2f3;font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.25;padding:10px}
+.ta::placeholder{color:#9a9a9f}
+.cap{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#9a9a9f}
+</style>
+</helmet>
+<div style="position: relative; width: 1200px; height: 680px; box-sizing: border-box; padding: 52px 64px; display: flex; flex-direction: column; gap: 34px; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse 110% 100% at 18% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000), #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <span class="cap" style="text-transform: uppercase">02 · Hero glass · monochrome edges</span>
+    <h1 style="margin: 0; font-size: 36px; font-weight: 200; letter-spacing: -0.02em; line-height: 1.15">Silver edges at rest. Colour only when you touch it.</h1>
+    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #9a9a9f; max-width: 780px">The composer and dialogs keep a plain silver rim on the thick glass, with no colour in the edges. Hover a button and a spectrum circles its rim; press it and it heats.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 48px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span class="cap">COMPOSER · HOME AND SESSION</span>
+      <form class="lgp" style="border-radius: 20px; padding: 7px; display: flex; align-items: flex-end; gap: 6px; margin: 0">
+        <button type="button" class="lg ic" aria-label="Add photos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <textarea class="ta" rows="1" aria-label="Topic" placeholder="What do you want to learn?"></textarea>
+        <button type="button" class="lg ic pri" aria-label="Start session"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
+      </form>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 0 4px" class="cap">
+        <span style="padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,.1); color: #f2f2f3">TEACH</span><span style="padding: 3px 8px">PRACTICE</span><span style="padding: 3px 8px; border: 1px solid rgba(255,255,255,.12); border-radius: 6px">1M1</span><span style="flex-grow: 1"></span><span>MODEL · THINKING</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span class="cap">DIALOG</span>
+      <div class="lgp" style="border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 300; letter-spacing: -0.01em">Abort this turn?</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 1.45; color: #9a9a9f">The partial answer stays in the transcript.</p>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px">
+          <button type="button" class="lg">Cancel</button>
+          <button type="button" class="lg pri">Abort</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -167,7 +167,7 @@ export function AppearanceSection({
 		const onPointerDown = (e: PointerEvent) => {
 			const target = e.target as Node;
 			if (menuAnchorRef.current?.contains(target)) return;
-			if (target instanceof Element && target.closest("[data-lh-menu]")) return;
+			if (target instanceof Element && target.closest("[data-mt-menu]")) return;
 			if (target instanceof Element && target.closest('[role="dialog"]')) {
 				setFontMenuOpen(false);
 			}
@@ -190,7 +190,7 @@ export function AppearanceSection({
 	return (
 		<>
 			<SettingsRow label="Theme" hint={THEME_LABEL[appearance?.mode ?? resolved.mode]} testid="row-mode">
-				<div className="lh-theme-switch lh-glass lh-glass-sm" role="group" aria-label="theme" data-testid="select-mode">
+				<div className="mt-theme-switch mt-glass mt-glass-sm" role="group" aria-label="theme" data-testid="select-mode">
 					{APPEARANCE_MODES.map((mode) => (
 						<button
 							key={mode}
@@ -200,7 +200,7 @@ export function AppearanceSection({
 							title={THEME_LABEL[mode]}
 							onClick={() => onSectionChange({ ...appearance, mode })}
 						>
-							<span className={`lh-swatch lh-swatch--${mode}`} />
+							<span className={`mt-swatch mt-swatch--${mode}`} />
 						</button>
 					))}
 				</div>

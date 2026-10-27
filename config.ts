@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * THE data-location seam (the Electron contract, 2026-09-17): LH_DATA_DIR
+ * THE data-location seam (the Electron contract, 2026-09-17): MT_DATA_DIR
  * relocates every MUTABLE record — chat sessions, graph ledgers, the
  * embedding model cache — when set. The desktop shell points it at
  * userData so nothing is written inside the read-only .app bundle
@@ -14,8 +14,8 @@ export const ROOT = path.dirname(fileURLToPath(import.meta.url));
  * byte-for-byte as before. Read-only assets (prompts) stay ROOT-anchored
  * on purpose: they ship inside the app bundle by design.
  */
-const DATA_ROOT = process.env.LH_DATA_DIR
-	? path.resolve(process.env.LH_DATA_DIR)
+const DATA_ROOT = process.env.MT_DATA_DIR
+	? path.resolve(process.env.MT_DATA_DIR)
 	: path.join(ROOT, "data");
 
 /**
@@ -23,29 +23,29 @@ const DATA_ROOT = process.env.LH_DATA_DIR
  * study/modules/<CODE>/{materials,sessions,papers,attempts,marking}. It is
  * a CONTRACT shared with .claude/skills/make-papers and mark-attempts
  * (layout in CLAUDE.md), so it stays at the repo root where those skills
- * look. LH_STUDY_DIR relocates it.
+ * look. MT_STUDY_DIR relocates it.
  */
-export const STUDY_ROOT = process.env.LH_STUDY_DIR
-	? path.resolve(process.env.LH_STUDY_DIR)
+export const STUDY_ROOT = process.env.MT_STUDY_DIR
+	? path.resolve(process.env.MT_STUDY_DIR)
 	: path.join(ROOT, "study");
 
 /**
  * The workspace (personal fork, 2026-10-24): the folder the paper skills
  * run in — it holds study/ and the .claude/ skills. The desktop app sets
- * LH_WORKSPACE_DIR to the learner's synced folder (Google Drive); repo
+ * MT_WORKSPACE_DIR to the learner's synced folder (Google Drive); repo
  * work keeps the repo itself.
  */
-export const WORKSPACE_ROOT = process.env.LH_WORKSPACE_DIR
-	? path.resolve(process.env.LH_WORKSPACE_DIR)
+export const WORKSPACE_ROOT = process.env.MT_WORKSPACE_DIR
+	? path.resolve(process.env.MT_WORKSPACE_DIR)
 	: ROOT;
 
 /**
  * Per-machine state that must NOT sync: downloaded programs (the
  * Antigravity server) and this machine's setup record. The desktop app
- * points LH_LOCAL_DIR at userData; repo work keeps the git-ignored .tools/.
+ * points MT_LOCAL_DIR at userData; repo work keeps the git-ignored .tools/.
  */
-export const LOCAL_ROOT = process.env.LH_LOCAL_DIR
-	? path.resolve(process.env.LH_LOCAL_DIR)
+export const LOCAL_ROOT = process.env.MT_LOCAL_DIR
+	? path.resolve(process.env.MT_LOCAL_DIR)
 	: path.join(ROOT, ".tools");
 
 export const PATHS = {
@@ -160,7 +160,7 @@ export const PROMPTS_OVERRIDE_DIR = path.join(DATA_ROOT, "prompts");
  * THE AUTH/KEY STORE (auth-keys wave, 2026-09-19): BYOK provider keys in a
  * flat {VAR: value} JSON map — the SAME file the Electron app has always
  * hand-edited (owner decision: option A, zero migration). Desktop main.cjs
- * passes LH_AUTH_FILE pointing at userData/auth.json (mode 0600); in dev
+ * passes MT_AUTH_FILE pointing at userData/auth.json (mode 0600); in dev
  * (no Electron) the default is the repo-root auth.json (gitignored, same
  * pattern as .env.local — a worktree may symlink it to the master copy).
  * The SERVER reads/writes this file directly at call time (no restart to
@@ -170,6 +170,6 @@ export const PROMPTS_OVERRIDE_DIR = path.join(DATA_ROOT, "prompts");
  * re-read from disk on every API access. Secrets NEVER go in settings.json
  * — this file keeps that role, alongside .env.local.
  */
-export const AUTH_FILE = process.env.LH_AUTH_FILE
-	? path.resolve(process.env.LH_AUTH_FILE)
+export const AUTH_FILE = process.env.MT_AUTH_FILE
+	? path.resolve(process.env.MT_AUTH_FILE)
 	: path.join(ROOT, "auth.json");

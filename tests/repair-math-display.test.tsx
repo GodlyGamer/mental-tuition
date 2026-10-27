@@ -16,7 +16,7 @@ import { MessageResponse } from "../components/ai-elements/message.tsx";
 import {
 	repairMathForDisplay, healOverescapedCommands, restoreMathEscapes,
 	parseQuizInput, parseAskInput, parseExplainInput, activeProblemOf, projectView,
-	toLlmMessages, type LhMessage, type ArtifactPartProps,
+	toLlmMessages, type MtMessage, type ArtifactPartProps,
 } from "../src/core/index.ts";
 
 const tex = String.raw`\nabla f(x) \in \mathbb{R}^{m \times n}`;
@@ -162,7 +162,7 @@ describe("practice display surfaces", () => {
 		const messages = [
 			{ id: "numeric_pose", role: "assistant", content: [call], timestamp: 1 },
 			{ id: "numeric_ack", role: "toolResult", toolCallId: call.id, toolName: "problem", content: [{ type: "text", text: "Problem posed" }], details: null, isError: false, timestamp: 2 },
-		] as unknown as LhMessage[];
+		] as unknown as MtMessage[];
 		const before = structuredClone(messages);
 		const active = activeProblemOf(messages);
 		assert.ok(active);
@@ -172,7 +172,7 @@ describe("practice display surfaces", () => {
 		let expanded = "";
 		assert.doesNotThrow(() => { expanded = renderToStaticMarkup(dock(input)); });
 		const { document } = parseHTML(expanded);
-		assert.equal(document.querySelector(".lh-prose")!.innerHTML,
+		assert.equal(document.querySelector(".mt-prose")!.innerHTML,
 			parseHTML(renderToStaticMarkup(<MessageResponse>{input.statement}</MessageResponse>)).document.firstElementChild!.outerHTML,
 			"non-string values pass through exactly as before, without string coercion or a new fallback");
 		const collapsed = renderToStaticMarkup(dock(input, false));
@@ -226,11 +226,11 @@ describe("practice display surfaces", () => {
 		const messages = [
 			{ ...stamps, id: "a1", role: "assistant", content: [{ type: "toolCall", id: "p1", name: "problem", arguments: input }] },
 			{ id: "r1", role: "toolResult", toolCallId: "p1", toolName: "problem", content: [{ type: "text", text: "Problem posed" }], details: null, isError: false, timestamp: 2 },
-		] as unknown as LhMessage[];
+		] as unknown as MtMessage[];
 		const concluded = [...messages,
 			{ ...stamps, id: "a2", role: "assistant", content: [{ type: "toolCall", id: "c1", name: "conclude", arguments: { outcome: "solved", verdict: doubled } }] },
 			{ id: "r2", role: "toolResult", toolCallId: "c1", toolName: "conclude", content: [{ type: "text", text: "Problem concluded" }], details: null, isError: false, timestamp: 3 },
-		] as unknown as LhMessage[];
+		] as unknown as MtMessage[];
 		const before = structuredClone(concluded);
 		const history = structuredClone(toLlmMessages(concluded));
 		assert.deepEqual(activeProblemOf(messages)?.input, input);

@@ -1,9 +1,9 @@
 /**
- * Wave D: these scans read VIEW messages (core/view.ts LhViewMessage — the
+ * Wave D: these scans read VIEW messages (core/view.ts MtViewMessage — the
  * client's grouped transcript). The part shapes are the same vocabulary the
  * pre-Wave-D client dialect used; a tool part is structural: `tool-` prefix +
  * toolCallId. The server-side record scans (danglingQuestionOf over native
- * LhMessage[]) live in native-messages.ts.
+ * MtMessage[]) live in native-messages.ts.
  */
 interface UIMessage {
 	role?: string;

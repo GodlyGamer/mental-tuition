@@ -8,7 +8,7 @@
  * marker); `details` feeds the transcript's collapsible
  * GraphContextCard (render-practice pins live in the render suite).
  *
- * The route pin drives POST /api/chats under an isolated LH_DATA_DIR
+ * The route pin drives POST /api/chats under an isolated MT_DATA_DIR
  * (the birth-stamp discipline): picks ride the CREATION, the marker
  * lands as message[0], and the chains derive from the live graph
  * snapshot.
@@ -21,12 +21,12 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 
 // ── the seam, BEFORE any config-loading import ──────────────────────────────
-const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "lh-graph-context-"));
-process.env.LH_DATA_DIR = TMP_DATA;
+const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "mt-graph-context-"));
+process.env.MT_DATA_DIR = TMP_DATA;
 
 const { newGraphContextMessage } = await import("../src/core/native-messages.ts");
 const { toLlmMessages } = await import("../src/core/native-messages.ts");
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 const { projectView } = await import("../src/core/view.ts");
 const { POST } = await import("../app/api/chats/route.ts");
 const { initialPromptOwed } = await import("../components/chat.tsx");
@@ -66,7 +66,7 @@ describe("newGraphContextMessage", () => {
 
 	it("toLlmMessages flattens it to a user message (the model's face)", () => {
 		const m = newGraphContextMessage(PICKS, ["Modus ponens → Soundness"]);
-		const wire = toLlmMessages([m as unknown as LhMessage] as never);
+		const wire = toLlmMessages([m as unknown as MtMessage] as never);
 		assert.equal(wire.length, 1);
 		assert.equal(wire[0]!.role, "user");
 		assert.ok(String((wire[0]!.content as { text?: string }[])[0]!.text).includes("[Session context]"));
@@ -74,7 +74,7 @@ describe("newGraphContextMessage", () => {
 
 	it("projectView: a user-side data part — never a text bubble", () => {
 		const m = newGraphContextMessage(PICKS, []);
-		const view = projectView([m as unknown as LhMessage] as never);
+		const view = projectView([m as unknown as MtMessage] as never);
 		assert.equal(view.length, 1);
 		assert.equal(view[0]!.role, "user");
 		const part = view[0]!.parts[0] as { type: string; data: unknown };

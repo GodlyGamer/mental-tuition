@@ -416,12 +416,12 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
 	// page owns ONE hook instance, and only the mounted page's listener is
 	// attached.
 	useEffect(() => {
-		window.addEventListener("lh:kbd-toggle-dictation", toggle);
-		return () => window.removeEventListener("lh:kbd-toggle-dictation", toggle);
+		window.addEventListener("mt:kbd-toggle-dictation", toggle);
+		return () => window.removeEventListener("mt:kbd-toggle-dictation", toggle);
 	}, [toggle]);
 	useEffect(() => {
-		window.addEventListener("lh:kbd-cancel-dictation", cancel);
-		return () => window.removeEventListener("lh:kbd-cancel-dictation", cancel);
+		window.addEventListener("mt:kbd-cancel-dictation", cancel);
+		return () => window.removeEventListener("mt:kbd-cancel-dictation", cancel);
 	}, [cancel]);
 
 	return {

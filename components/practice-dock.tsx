@@ -108,7 +108,7 @@ export function PracticeDock({ problemCallId, input, expanded, onExpand, onSubmi
 			    (--dock-max-h; the old fixed 40vh cut long problems short). */}
 			<div className="max-h-[var(--dock-max-h,40vh)] overflow-y-auto px-4 pt-3 pb-2">
 				<div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Problem</div>
-				<div className="lh-prose text-[15px]">
+				<div className="mt-prose text-[15px]">
 					<MessageResponse>{typeof input.statement === "string" ? repairMathForDisplay(input.statement) : input.statement}</MessageResponse>
 				</div>
 			</div>
@@ -147,7 +147,7 @@ export function PracticeDock({ problemCallId, input, expanded, onExpand, onSubmi
 					placeholder="Work here, think out loud."
 					rows={4}
 					className={cn(
-						"field-sizing-content lh-input max-h-64 min-h-16 w-full resize-none bg-transparent px-2.5 pb-2 outline-none placeholder:text-muted-foreground",
+						"field-sizing-content mt-input max-h-64 min-h-16 w-full resize-none bg-transparent px-2.5 pb-2 outline-none placeholder:text-muted-foreground",
 					)}
 				/>
 				{/* The submit row (owner round 4, 2026-10-05): IDENTICAL to the

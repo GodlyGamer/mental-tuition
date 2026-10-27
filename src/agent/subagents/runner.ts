@@ -110,7 +110,7 @@ interface LoopContext {
 	 * model call so the spend stops mid-call, not at the next loop check. */
 	abortSignal: AbortSignal;
 	/** The job's chat (debug: raw provider-event recording under
-	 * LH_PROVIDER_EVENTS=1 — forwarded into every subagent run). */
+	 * MT_PROVIDER_EVENTS=1 — forwarded into every subagent run). */
 	chatId?: string;
 	/** Fold one model call's usage into the job record (progress write). */
 	onUsage: (step: UsageStepLike) => void;
@@ -359,7 +359,7 @@ export function createJobRunner(deps: JobRunnerDeps): JobRunner {
 		// Per-job PDF dir (researcher PDF wave, 2026-10-07): web_fetch_pdf
 		// downloads land here; every pdf tool is scoped to it; it dies with
 		// the job (never enters the record).
-		const pdfDir = await fs.mkdtemp(path.join(os.tmpdir(), "lh-research-"));
+		const pdfDir = await fs.mkdtemp(path.join(os.tmpdir(), "mt-research-"));
 
 		try {
 			jobStore.updateJob(jobId, { activity: "researching" });

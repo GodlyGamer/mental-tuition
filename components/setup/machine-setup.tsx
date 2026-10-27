@@ -131,8 +131,8 @@ export function MachineSetup({ onFinish }: { onFinish?: () => void }) {
 					Your chats, knowledge graph, settings and study modules live here. Keep it in Google Drive and both computers share them.
 					Close the app on one computer before opening it on the other.
 				</p>
-				{window.lh?.changeWorkspace && (
-					<button type="button" className={`${pill} mt-3`} onClick={() => void window.lh?.changeWorkspace?.()}>
+				{window.mt?.changeWorkspace && (
+					<button type="button" className={`${pill} mt-3`} onClick={() => void window.mt?.changeWorkspace?.()}>
 						<FolderOpenIcon className="size-3.5" />
 						Change folder…
 					</button>

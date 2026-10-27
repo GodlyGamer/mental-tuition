@@ -21,7 +21,7 @@ import * as fs from "node:fs";
 import { after, describe, it } from "node:test";
 import type { AuditVerdicts, GraphChain, GraphNode, SessionFindings } from "../src/core/contracts.ts";
 import type { QuestionAnswerData } from "../src/core/question-core.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { projectView as projectNative } from "../src/core/view.ts";
 import { deriveView, getGraph, graphSnapshot, mergeFindings, type GraphDeps } from "../src/core/graph.ts";
 import { coverageSlots } from "../src/core/coverage.ts";
@@ -86,18 +86,18 @@ interface NativeCall {
 	output: QuestionAnswerData;
 }
 
-function user(id: string, text: string): LhMessage[] {
+function user(id: string, text: string): MtMessage[] {
 	return [{ id, role: "user", content: text, timestamp: Date.now() } as never];
 }
 
 /** A teacher-prose message (the coverage unit, owner 2026-09-28). */
-function teacher(id: string, text: string): LhMessage[] {
+function teacher(id: string, text: string): MtMessage[] {
 	return [{ id, role: "assistant", content: [{ type: "text", text }], timestamp: Date.now() } as never];
 }
 
-function assistant(id: string, calls: NativeCall[]): LhMessage[] {
+function assistant(id: string, calls: NativeCall[]): MtMessage[] {
 	const content = calls.map((c) => ({ type: "toolCall", id: c.toolCallId, name: c.name, arguments: c.input as never }));
-	const out: LhMessage[] = [
+	const out: MtMessage[] = [
 		{
 			id,
 			role: "assistant",
@@ -154,7 +154,7 @@ function answer(over: Partial<QuestionAnswerData>): QuestionAnswerData {
 
 /** Create a chat in the real store with messages; returns the record.
  *  Tree-blind world: the plan tree is irrelevant to the merger — no tree. */
-function fixtureChat(title: string, messages: LhMessage[]) {
+function fixtureChat(title: string, messages: MtMessage[]) {
 	const chat = chatStore.createChat(title);
 	createdChats.push(chat.id);
 	chatStore.saveMessages(chat.id, messages);
@@ -162,7 +162,7 @@ function fixtureChat(title: string, messages: LhMessage[]) {
 }
 
 /** The full fixture transcript: five graded quizzes + a dismissed one + an ask. */
-function fixtureMessages(): LhMessage[] {
+function fixtureMessages(): MtMessage[] {
 	return [
 		user("u1", "teach me the fixture topic"),
 		assistant("a1", [
@@ -944,9 +944,9 @@ describe("single-node deletion (deleteNodeTraces + deleteGraphNode, node interlu
 		// belongs to another session), the caller retries. The registry is
 		// the pipeline's globalThis store — a fake entry is the honest way
 		// to pin the gate without staging a real run.
-		const g = globalThis as { __lhExtractionRuns?: unknown };
-		const realRuns = g.__lhExtractionRuns;
-		g.__lhExtractionRuns = {
+		const g = globalThis as { __mtExtractionRuns?: unknown };
+		const realRuns = g.__mtExtractionRuns;
+		g.__mtExtractionRuns = {
 			running: new Map([
 				["chat_busy", { chatId: "chat_busy", kind: "chat", phase: "extracting", startedAt: 1, usage: {}, controller: new AbortController() }],
 			]),
@@ -961,7 +961,7 @@ describe("single-node deletion (deleteNodeTraces + deleteGraphNode, node interlu
 				error: "An extraction is running — try again when it finishes",
 			});
 		} finally {
-			g.__lhExtractionRuns = realRuns;
+			g.__mtExtractionRuns = realRuns;
 		}
 
 		// Success — the node dies, the version stamp moves.
@@ -1024,10 +1024,10 @@ describe("session coverage read (extraction-UX redesign, 2026-09-24)", () => {
 
 	it("running: true only for THIS session's chat-kind run (the registry pin)", () => {
 		const chat = fixtureChat("coverage running", [user("cov_r1", "running pin")].flat());
-		const g = globalThis as { __lhExtractionRuns?: unknown };
-		const realRuns = g.__lhExtractionRuns;
+		const g = globalThis as { __mtExtractionRuns?: unknown };
+		const realRuns = g.__mtExtractionRuns;
 		try {
-			g.__lhExtractionRuns = {
+			g.__mtExtractionRuns = {
 				running: new Map([
 					// a notes run for the same id is NOT this session's chat run
 					["src_notes", { chatId: "src_notes", kind: "notes", phase: "extracting", startedAt: 1, usage: {}, controller: new AbortController() }],
@@ -1037,7 +1037,7 @@ describe("session coverage read (extraction-UX redesign, 2026-09-24)", () => {
 				lastStartedAt: 0,
 			};
 			assert.equal(sessionCoverage(chat.id)!.running, false, "no chat-kind run for this id");
-			g.__lhExtractionRuns = {
+			g.__mtExtractionRuns = {
 				running: new Map([
 					[chat.id, { chatId: chat.id, kind: "chat", phase: "extracting", startedAt: 3, usage: {}, controller: new AbortController() }],
 				]),
@@ -1046,7 +1046,7 @@ describe("session coverage read (extraction-UX redesign, 2026-09-24)", () => {
 			};
 			assert.equal(sessionCoverage(chat.id)!.running, true);
 		} finally {
-			g.__lhExtractionRuns = realRuns;
+			g.__mtExtractionRuns = realRuns;
 		}
 	});
 

@@ -9,7 +9,7 @@
  * payload exactly); a payload missing a view node (a merge landed
  * mid-drag) triggers exactly one absorbing settle.
  *
- * Hermetic: LH_DATA_DIR → a temp dir, set BEFORE the first import of
+ * Hermetic: MT_DATA_DIR → a temp dir, set BEFORE the first import of
  * the server modules (the seam is env-at-module-load, see
  * tests/data-dir-seam.test.ts).
  */
@@ -19,7 +19,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { before, describe, it } from "node:test";
 
-process.env.LH_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "lh-pos-commit-"));
+process.env.MT_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "mt-pos-commit-"));
 
 let commitPositions: (input: unknown) => Record<string, { x: number; y: number }>;
 let readPositions: () => Record<string, { x: number; y: number }>;
@@ -29,7 +29,7 @@ let appendChain: (assertion: unknown) => void;
 before(async () => {
 	({ commitPositions } = await import("../src/server/commit-positions.ts"));
 	const { stores } = await import("../src/server/stores.ts");
-	const positionsFile = path.join(process.env.LH_DATA_DIR!, "graph", "positions.json");
+	const positionsFile = path.join(process.env.MT_DATA_DIR!, "graph", "positions.json");
 	readPositions = () => JSON.parse(fs.readFileSync(positionsFile, "utf8")).positions as Record<string, { x: number; y: number }>;
 	appendNode = stores.graphStore.appendNode as (node: unknown) => void;
 	appendChain = stores.graphStore.appendChain as (assertion: unknown) => void;

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { LhViewMessage, LhViewPart } from "@/src/core";
+import type { MtViewMessage, MtViewPart } from "@/src/core";
 import { ArrowDownIcon, DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
@@ -100,7 +100,7 @@ export const ConversationScrollButton = ({
   );
 };
 
-const getMessageText = (message: LhViewMessage): string =>
+const getMessageText = (message: MtViewMessage): string =>
   message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
@@ -110,21 +110,21 @@ export type ConversationDownloadProps = Omit<
   ComponentProps<typeof Button>,
   "onClick"
 > & {
-  messages: LhViewMessage[];
+  messages: MtViewMessage[];
   filename?: string;
-  formatMessage?: (message: LhViewMessage, index: number) => string;
+  formatMessage?: (message: MtViewMessage, index: number) => string;
 };
 
-const defaultFormatMessage = (message: LhViewMessage): string => {
+const defaultFormatMessage = (message: MtViewMessage): string => {
   const roleLabel =
     message.role.charAt(0).toUpperCase() + message.role.slice(1);
   return `**${roleLabel}:** ${getMessageText(message)}`;
 };
 
 export const messagesToMarkdown = (
-  messages: LhViewMessage[],
+  messages: MtViewMessage[],
   formatMessage: (
-    message: LhViewMessage,
+    message: MtViewMessage,
     index: number
   ) => string = defaultFormatMessage
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join("\n\n");

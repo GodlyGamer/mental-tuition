@@ -15,7 +15,7 @@ function withPayload(test: (fixture: {
 	write: (relative: string, content: string) => void;
 	run: () => ReturnType<typeof spawnSync>;
 }) => void) {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), "lh-demo-payload-test-"));
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "mt-demo-payload-test-"));
 	const write = (relative: string, content: string) => {
 		const file = path.join(root, relative);
 		fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -59,7 +59,7 @@ describe("demo standalone dependency gate", () => {
 	it("rejects imports outside the payload even when they resolve successfully", () => {
 		withPayload(({ write, run }) => {
 			// A sibling file, not just a missing file: resolution succeeds but confinement must fail.
-			const sibling = fs.mkdtempSync(path.join(os.tmpdir(), "lh-demo-outside-"));
+			const sibling = fs.mkdtempSync(path.join(os.tmpdir(), "mt-demo-outside-"));
 			try {
 				const external = path.join(sibling, "dependency.mjs");
 				fs.writeFileSync(external, "export const outside = true;");
@@ -94,13 +94,13 @@ describe("demo standalone dependency gate", () => {
 	});
 
 	it("strips secrets and uses only scratch data/auth/profile locations", () => {
-		const original = { PATH: "/bin", API_KEY: "fake", GH_TOKEN: "fake", MY_SECRET: "fake", PASSWORD: "fake", NODE_OPTIONS: "--require anything", NODE_PATH: "/outside", ELECTRON_RUN_AS_NODE: "1", LH_DEV_URL: "http://localhost", LH_DATA_DIR: "/real", LH_AUTH_FILE: "/real/auth.json", GOOGLE_APPLICATION_CREDENTIALS: "/real/google.json", AWS_SHARED_CREDENTIALS_FILE: "/real/aws", AWS_PROFILE: "real-profile", CLOUDSDK_CONFIG: "/real/gcloud" };
+		const original = { PATH: "/bin", API_KEY: "fake", GH_TOKEN: "fake", MY_SECRET: "fake", PASSWORD: "fake", NODE_OPTIONS: "--require anything", NODE_PATH: "/outside", ELECTRON_RUN_AS_NODE: "1", MT_DEV_URL: "http://localhost", MT_DATA_DIR: "/real", MT_AUTH_FILE: "/real/auth.json", GOOGLE_APPLICATION_CREDENTIALS: "/real/google.json", AWS_SHARED_CREDENTIALS_FILE: "/real/aws", AWS_PROFILE: "real-profile", CLOUDSDK_CONFIG: "/real/gcloud" };
 		const env = probeEnv(original, "/scratch");
-		for (const key of ["API_KEY", "GH_TOKEN", "MY_SECRET", "PASSWORD", "NODE_OPTIONS", "NODE_PATH", "ELECTRON_RUN_AS_NODE", "LH_DEV_URL", "GOOGLE_APPLICATION_CREDENTIALS", "AWS_SHARED_CREDENTIALS_FILE", "AWS_PROFILE", "CLOUDSDK_CONFIG"]) assert.equal(key in env, false, key);
+		for (const key of ["API_KEY", "GH_TOKEN", "MY_SECRET", "PASSWORD", "NODE_OPTIONS", "NODE_PATH", "ELECTRON_RUN_AS_NODE", "MT_DEV_URL", "GOOGLE_APPLICATION_CREDENTIALS", "AWS_SHARED_CREDENTIALS_FILE", "AWS_PROFILE", "CLOUDSDK_CONFIG"]) assert.equal(key in env, false, key);
 		assert.equal(env.PATH, "/bin");
-		assert.equal(env.LH_DATA_DIR, path.join("/scratch", "data"));
-		assert.equal(env.LH_AUTH_FILE, path.join("/scratch", "auth.json"));
-		assert.equal(env.LH_IGNORE_ENV_KEYS, "1");
+		assert.equal(env.MT_DATA_DIR, path.join("/scratch", "data"));
+		assert.equal(env.MT_AUTH_FILE, path.join("/scratch", "auth.json"));
+		assert.equal(env.MT_IGNORE_ENV_KEYS, "1");
 		assert.equal(env.HOME, "/scratch");
 		assert.equal(original.API_KEY, "fake");
 	});

@@ -5,7 +5,7 @@
  *
  * THE CONTRACT: full history stays persisted in the record — extraction
  * and the user's transcript keep reading everything. A compaction marker
- * (LhMarkerMessage, customType "compaction") carries a summary plus the
+ * (MtMarkerMessage, customType "compaction") carries a summary plus the
  * cut (firstKeptMessageId); toLlmMessages — the ONE model-facing seam —
  * projects [summary] + [messages from the cut onward] on every request.
  * The live agent never holds dropped messages because every run is built
@@ -35,7 +35,7 @@
 import type { PlanTree } from "./contracts/plan.ts";
 import { derivePlanStatusesLh, derivedNodeStatus } from "./contracts/plan.ts";
 import { COMPACTED_HISTORY_HEADER } from "./contracts/chat.ts";
-import type { LhMessage, LhMarkerMessage } from "./native-messages.ts";
+import type { MtMessage, MtMarkerMessage } from "./native-messages.ts";
 import { newMessageId, userMessageText } from "./native-messages.ts";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { AssistantMessage, ToolResultMessage, Usage } from "@earendil-works/pi-ai";
@@ -95,7 +95,7 @@ export function calculateContextTokens(usage: {
  * whole message — record scaffolding (ids, usage, responseId, app-side
  * details, escaped quotes/backslashes) inflates ~3x (measured on the
  * 2026-10-05 relational-databases incident: 84k estimated vs ~30k real). */
-export function estimateMessageTokens(message: LhMessage | AgentMessage): number {
+export function estimateMessageTokens(message: MtMessage | AgentMessage): number {
 	const content: unknown = (message as { content?: unknown }).content;
 	let chars = 0;
 	if ((message as { role?: string }).role === "assistant") {
@@ -136,11 +136,11 @@ function textCharsOfContent(content: unknown): number {
  * captured before a later compaction" law). Index into messages, or
  * null. */
 export function lastAssistantUsageIndex(
-	messages: readonly (LhMessage | AgentMessage)[],
+	messages: readonly (MtMessage | AgentMessage)[],
 ): number | null {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const m = messages[i]!;
-		if ((m as { role?: string }).role === "custom" && (m as LhMarkerMessage).customType === "compaction") return null;
+		if ((m as { role?: string }).role === "custom" && (m as MtMarkerMessage).customType === "compaction") return null;
 		if ((m as { role?: string }).role !== "assistant") continue;
 		const a = m as AssistantMessage & { stopReason?: string };
 		if (a.stopReason === "aborted") continue;
@@ -168,7 +168,7 @@ export interface ContextTokenEstimate {
  * counted (the relational-databases bug: full-record JSON.stringify/4
  * tripled the true context and fired a 30k session at an 80k threshold). */
 export function estimateContextTokens(
-	messages: readonly (LhMessage | AgentMessage)[],
+	messages: readonly (MtMessage | AgentMessage)[],
 ): ContextTokenEstimate {
 	const anchor = lastAssistantUsageIndex(messages);
 	if (anchor === null) {
@@ -184,7 +184,7 @@ export function estimateContextTokens(
 }
 
 /** Estimate a whole message list (the plain heuristic — cut-walk use). */
-export function estimateTokens(messages: readonly (LhMessage | AgentMessage)[]): number {
+export function estimateTokens(messages: readonly (MtMessage | AgentMessage)[]): number {
 	let total = 0;
 	for (const m of messages) total += estimateMessageTokens(m);
 	return total;
@@ -208,7 +208,7 @@ export function estimateTokens(messages: readonly (LhMessage | AgentMessage)[]):
  * span — valid), or messages.length when there is nothing meaningful to
  * cut (kept budget covers everything — caller checks before compacting).
  */
-export function compactionCutIndex(messages: readonly LhMessage[], keepRecentTokens = KEEP_RECENT_TOKENS): number {
+export function compactionCutIndex(messages: readonly MtMessage[], keepRecentTokens = KEEP_RECENT_TOKENS): number {
 	let kept = 0;
 	for (let i = messages.length - 1; i >= 0; i--) {
 		if (kept >= keepRecentTokens) {
@@ -229,7 +229,7 @@ export function compactionCutIndex(messages: readonly LhMessage[], keepRecentTok
 
 /** The newest assistant message at or before `before` whose content
  * carries the tool call `toolCallId` — the call a result answers. */
-function assistantIndexOfCall(messages: readonly LhMessage[], toolCallId: string, before: number): number {
+function assistantIndexOfCall(messages: readonly MtMessage[], toolCallId: string, before: number): number {
 	for (let i = before - 1; i >= 0; i--) {
 		const m = messages[i]!;
 		if ((m as { role?: string }).role !== "assistant") continue;
@@ -261,7 +261,7 @@ export interface CompactionDetails {
  * (header + summary — single-sourced header); the marker rides the
  * record at the compaction MOMENT (near the transcript end), while the
  * cut it names sits deep in history: the UI renders both places. */
-export function newCompactionMarker(summary: string, details: CompactionDetails): LhMarkerMessage {
+export function newCompactionMarker(summary: string, details: CompactionDetails): MtMarkerMessage {
 	return {
 		id: newMessageId(),
 		role: "custom",
@@ -276,15 +276,15 @@ export function newCompactionMarker(summary: string, details: CompactionDetails)
 /** The ACTIVE compaction marker: the newest one in the record (chained
  * compactions — the last one rules; older markers fall inside the
  * dropped span and never render). */
-export function activeCompactionOf(messages: readonly LhMessage[]): (LhMarkerMessage & { details: CompactionDetails }) | null {
+export function activeCompactionOf(messages: readonly MtMessage[]): (MtMarkerMessage & { details: CompactionDetails }) | null {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const m = messages[i]!;
 		if ((m as { role?: string }).role !== "custom") continue;
-		const marker = m as LhMarkerMessage;
+		const marker = m as MtMarkerMessage;
 		if (marker.customType === "compaction") {
 			const details = marker.details as Partial<CompactionDetails>;
 			if (typeof details.firstKeptMessageId === "string") {
-				return marker as LhMarkerMessage & { details: CompactionDetails };
+				return marker as MtMarkerMessage & { details: CompactionDetails };
 			}
 		}
 	}
@@ -294,7 +294,7 @@ export function activeCompactionOf(messages: readonly LhMessage[]): (LhMarkerMes
 /** The index of the first KEPT message, or -1 when the record's active
  * marker names an id that no longer exists (corrupt/foreign) — callers
  * fall back to rendering everything (honest degradation, never throw). */
-export function keptIndexFor(messages: readonly LhMessage[], marker: LhMarkerMessage & { details: CompactionDetails }): number {
+export function keptIndexFor(messages: readonly MtMessage[], marker: MtMarkerMessage & { details: CompactionDetails }): number {
 	const id = marker.details.firstKeptMessageId;
 	for (let i = 0; i < messages.length; i++) {
 		if (messages[i]!.id === id) return i;
@@ -307,7 +307,7 @@ export function keptIndexFor(messages: readonly LhMessage[], marker: LhMarkerMes
 /** Serialize a message span as labeled text for the summarizer. Tool
  * results truncate at ~2k chars (the kept tail carries them verbatim for
  * the model; the SUMMARY only needs their gist). */
-export function serializeForSummary(messages: readonly LhMessage[]): string {
+export function serializeForSummary(messages: readonly MtMessage[]): string {
 	const lines: string[] = [];
 	for (const m of messages) {
 		const role = (m as { role?: string }).role;
@@ -334,7 +334,7 @@ export function serializeForSummary(messages: readonly LhMessage[]): string {
 				}`,
 			);
 		} else if (role === "custom") {
-			const marker = m as LhMarkerMessage;
+			const marker = m as MtMarkerMessage;
 			if (marker.customType === "plan-block") continue; // UI-only
 			lines.push(`[SYSTEM NOTE] ${marker.content}`);
 		}
@@ -346,7 +346,7 @@ export function serializeForSummary(messages: readonly LhMessage[]): string {
  * persists through compaction). Structure from record.tree, statuses
  * derived from the transcript (the record's own law: the tree carries
  * structure only). Empty tree → absent section (nothing persisted). */
-export function planTreeToText(tree: PlanTree | undefined, messages: readonly LhMessage[]): string | null {
+export function planTreeToText(tree: PlanTree | undefined, messages: readonly MtMessage[]): string | null {
 	if (!tree || tree.nodes.length === 0) return null;
 	const statuses = derivePlanStatusesLh(tree, messages);
 	const byId = new Map(tree.nodes.map((n) => [n.id, n]));

@@ -16,7 +16,7 @@ import {
 	activeProblemOf,
 	PRACTICE_CONCLUDE_TOOL,
 	PRACTICE_PROBLEM_TOOL,
-	type LhMessage,
+	type MtMessage,
 } from "../src/core/native-messages.ts";
 import { CONCLUDE_ACK_TEXT } from "../src/core/contracts/chat.ts";
 import { concludeInputObject, concludeTool, createPracticeGate, problemTool, practiceTools } from "../src/agent/tools/practice.ts";
@@ -41,8 +41,8 @@ const STAMPS = {
 } as const;
 
 /** A record whose latest problem call is ACTIVE (pose + ack, nothing after). */
-function activeProblemRecord(): LhMessage[] {
-	const pose: LhMessage & AssistantMessage = {
+function activeProblemRecord(): MtMessage[] {
+	const pose: MtMessage & AssistantMessage = {
 		id: "msg_a1",
 		role: "assistant",
 		content: [
@@ -51,7 +51,7 @@ function activeProblemRecord(): LhMessage[] {
 		timestamp: 1,
 		...STAMPS,
 	};
-	const ack: LhMessage & ToolResultMessage = {
+	const ack: MtMessage & ToolResultMessage = {
 		id: "msg_r1",
 		role: "toolResult",
 		toolCallId: "call_p1",
@@ -64,7 +64,7 @@ function activeProblemRecord(): LhMessage[] {
 	return [pose, ack];
 }
 
-function recordStore(messages: LhMessage[]) {
+function recordStore(messages: MtMessage[]) {
 	return {
 		store: {
 			getChat: (_id: string) => ({ messages, kind: "practice" }),
@@ -72,7 +72,7 @@ function recordStore(messages: LhMessage[]) {
 	};
 }
 
-const ctxOf = (messages: LhMessage[]) => ({ chatId: "c1", chatStore: recordStore(messages).store });
+const ctxOf = (messages: MtMessage[]) => ({ chatId: "c1", chatStore: recordStore(messages).store });
 const PROBLEM_INPUT = {
 	statement: "Prove the sum is even.",
 	mode: "recall",

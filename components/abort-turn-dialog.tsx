@@ -68,7 +68,7 @@ export function AbortTurnBody({
 			aria-modal="true"
 			aria-label={copy.title}
 			data-testid="abort-turn-dialog"
-			className="lh-scrim fixed inset-0 z-50 flex items-center justify-center"
+			className="mt-scrim fixed inset-0 z-50 flex items-center justify-center"
 			// A genuine click on the scrim cancels — the cautious default, like Esc.
 			{...backdropDismiss}
 		>

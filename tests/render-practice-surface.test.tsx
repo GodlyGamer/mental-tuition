@@ -26,7 +26,7 @@ import type { ArtifactPartProps } from "../src/core";
 import {
 	newThinkingMessage,
 	PRACTICE_PROBLEM_TOOL,
-	type LhMessage,
+	type MtMessage,
 } from "../src/core/native-messages.ts";
 
 const part = (over: Partial<ArtifactPartProps["part"]>): ArtifactPartProps["part"] => ({
@@ -197,7 +197,7 @@ describe("the practice transcript cards", () => {
 describe("the practice view projection", () => {
 	it("the thinking marker projects as a user-side data part (register in details)", () => {
 		const marker = newThinkingMessage("call_p1", "It is 42.");
-		const view = projectView([marker as LhMessage]);
+		const view = projectView([marker as MtMessage]);
 		assert.equal(view.length, 1);
 		assert.equal(view[0]!.role, "user");
 		const dataPart = view[0]!.parts[0]!;
@@ -222,7 +222,7 @@ describe("the practice view projection", () => {
 				details: null,
 				isError: false,
 			},
-		] as unknown as LhMessage[];
+		] as unknown as MtMessage[];
 		const view = projectView(messages);
 		const toolPart = view[0]!.parts.find((p) => p.type === `tool-${PRACTICE_PROBLEM_TOOL}`)!;
 		assert.equal(toolPart.state, "input-available");
@@ -258,7 +258,7 @@ describe("GraphContextCard", () => {
 	it("the marker projects to the card's part (projectView fold)", () => {
 		const view = projectView([newGraphContextMessage(
 			[{ id: "n1", name: "A", statement: "S." }], [],
-		) as unknown as LhMessage]);
+		) as unknown as MtMessage]);
 		assert.equal((view[0]!.parts[0] as { type: string }).type, "data-graph-context");
 	});
 });

@@ -15,8 +15,8 @@
  * Electron shell does (electron/main.cjs) — with --electron it uses
  * Electron's bundled Node via ELECTRON_RUN_AS_NODE, otherwise host Node —
  * 127.0.0.1 on a kernel-assigned
- * free port, NODE_ENV=production, a THROWAWAY LH_DATA_DIR and an EMPTY
- * LH_AUTH_FILE under os.tmpdir() (no real keys or data ever touch it) —
+ * free port, NODE_ENV=production, a THROWAWAY MT_DATA_DIR and an EMPTY
+ * MT_AUTH_FILE under os.tmpdir() (no real keys or data ever touch it) —
  * polls GET / until 200, then probes the GET-only API surface (graph /
  * models / settings — no side effects). Any non-200, an early server
  * exit, or a 30s boot timeout fails the gate and prints the server's own
@@ -82,7 +82,7 @@ async function main() {
 	verifyDemoRuntime(STANDALONE, RUNTIME);
 	const port = await freePort();
 	const url = `http://127.0.0.1:${port}`;
-	const home = fs.mkdtempSync(path.join(os.tmpdir(), "lh-smoke-"));
+	const home = fs.mkdtempSync(path.join(os.tmpdir(), "mt-smoke-"));
 	const dataDir = path.join(home, "data");
 	const authFile = path.join(home, "auth.json");
 	fs.writeFileSync(authFile, "{}\n", "utf-8");
@@ -113,8 +113,8 @@ async function main() {
 			NODE_ENV: "production",
 			PORT: String(port),
 			HOSTNAME: "127.0.0.1",
-			LH_DATA_DIR: dataDir,
-			LH_AUTH_FILE: authFile,
+			MT_DATA_DIR: dataDir,
+			MT_AUTH_FILE: authFile,
 		},
 		stdio: ["ignore", "pipe", "pipe"],
 	});

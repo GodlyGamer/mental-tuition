@@ -15,7 +15,7 @@
  *
  * UI-ONLY CONTENT (owner ruling, fork 1 + the plan's custom-message
  * taxonomy): the probe→teach handoff, sub-agent steers,
- * and plan blocks are LhMarkerMessage — this app's declaration-merged
+ * and plan blocks are MtMarkerMessage — this app's declaration-merged
  * member of pi-agent-core's CustomAgentMessages extension point, shaped
  * exactly like pi's own CustomMessage ({role:"custom", customType,
  * content, display, details}). ONE seam — toLlmMessages, wired as the
@@ -61,7 +61,7 @@ export const INTERRUPTED_TEXT =
  * model-visible), `display` marks messages the UI renders (our projection
  * keys rendering on customType; the flag documents intent).
  */
-export interface LhMarkerMessage {
+export interface MtMarkerMessage {
 	/** Record identity (pi messages carry no id — see the file header). */
 	id: string;
 	role: "custom";
@@ -85,16 +85,16 @@ export interface LhMarkerMessage {
 
 declare module "@earendil-works/pi-agent-core" {
 	interface CustomAgentMessages {
-		lhMarker: LhMarkerMessage;
+		mtMarker: MtMarkerMessage;
 	}
 }
 
 /** A record message: a native pi message (or our marker) plus the record id. */
-export type LhMessage = (UserMessage | AssistantMessage | ToolResultMessage | LhMarkerMessage) & { id: string };
+export type MtMessage = (UserMessage | AssistantMessage | ToolResultMessage | MtMarkerMessage) & { id: string };
 
 /** A record message list is assignable to the agent's context — that IS
  *  the replay (ui-stream/chat-handler assign it to initialState.messages). */
-export function asAgentMessages(messages: readonly LhMessage[]): AgentMessage[] {
+export function asAgentMessages(messages: readonly MtMessage[]): AgentMessage[] {
 	return messages as unknown as AgentMessage[];
 }
 
@@ -117,7 +117,7 @@ export interface ChatImage {
 /** A learner-authored user message (text input, verdict note). With
  *  photos attached (the composer's + button, personal fork 2026-10-24)
  *  the content becomes blocks: the text (when any), then each image. */
-export function newUserMessage(text: string, images: readonly ChatImage[] = []): LhMessage & UserMessage {
+export function newUserMessage(text: string, images: readonly ChatImage[] = []): MtMessage & UserMessage {
 	return {
 		id: newMessageId(),
 		role: "user",
@@ -147,7 +147,7 @@ export function userMessageText(content: unknown): string {
  *  rides agent.steer(), the live stream's message events, and the settled
  *  record, so the optimistic queued indicator and the transcript card
  *  upsert by one identity. */
-export function newUserSteer(text: string, id: string): LhMessage & UserMessage {
+export function newUserSteer(text: string, id: string): MtMessage & UserMessage {
 	return { id, role: "user", content: text, timestamp: Date.now() };
 }
 
@@ -161,7 +161,7 @@ export function newAnswerResult(
 	toolCallId: string,
 	toolName: string,
 	answer: unknown,
-): LhMessage & ToolResultMessage {
+): MtMessage & ToolResultMessage {
 	// Photos of working (the dock's + button) ride ONCE, as image blocks
 	// after the answer text; the stored details keep only their count.
 	const { photos, ...rest } = answer as QuestionAnswerData;
@@ -185,7 +185,7 @@ export function newAnswerResult(
 
 /** The probe→teach handoff wake: scaffolding, not speech — the model reads
  *  HANDOFF_TEXT, the UI renders the quiet system line. */
-export function newHandoffMessage(chatId: string): LhMarkerMessage {
+export function newHandoffMessage(chatId: string): MtMarkerMessage {
 	return {
 		id: `steer_probe_${chatId}`,
 		role: "custom",
@@ -203,7 +203,7 @@ export function newHandoffMessage(chatId: string): LhMarkerMessage {
 export function newPlanBlockMessage(
 	planCallId: string,
 	block: unknown,
-): LhMarkerMessage {
+): MtMarkerMessage {
 	return {
 		id: `pb_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`,
 		role: "custom",
@@ -237,7 +237,7 @@ export interface GraphContextPick {
  *  to a user message by toLlmMessages like every marker); `details`
  *  feeds the transcript's collapsible GraphContextCard. No more seed
  *  text glued into the first prompt. */
-export function newGraphContextMessage(picks: readonly GraphContextPick[], chains: readonly string[]): LhMarkerMessage {
+export function newGraphContextMessage(picks: readonly GraphContextPick[], chains: readonly string[]): MtMarkerMessage {
 	// IDS FIRST (owner round 9, 2026-10-05 — the mastery-trace contract):
 	// each proposition is introduced ONCE with its id, name, and statement;
 	// the problem tool's `target` field takes these ids (names normalize to
@@ -274,7 +274,7 @@ export function newGraphContextMessage(picks: readonly GraphContextPick[], chain
  *  content label is the single "Your thinking"; `details` keeps the raw
  *  payload for the transcript card. One problem may carry many
  *  submissions. */
-export function newThinkingMessage(problemCallId: string, text: string): LhMarkerMessage {
+export function newThinkingMessage(problemCallId: string, text: string): MtMarkerMessage {
 	return {
 		id: newMessageId(),
 		role: "custom",
@@ -292,7 +292,7 @@ export function newThinkingMessage(problemCallId: string, text: string): LhMarke
  *  single-sourced NEXT_PROBLEM_TEXT — the model's unambiguous go-ahead;
  *  the transcript renders its own compact line off the marker (never
  *  the content). */
-export function newNextMessage(): LhMarkerMessage {
+export function newNextMessage(): MtMarkerMessage {
 	return {
 		id: newMessageId(),
 		role: "custom",
@@ -310,7 +310,7 @@ export function newNextMessage(): LhMarkerMessage {
  *  (concludedByDismissalPair below) — the agent sees the dismissal as a
  *  conclude call it "made" with outcome "dismissed", so the slot-freed
  *  state and the dismissal read through the one vocabulary it owns. */
-export function newProblemDismissedMarker(problemCallId: string): LhMarkerMessage {
+export function newProblemDismissedMarker(problemCallId: string): MtMarkerMessage {
 	return {
 		id: newMessageId(),
 		role: "custom",
@@ -331,7 +331,7 @@ export function newProblemDismissedMarker(problemCallId: string): LhMarkerMessag
  *  pair appends at most once per marker). */
 export function concludedByDismissalPair(
 	problemCallId: string,
-): [LhMessage & AssistantMessage, LhMessage & ToolResultMessage] {
+): [MtMessage & AssistantMessage, MtMessage & ToolResultMessage] {
 	const callId = `call_conc_${problemCallId}`;
 	const now = Date.now();
 	// The stamps are placeholders by design: history serialization reads
@@ -380,7 +380,7 @@ export function concludedByDismissalPair(
  *  subject is the call, not a dangling result). */
 /** The ids of tool calls whose results are CLEAN (not errored) — the only
  *  calls that ever happened, per the honest-activation ruling. */
-function cleanToolCallIds(messages: readonly LhMessage[]): Set<string> {
+function cleanToolCallIds(messages: readonly MtMessage[]): Set<string> {
 	const ids = new Set<string>();
 	for (const m of messages) {
 		if ((m as { role?: string }).role !== "toolResult") continue;
@@ -397,7 +397,7 @@ function cleanToolCallIds(messages: readonly LhMessage[]): Set<string> {
  *  inputs that still carry their own solutionReveal fall back to it at the
  *  card. Undefined when the pose carries no string solution. */
 export function modelSolutionForConclude(
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 	concludeCallId: string,
 ): string | undefined {
 	const input = problemInputForConclude(messages, concludeCallId);
@@ -411,7 +411,7 @@ export function modelSolutionForConclude(
  * and refusal law as the reveal: a pose the record never acked (a
  * refused call) folds nothing. */
 export function problemInputForConclude(
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 	concludeCallId: string,
 ): { statement?: unknown; mode?: unknown; target?: unknown; modelSolution?: unknown } | undefined {
 	let mi = messages.findIndex(
@@ -440,7 +440,7 @@ export function problemInputForConclude(
 }
 
 export function activeProblemOf(
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 ): { toolCallId: string; input: unknown } | null {
 	// HONEST ACTIVATION (owner ruling, 2026-10-05 — the BKT incident):
 	// calls count only through their RESULTS — a problem activates on its
@@ -451,7 +451,7 @@ export function activeProblemOf(
 		const m = messages[mi]!;
 		const role = (m as { role?: string }).role;
 		if (role === "custom") {
-			const marker = m as LhMarkerMessage;
+			const marker = m as MtMarkerMessage;
 			if (marker.customType === "problem-dismissed") return null;
 			continue;
 		}
@@ -478,13 +478,13 @@ export function activeProblemOf(
  *  text/continue appends read this: the pair rides the user's next input
  *  (input-events). Newest-marker-wins scan: the first dismissal marker or
  *  conclude call from the end decides. */
-export function pendingProblemDismissalOf(messages: readonly LhMessage[]): string | null {
+export function pendingProblemDismissalOf(messages: readonly MtMessage[]): string | null {
 	const cleanCallIds = cleanToolCallIds(messages);
 	for (let mi = messages.length - 1; mi >= 0; mi--) {
 		const m = messages[mi]!;
 		const role = (m as { role?: string }).role;
 		if (role === "custom") {
-			const marker = m as LhMarkerMessage;
+			const marker = m as MtMarkerMessage;
 			if (marker.customType === "problem-dismissed") {
 				return (marker.details as { problemCallId?: unknown }).problemCallId as string;
 			}
@@ -547,12 +547,12 @@ export function toLlmMessages(messages: readonly AgentMessage[]): Message[] {
 	// (header + summary) rendered ONCE, up top. The marker itself is then
 	// skipped in place — it must never render twice. A cut naming a
 	// missing id degrades honestly (everything renders — never throw).
-	const lhMessages = messages as readonly LhMessage[];
-	const active = activeCompactionOf(lhMessages);
+	const mtMessages = messages as readonly MtMessage[];
+	const active = activeCompactionOf(mtMessages);
 	let start = 0;
 	let head: Message | null = null;
 	if (active) {
-		const kept = keptIndexFor(lhMessages, active);
+		const kept = keptIndexFor(mtMessages, active);
 		if (kept > 0) {
 			start = kept;
 			head = {
@@ -582,7 +582,7 @@ export function toLlmMessages(messages: readonly AgentMessage[]): Message[] {
 		const m = messages[i]!;
 		const role = (m as { role?: string }).role;
 		if (role === "custom") {
-			const marker = m as LhMarkerMessage;
+			const marker = m as MtMarkerMessage;
 			// UI-only markers: plan blocks, and problem dismissals (the
 			// synthesized conclude pair carries the model's face).
 			if (marker.customType === "plan-block" || marker.customType === "problem-dismissed") continue;
@@ -599,7 +599,7 @@ export function toLlmMessages(messages: readonly AgentMessage[]): Message[] {
 			continue;
 		}
 		// Strip the record id: the wire carries the native shape only.
-		const { id: _id, ...native } = m as LhMessage;
+		const { id: _id, ...native } = m as MtMessage;
 		out.push(native as Message);
 		// Dangling-call synthesis: an assistant message whose toolCalls have
 		// no results in the remaining tail (abort mid-question) — the
@@ -631,7 +631,7 @@ export function toLlmMessages(messages: readonly AgentMessage[]): Message[] {
  *  NEWEST assistant message's FIRST question-tool call with no result in
  *  the tail — one question at a time, the dock's subject. */
 export function danglingQuestionOf(
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 ): { toolCallId: string; tool: string; input: unknown } | null {
 	for (let mi = messages.length - 1; mi >= 0; mi--) {
 		const m = messages[mi]!;
@@ -651,7 +651,7 @@ export function danglingQuestionOf(
 
 /** The probe→teach construction seam (chat-handler): a probe_done call in
  *  the transcript — any state — means the probe is concluded: teach. */
-export function hasProbeDone(messages: readonly LhMessage[]): boolean {
+export function hasProbeDone(messages: readonly MtMessage[]): boolean {
 	for (const m of messages) {
 		if ((m as { role?: string }).role !== "assistant") continue;
 		const assistant = m as AssistantMessage;
@@ -662,7 +662,7 @@ export function hasProbeDone(messages: readonly LhMessage[]): boolean {
 
 /** Every toolResult id in the record — answer-event validation (the call
  *  must be a DANGLING question call, not an already-answered one). */
-export function answeredCallIds(messages: readonly LhMessage[]): Set<string> {
+export function answeredCallIds(messages: readonly MtMessage[]): Set<string> {
 	return resultIdsFrom(messages);
 }
 
@@ -688,7 +688,7 @@ export function answeredCallIds(messages: readonly LhMessage[]): Set<string> {
 /** Is this record message a user-dismissed question result? The full
  *  answer rides the toolResult's `details` (newAnswerResult) — the
  *  dismissal pause and the continuation fold both read it. */
-function isDismissedResult(m: LhMessage): boolean {
+function isDismissedResult(m: MtMessage): boolean {
 	if ((m as { role?: string }).role !== "toolResult") return false;
 	const details = (m as { details?: unknown }).details as { dismissed?: unknown } | undefined;
 	return details?.dismissed === true;
@@ -700,12 +700,12 @@ function isDismissedResult(m: LhMessage): boolean {
  *  the wake pipeline holds job deliveries in the steer queue until the
  *  next send. Derived from the tail — no latch to persist or clear; any
  *  user message flips it off by changing the record. */
-export function endsInDismissal(messages: readonly LhMessage[]): boolean {
+export function endsInDismissal(messages: readonly MtMessage[]): boolean {
 	const last = messages[messages.length - 1];
 	return last !== undefined && isDismissedResult(last);
 }
 
-export function needsContinuation(messages: readonly LhMessage[]): boolean {
+export function needsContinuation(messages: readonly MtMessage[]): boolean {
 	const last = messages[messages.length - 1];
 	if (!last || (last as { role?: string }).role !== "toolResult") return false;
 	// The trailing results batch (contiguous by construction — the agent

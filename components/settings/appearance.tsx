@@ -5,7 +5,7 @@
  * the factory defaults and applied as RUNTIME CSS variables on <html>.
  *
  * Why variables and not className swaps: every seam the settings touch was
- * built token-first (--font-prose, --lh-prose-size, --lh-ink-strong, …),
+ * built token-first (--font-prose, --mt-prose-size, --mt-ink-strong, …),
  * so application is setProperty and nothing re-renders. The ONE thing the
  * variables can't reach — the mode — is a data-theme attribute on <html>
  * (Mentaljineer themes: dark / light / nocturne, palettes in globals.css),
@@ -82,20 +82,20 @@ export function appearanceVars(a: ReturnType<typeof resolveAppearance>): Record<
 	}
 	// The ONE documented reading-size variable (typography round 4): prose,
 	// inputs, and session titles all read it, so one setProperty moves them.
-	vars["--lh-prose-size"] = `${a.proseFontSize}px`;
+	vars["--mt-prose-size"] = `${a.proseFontSize}px`;
 	// Session names: Geist light by default (the stylesheet's --font-title);
 	// the toggle swaps in CMU Serif bold — covers chat.tsx + new-session.tsx
 	// titles with zero component edits (they use the .font-title utility).
 	if (a.sessionNameSerif) {
-		vars["--font-title"] = `"lh-cmu", serif`;
-		vars["--lh-title-weight"] = "700";
-		vars["--lh-title-tracking"] = "0";
+		vars["--font-title"] = `"mt-cmu", serif`;
+		vars["--mt-title-weight"] = "700";
+		vars["--mt-title-tracking"] = "0";
 	}
 	// Markdown rendering: heading weight + the emphasis inks (the vars
 	// were built "ready for the settings UI").
-	vars["--lh-heading-weight"] = String(a.mdRendering.headingWeight);
-	if (a.mdRendering.boldColor !== null) vars["--lh-ink-strong"] = a.mdRendering.boldColor;
-	if (a.mdRendering.italicColor !== null) vars["--lh-ink-italic"] = a.mdRendering.italicColor;
+	vars["--mt-heading-weight"] = String(a.mdRendering.headingWeight);
+	if (a.mdRendering.boldColor !== null) vars["--mt-ink-strong"] = a.mdRendering.boldColor;
+	if (a.mdRendering.italicColor !== null) vars["--mt-ink-italic"] = a.mdRendering.italicColor;
 	return vars;
 }
 
@@ -164,9 +164,9 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
 		const root = document.documentElement;
 		root.dataset.theme = mode;
 		root.classList.toggle("dark", mode !== "light");
-		window.lh?.setTheme?.(mode);
+		window.mt?.setTheme?.(mode);
 		try {
-			localStorage.setItem("lh-theme", mode);
+			localStorage.setItem("mt-theme", mode);
 		} catch {/* storage blocked: the boot script falls back to dark */}
 	}, [mode]);
 

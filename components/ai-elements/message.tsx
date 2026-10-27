@@ -18,7 +18,7 @@ import { createMathPlugin } from "@streamdown/math";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import type { LhViewMessage } from "@/src/core";
+import type { MtViewMessage } from "@/src/core";
 import {
   createContext,
   memo,
@@ -37,7 +37,7 @@ import { mdComponents } from "@/components/md-blocks";
 import { transformMathDelimiters } from "@/src/core";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: LhViewMessage["role"];
+  from: MtViewMessage["role"];
 };
 
 export const Message = ({ className, from, ...props }: MessageProps) => (
@@ -370,7 +370,7 @@ export const MessageResponse = memo(
         className={cn(
           // Source Sans 3 + emphasis-color tokens on every markdown surface
           // (labels stay JetBrains Mono). Unlayered plain CSS wins over text-sm.
-          "lh-prose size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+          "mt-prose size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
           className
         )}
         components={mdComponents}

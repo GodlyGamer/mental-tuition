@@ -14,10 +14,10 @@ import unittest
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "learnharness" / "scripts"
+SCRIPTS = ROOT / "skills" / "mentaltuition" / "scripts"
 GOLDEN = ROOT / "tests" / "fixtures" / "golden-data"
 sys.path.insert(0, str(SCRIPTS))
-spec = importlib.util.spec_from_file_location("lh_sessions_reader", SCRIPTS / "sessions.py")
+spec = importlib.util.spec_from_file_location("mt_sessions_reader", SCRIPTS / "sessions.py")
 sessions = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sessions)
 

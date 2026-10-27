@@ -1,7 +1,7 @@
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { serverExecute } from "../tool-execute.ts";
 import { probeDoneInputSchema, PROBE_DONE_ACK_TEXT } from "../../core/contracts.ts";
-import { danglingQuestionOf, hasProbeDone, type LhMessage } from "../../core/native-messages.ts";
+import { danglingQuestionOf, hasProbeDone, type MtMessage } from "../../core/native-messages.ts";
 import type { ChatStore } from "../../core/ports.ts";
 import { buildProbeHandoffSteer, type SteerMessage } from "../../core/contracts.ts";
 
@@ -18,7 +18,7 @@ export interface ProbeDoneContext {
 /** Does the transcript already carry a concluded probe (any state)?
  *  Wave B: the native scan (any probe_done tool call, any state) — same
  *  semantics the UIMessage part scan had. */
-function probeConcluded(messages: readonly LhMessage[]): boolean {
+function probeConcluded(messages: readonly MtMessage[]): boolean {
 	return hasProbeDone(messages);
 }
 

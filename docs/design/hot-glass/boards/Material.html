@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Liquid glass material</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+.stage{position:relative;z-index:0}
+.lgp{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.06) 16%,rgba(255,255,255,.035) 34%,rgba(255,255,255,.025) 55%,rgba(255,255,255,.03) 78%,rgba(255,255,255,.06) 100%),rgba(18,18,21,.55);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 2px 1px -1px rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1.5px 1px -.5px rgba(255,255,255,.22),inset 0 40px 60px -48px rgba(255,255,255,.18),0 40px 80px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4)}
+.lg{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border:0;border-radius:999px;font-family:'Geist',sans-serif;font-size:14px;line-height:1;cursor:pointer;user-select:none;color:rgba(255,255,255,.86);text-shadow:0 1px 0 rgba(255,255,255,.14),0 -1px 0 rgba(0,0,0,.35),0 0 14px rgba(255,255,255,.2);background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.09) 22%,rgba(255,255,255,.05) 44%,rgba(255,255,255,.03) 62%,rgba(255,255,255,.05) 82%,rgba(255,255,255,.1) 100%),rgba(28,28,32,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.09),inset 0 -1.5px 1px -.5px rgba(255,255,255,.4),inset 0 10px 14px -10px rgba(255,255,255,.24),inset 0 -12px 16px -12px rgba(255,255,255,.2),inset 0 0 16px rgba(0,0,0,.28),0 12px 28px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4);transition:transform 320ms cubic-bezier(.2,.7,.2,1)}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+.lg::before,.lg::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;background:conic-gradient(from calc(var(--ang) + var(--spin)),#ff5ad1,#ffb547,#f4ff7a,#5dffb0,#49e6ff,#6a7bff,#c86bff,#ff5ad1);opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 700ms cubic-bezier(.2,.7,.2,1),--ang 1400ms cubic-bezier(.2,.7,.2,1)}
+.lg::before{inset:-1px;padding:1.5px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg::after{inset:-6px;filter:blur(12px);z-index:-1}
+.lg:hover::before{opacity:.9;animation-play-state:running;transition-duration:300ms,1400ms}
+.lg:hover::after{animation-play-state:running}
+.lg:active{transform:scale(.97);transition-duration:90ms}
+.lg:active::before{opacity:1;--ang:220deg;transition-duration:60ms,1400ms}
+.lg:active::after{opacity:.55;--ang:220deg;transition-duration:60ms,1400ms}
+.lg.xl{height:136px;padding:0 64px;font-size:44px;font-weight:300;letter-spacing:-.02em;text-shadow:0 1.5px 0 rgba(255,255,255,.16),0 -1px 0 rgba(0,0,0,.4),0 0 26px rgba(255,255,255,.28);box-shadow:0 0 0 1.5px rgba(0,0,0,.6),inset 0 3px 1px -1px rgba(255,255,255,.85),inset 0 0 0 1.5px rgba(255,255,255,.1),inset 0 -3px 2px -1px rgba(255,255,255,.45),inset 0 26px 34px -26px rgba(255,255,255,.28),inset 0 -30px 36px -28px rgba(255,255,255,.22),inset 0 0 40px rgba(0,0,0,.3),0 30px 60px rgba(0,0,0,.6),0 4px 10px rgba(0,0,0,.45)}
+.lg.xl::before{padding:2.5px}
+.lg.xl::after{inset:-14px;filter:blur(24px)}
+.lg.round{width:136px;padding:0}
+.cap{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#9a9a9f}
+</style>
+</helmet>
+<div style="position: relative; width: 1200px; height: 680px; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse 110% 100% at 18% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000), #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+  <div class="lgp stage" style="position: absolute; left: 220px; top: -60px; width: 1040px; height: 600px; border-radius: 72px">
+    <div style="position: absolute; left: 76px; top: 112px; display: flex; flex-direction: column; gap: 12px; font-family: 'Geist Mono', monospace; font-size: 13px; letter-spacing: 0.14em; color: rgba(255,255,255,.34)"><span>MENTAL TUITION</span><span>V.04</span></div>
+    <div style="position: absolute; left: 76px; bottom: 68px; display: flex; align-items: center; gap: 44px">
+      <button type="button" class="lg xl round" aria-label="New session"><svg width="56" height="56" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="filter: drop-shadow(0 0 10px rgba(255,255,255,.35))"><path d="M28 8v40M8 28h40M13.9 13.9l28.2 28.2M42.1 13.9L13.9 42.1"></path></svg></button>
+      <button type="button" class="lg xl">Start session</button>
+    </div>
+  </div>
+  <div style="position: absolute; left: 64px; top: 574px; right: 64px; display: flex; flex-direction: column; gap: 10px">
+    <span class="cap" style="text-transform: uppercase">00 · Liquid glass material · hover, then press either button</span>
+    <h2 style="margin: 0; font-size: 22px; font-weight: 200; letter-spacing: -0.01em; line-height: 1.3">Thick, domed glass: a bright rim along the top, a caustic glow along the bottom, a dark refraction edge, and type that sits inside the glass.</h2>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

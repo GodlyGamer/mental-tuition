@@ -4,10 +4,10 @@ import {
 	firstSourceTextParts, messageAnchorId, messageIdFromHash, propositionSessionHref, textPartMessageId,
 } from "../src/core/session-navigation.ts";
 import { projectView } from "../src/core/view.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 
-function teacher(id: string, content: unknown[]): LhMessage {
-	return { id, role: "assistant", content, stopReason: "stop", timestamp: 0, provider: "openrouter", model: "test" } as LhMessage;
+function teacher(id: string, content: unknown[]): MtMessage {
+	return { id, role: "assistant", content, stopReason: "stop", timestamp: 0, provider: "openrouter", model: "test" } as MtMessage;
 }
 
 describe("proposition source-session links (owner, 2026-10-13)", () => {
@@ -69,7 +69,7 @@ describe("native message anchors survive assistant grouping", () => {
 
 	it("learner text and teacher messages without prose acquire no source anchor", () => {
 		const view = projectView([
-			{ id: "user_a", role: "user", content: "Learner text", timestamp: 1 } as LhMessage,
+			{ id: "user_a", role: "user", content: "Learner text", timestamp: 1 } as MtMessage,
 			teacher("msg_a", [{ type: "thinking", thinking: "Private reasoning" }]),
 			teacher("msg_b", [{ type: "text", text: "\n\t" }]),
 		]);

@@ -45,7 +45,7 @@
  * state is clean — toggle + name); the indicator ("Your version is
  * saved") appears ONLY when an override exists. The switch requires an
  * override FILE (route-enforced), so a file-less toggle is disabled.
- * The segments view re-reads on the 'lh:settings-saved' signal for the
+ * The segments view re-reads on the 'mt:settings-saved' signal for the
  * agent section — the view's enabled flags derive from the record's
  * switches, and the 2026-09-26 state-echo bug was exactly this reader
  * missing (the toggle painted its old state until a remount re-fetched).
@@ -285,7 +285,7 @@ function MenuTrigger({
 /* The section's dropdowns all mount the shared MenuShell (fix wave chunk
  * B): portaled to document.body, fixed-anchored to the open trigger by
  * testid (the section's one-ref pattern), opening DOWN with the shell's
- * viewport cap and auto-flip. data-lh-menu rides the shell — the
+ * viewport cap and auto-flip. data-mt-menu rides the shell — the
  * outside-click contract's exemption mark. */
 
 export function AgentSection({
@@ -413,7 +413,7 @@ export function AgentSection({
 		const onPointerDown = (e: PointerEvent) => {
 			const target = e.target as Node;
 			if (menuAnchorRef.current?.contains(target)) return;
-			if (target instanceof Element && target.closest("[data-lh-menu]")) return;
+			if (target instanceof Element && target.closest("[data-mt-menu]")) return;
 			if (target instanceof Element && target.closest('[role="dialog"]')) {
 				setOpenMenu(null);
 			}

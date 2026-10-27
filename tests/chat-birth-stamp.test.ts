@@ -7,7 +7,7 @@
  * record; resolveConversationSpec prefers chat.settings.model).
  *
  * This pin drives the actual route handler (framework-free
- * Request/Response) under an isolated LH_DATA_DIR — the seam must be set
+ * Request/Response) under an isolated MT_DATA_DIR — the seam must be set
  * before the first import that transitively loads config.ts, so every
  * app-module import is dynamic (the prompt-overrides discipline).
  */
@@ -19,8 +19,8 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 
 // ── the seam, BEFORE any config-loading import ──────────────────────────────
-const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "lh-birth-stamp-"));
-process.env.LH_DATA_DIR = TMP_DATA;
+const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "mt-birth-stamp-"));
+process.env.MT_DATA_DIR = TMP_DATA;
 
 const { POST } = await import("../app/api/chats/route.ts");
 const { readSettings, writeSettings } = await import("../src/store/settings.ts");

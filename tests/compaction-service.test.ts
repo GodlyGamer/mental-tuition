@@ -19,8 +19,8 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 
 // ── the seam, BEFORE any config-loading import (the birth-stamp discipline) ─
-const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "lh-compaction-"));
-process.env.LH_DATA_DIR = TMP_DATA;
+const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "mt-compaction-"));
+process.env.MT_DATA_DIR = TMP_DATA;
 
 const { chatStore } = await import("../src/store/chats.ts");
 const {
@@ -33,7 +33,7 @@ const {
 import type { CompactionDeps } from "../src/server/compaction.ts";
 const { subscribe } = await import("../src/core/events.ts");
 const { activeCompactionOf, newUserMessage, COMPACTED_HISTORY_HEADER } = await import("../src/core/index.ts");
-import type { LhMessage } from "../src/core/index.ts";
+import type { MtMessage } from "../src/core/index.ts";
 
 after(() => {
 	fs.rmSync(TMP_DATA, { recursive: true, force: true });
@@ -41,7 +41,7 @@ after(() => {
 
 // ── fixtures ────────────────────────────────────────────────────────────────
 
-const big = (text: string, kb = 100): LhMessage => newUserMessage(`${text}: ${"x".repeat(kb * 1024)}`);
+const big = (text: string, kb = 100): MtMessage => newUserMessage(`${text}: ${"x".repeat(kb * 1024)}`);
 
 /** A chat whose record projects far over any test threshold. */
 function overThresholdChat(label: string): string {

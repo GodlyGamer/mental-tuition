@@ -1,4 +1,4 @@
-# LearnHarness data: a field reference
+# Mental Tuition data: a field reference
 
 The files are the user's record, not an import format to rewrite. Work read-only.
 The bundled readers make common views convenient; they are not required for custom

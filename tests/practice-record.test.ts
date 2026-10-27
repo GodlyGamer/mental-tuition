@@ -24,7 +24,7 @@ import {
 	toLlmMessages,
 	PRACTICE_CONCLUDE_TOOL,
 	PRACTICE_PROBLEM_TOOL,
-	type LhMessage,
+	type MtMessage,
 } from "../src/core/native-messages.ts";
 import { CONCLUDE_ACK_TEXT } from "../src/core/contracts/chat.ts";
 import { dismissAppends, inputAppends, parseChatInput, parseDismissInput } from "../src/core/input-events.ts";
@@ -48,8 +48,8 @@ const STAMPS = {
 	stopReason: "toolUse",
 } as const;
 
-function problemPose(callId = "call_p1", statement = "Show that…"): LhMessage[] {
-	const assistant: LhMessage & AssistantMessage = {
+function problemPose(callId = "call_p1", statement = "Show that…"): MtMessage[] {
+	const assistant: MtMessage & AssistantMessage = {
 		id: `msg_a_${callId}`,
 		role: "assistant",
 		content: [
@@ -58,7 +58,7 @@ function problemPose(callId = "call_p1", statement = "Show that…"): LhMessage[
 		timestamp: 1,
 		...STAMPS,
 	};
-	const ack: LhMessage & ToolResultMessage = {
+	const ack: MtMessage & ToolResultMessage = {
 		id: `msg_r_${callId}`,
 		role: "toolResult",
 		toolCallId: callId,
@@ -71,7 +71,7 @@ function problemPose(callId = "call_p1", statement = "Show that…"): LhMessage[
 	return [assistant, ack];
 }
 
-function concludeCall(outcome: string): LhMessage[] {
+function concludeCall(outcome: string): MtMessage[] {
 	// Honest folds: the conclude call rides WITH its clean ack — a
 	// dangling or errored conclude never freed anything.
 	return [
@@ -356,7 +356,7 @@ describe("needsContinuation (a persisted pose ack owes nothing)", () => {
 				details: null,
 				isError: false,
 				timestamp: 4,
-			} as LhMessage & ToolResultMessage,
+			} as MtMessage & ToolResultMessage,
 			...problemPose("call_p2", "the next one"),
 		];
 		assert.equal(needsContinuation(messages), false);
@@ -364,7 +364,7 @@ describe("needsContinuation (a persisted pose ack owes nothing)", () => {
 
 	it("an ERROR result is not a pose — the agent loop continues past it, so a record ending there (an abort) is owed the wake like any interrupted tool", () => {
 		const messages = [...problemPose("call_pe")];
-		const err = messages[1] as LhMessage & ToolResultMessage;
+		const err = messages[1] as MtMessage & ToolResultMessage;
 		err.isError = true;
 		err.content = [{ type: "text", text: "A problem is already active." }];
 		assert.equal(needsContinuation(messages), true);

@@ -142,10 +142,10 @@ export function PapersView({ initialModule }: { initialModule: string | null }) 
 
 	return (
 		<div className="relative flex h-dvh flex-col overflow-hidden">
-			<div className="lh-drag absolute inset-x-0 top-0 h-13" aria-hidden="true" />
-			<header className="lh-wco-gutter flex h-15 shrink-0 items-center gap-3 border-b border-border px-3">
+			<div className="mt-drag absolute inset-x-0 top-0 h-13" aria-hidden="true" />
+			<header className="mt-wco-gutter flex h-15 shrink-0 items-center gap-3 border-b border-border px-3">
 				{!sidebarOpen && (
-					<div className="lh-closed-toggle">
+					<div className="mt-closed-toggle">
 						<SidebarToggle />
 					</div>
 				)}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Press glow — corner glow, iridescent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+.stage{position:relative;z-index:0}
+.lgp{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.06) 16%,rgba(255,255,255,.035) 34%,rgba(255,255,255,.025) 55%,rgba(255,255,255,.03) 78%,rgba(255,255,255,.06) 100%),rgba(18,18,21,.55);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 2px 1px -1px rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1.5px 1px -.5px rgba(255,255,255,.22),inset 0 40px 60px -48px rgba(255,255,255,.18),0 30px 60px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4)}
+.lg{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border:0;border-radius:999px;font-family:'Geist',sans-serif;font-size:14px;line-height:1;cursor:pointer;user-select:none;color:rgba(255,255,255,.86);text-shadow:0 1px 0 rgba(255,255,255,.14),0 -1px 0 rgba(0,0,0,.35),0 0 14px rgba(255,255,255,.2);background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.09) 22%,rgba(255,255,255,.05) 44%,rgba(255,255,255,.03) 62%,rgba(255,255,255,.05) 82%,rgba(255,255,255,.1) 100%),rgba(28,28,32,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.09),inset 0 -1.5px 1px -.5px rgba(255,255,255,.4),inset 0 10px 14px -10px rgba(255,255,255,.24),inset 0 -12px 16px -12px rgba(255,255,255,.2),inset 0 0 16px rgba(0,0,0,.28),0 12px 28px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4);transition:transform 320ms cubic-bezier(.2,.7,.2,1)}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+.lg::before,.lg::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;background:conic-gradient(from calc(var(--ang) + var(--spin)),#ff5ad1,#ffb547,#f4ff7a,#5dffb0,#49e6ff,#6a7bff,#c86bff,#ff5ad1);opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 700ms cubic-bezier(.2,.7,.2,1),--ang 1400ms cubic-bezier(.2,.7,.2,1)}
+.lg::before{inset:-1px;padding:1.5px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg::after{inset:-6px;filter:blur(12px);z-index:-1}
+.lg:hover::before{opacity:.9;animation-play-state:running;transition-duration:300ms,1400ms}
+.lg:hover::after{animation-play-state:running}
+.lg:active{transform:scale(.97);transition-duration:90ms}
+.lg:active::before{opacity:1;--ang:220deg;transition-duration:60ms,1400ms}
+.lg:active::after{opacity:.55;--ang:220deg;transition-duration:60ms,1400ms}
+.lg.on::before{opacity:1;--ang:60deg}
+.lg.on::after{opacity:.55;--ang:60deg}
+.lg.cool::before{opacity:.45;--ang:160deg}
+.lg.cool::after{opacity:.22;--ang:160deg}
+.lg.hov::before{opacity:.9;animation-play-state:running}
+.lg.hov{box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.14),inset 0 -1.5px 1px -.5px rgba(255,255,255,.5),inset 0 10px 14px -10px rgba(255,255,255,.32),inset 0 -12px 16px -12px rgba(255,255,255,.26),inset 0 0 16px rgba(0,0,0,.28),0 12px 28px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4)}
+.lg.sm{height:36px;padding:0 16px;font-size:12px;cursor:default}
+.lg.ic{width:48px;padding:0}
+.lg.pri{color:#141416;text-shadow:0 1px 0 rgba(255,255,255,.6);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(244,244,246,.93) 30%,rgba(226,226,231,.9) 66%,rgba(238,238,242,.94));box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px #ffffff,inset 0 0 0 1px rgba(255,255,255,.6),inset 0 -1.5px 1px -.5px rgba(255,255,255,.95),inset 0 -12px 16px -12px rgba(0,0,0,.2),0 12px 28px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4)}
+.lg.flat{background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#9a9a9f;text-shadow:none}
+.cap{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#9a9a9f}
+.row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.4}
+.mono{font-family:'Geist Mono',monospace}
+</style>
+</helmet>
+<div style="position: relative; width: 1200px; height: 680px; box-sizing: border-box; padding: 52px 64px; display: flex; flex-direction: column; gap: 30px; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse 110% 100% at 18% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000), #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <span class="cap" style="text-transform: uppercase">01 · Hover and press · iridescent rim</span>
+    <h1 style="margin: 0; font-size: 36px; font-weight: 200; letter-spacing: -0.02em; line-height: 1.15">Hover sends a rainbow round the edge. Press heats it.</h1>
+    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #9a9a9f; max-width: 780px">Hovering sends a thin spectrum circling the rim. Pressing brightens it and adds a glow, and the colour keeps turning as it cools. Hover, then hold any control.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 24px; flex-grow: 1">
+    <div class="lgp" style="border-radius: 32px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+      <div class="stage" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; padding: 20px">
+        <button type="button" class="lg ic" aria-label="Add photos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <div class="lgp" style="display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px"><button type="button" class="lg sm" style="cursor: pointer">TEACH</button><button type="button" class="lg sm flat" style="cursor: pointer">PRACTICE</button></div>
+        <button type="button" class="lg">Start session</button>
+        <button type="button" class="lg ic pri" aria-label="Send" style="border-radius: 16px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
+      </div>
+      <div class="stage" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; justify-items: center; align-items: center; row-gap: 14px; padding-bottom: 6px">
+        <span class="lg sm" aria-hidden="true">Teach</span>
+        <span class="lg sm hov" aria-hidden="true">Teach</span>
+        <span class="lg sm on" aria-hidden="true">Teach</span>
+        <span class="lg sm cool" aria-hidden="true">Teach</span>
+        <span class="cap">REST</span>
+        <span class="cap">HOVER</span>
+        <span class="cap">PRESSED</span>
+        <span class="cap">COOLING</span>
+      </div>
+    </div>
+
+    <div class="lgp" style="border-radius: 32px; padding: 24px 26px; display: flex; flex-direction: column">
+      <span class="cap" style="padding-bottom: 8px">SPEC FOR CLAUDE CODE</span>
+      <div class="row"><span style="color: #9a9a9f">Applies to</span><span>Every button, chip, toggle and graph node, on press</span></div>
+      <div class="row"><span style="color: #9a9a9f">Heat in</span><span class="mono">60 ms</span></div>
+      <div class="row"><span style="color: #9a9a9f">Cool down</span><span><span class="mono">700 ms</span> fade, hue keeps turning <span class="mono">1.4 s</span></span></div>
+      <div class="row"><span style="color: #9a9a9f">Hover</span><span><span class="mono">1.5 px</span> spectrum rim, one turn every <span class="mono">3.2 s</span></span></div>
+      <div class="row"><span style="color: #9a9a9f">Press</span><span>Full rim plus glow, blur <span class="mono">12 px</span> at <span class="mono">55%</span></span></div>
+      <div class="row"><span style="color: #9a9a9f">Squash</span><span class="mono">scale 0.97</span></div>
+      <div class="row"><span style="color: #9a9a9f">Reduced motion</span><span>No spinning, fade only</span></div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding-top: 14px">
+        <span style="height: 12px; border-radius: 3px; background: #ff5ad1"></span><span style="height: 12px; border-radius: 3px; background: #ffb547"></span><span style="height: 12px; border-radius: 3px; background: #f4ff7a"></span><span style="height: 12px; border-radius: 3px; background: #5dffb0"></span><span style="height: 12px; border-radius: 3px; background: #49e6ff"></span><span style="height: 12px; border-radius: 3px; background: #6a7bff"></span><span style="height: 12px; border-radius: 3px; background: #c86bff"></span>
+        <span class="cap" style="grid-column: span 7">SPECTRUM · #FF5AD1 → #C86BFF</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

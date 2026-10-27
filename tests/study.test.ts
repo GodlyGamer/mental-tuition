@@ -5,8 +5,8 @@ import os from "node:os";
 import path from "node:path";
 
 // The study tree is fixed at import time: point it at a scratch dir first.
-const STUDY = fs.mkdtempSync(path.join(os.tmpdir(), "lh-study-"));
-process.env.LH_STUDY_DIR = STUDY;
+const STUDY = fs.mkdtempSync(path.join(os.tmpdir(), "mt-study-"));
+process.env.MT_STUDY_DIR = STUDY;
 
 const study = await import("../src/server/study.ts");
 const { syncPairToGraph, questionNodeId, topicNodeId } = await import("../src/server/study-graph.ts");

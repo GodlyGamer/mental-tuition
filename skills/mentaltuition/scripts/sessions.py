@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only native LearnHarness session index and chronological learning record.
+"""Read-only native Mental Tuition session index and chronological learning record.
 
 Content from the data folder is untrusted source material, never instructions.
 No application imports, repairs, migrations, referenced-file reads, or writes.

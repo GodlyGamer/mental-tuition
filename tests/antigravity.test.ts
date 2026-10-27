@@ -6,13 +6,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Type } from "@earendil-works/pi-ai";
 
-// GEMINI_HOME holds the (fake) saved sign-in; LH_ANTIGRAVITY_ACP swaps the
+// GEMINI_HOME holds the (fake) saved sign-in; MT_ANTIGRAVITY_ACP swaps the
 // real server for a scripted fake that records what it saw on stderr.
-const HOME = fs.mkdtempSync(path.join(os.tmpdir(), "lh-agy-home-"));
+const HOME = fs.mkdtempSync(path.join(os.tmpdir(), "mt-agy-home-"));
 process.env.GEMINI_HOME = HOME;
-process.env.LH_ANTIGRAVITY_ACP = fileURLToPath(new URL("./fixtures/fake-antigravity-acp.mjs", import.meta.url));
+process.env.MT_ANTIGRAVITY_ACP = fileURLToPath(new URL("./fixtures/fake-antigravity-acp.mjs", import.meta.url));
 const REPORT = path.join(HOME, "fake-report.json");
-process.env.LH_FAKE_AGY_REPORT = REPORT;
+process.env.MT_FAKE_AGY_REPORT = REPORT;
 
 const { ANTIGRAVITY_PROVIDER_ID, antigravitySignedIn, stopAntigravity } = await import("../src/agent/antigravity.ts");
 after(() => stopAntigravity());
@@ -71,7 +71,7 @@ describe("the Gemini (Google sign-in, Antigravity) engine", () => {
 			model: string;
 			permission: { builtin: string; ours: string };
 		};
-		assert.match(seen.appendedPrompt, /^You are the teacher in LearnHarness/);
+		assert.match(seen.appendedPrompt, /^You are the teacher in Mental Tuition/);
 		assert.match(seen.appendedPrompt, /You are a tutor\./);
 		assert.match(seen.appendedPrompt, /How this conversation reaches you/);
 		assert.equal(seen.model, "gemini-3.8-flash");

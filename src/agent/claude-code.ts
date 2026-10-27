@@ -51,9 +51,9 @@ export const CLAUDE_CODE_API = "claude-agent-sdk";
  *  catalog (context window, thinking map, modalities stay authoritative). */
 const SUBSCRIPTION_MODEL_IDS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"];
 
-/** MCP server name; tool names arrive as mcp__lh__<name> (or bare, when
+/** MCP server name; tool names arrive as mcp__mt__<name> (or bare, when
  *  the host sets CLAUDE_AGENT_SDK_MCP_NO_PREFIX). */
-const MCP_SERVER = "lh";
+const MCP_SERVER = "mt";
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`;
 
 /** Appended to every system prompt: how the replayed transcript reads. */
@@ -137,7 +137,7 @@ export function childEnv(): Record<string, string | undefined> {
 		if (NON_SUBSCRIPTION_AUTH.has(k) || k === "CLAUDECODE" || k.startsWith("CLAUDE_CODE_")) continue;
 		env[k] = v;
 	}
-	env.CLAUDE_AGENT_SDK_CLIENT_APP = "learnharness";
+	env.CLAUDE_AGENT_SDK_CLIENT_APP = "mentaltuition";
 	return env;
 }
 

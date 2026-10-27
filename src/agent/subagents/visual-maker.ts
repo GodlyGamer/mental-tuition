@@ -47,7 +47,7 @@ export interface VisualMakerOptions {
 	/** Money channel: one call per loop iteration (streamSimple), folded
 	 * into JobRecord.usage. */
 	onUsage?: (usage: Usage) => void;
-	/** Debug: raw provider-event recording key (LH_PROVIDER_EVENTS=1). */
+	/** Debug: raw provider-event recording key (MT_PROVIDER_EVENTS=1). */
 	chatId?: string;
 }
 

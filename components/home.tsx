@@ -175,7 +175,7 @@ export function Home({
 			    Placed first, every carved control (chrome row, node detail card,
 			    the toggle) comes later and subtracts correctly. Pure mask: it
 			    never needs to receive events — the mask routes the pixels. */}
-			<div className="lh-drag absolute inset-x-0 top-0 h-13" aria-hidden="true" />
+			<div className="mt-drag absolute inset-x-0 top-0 h-13" aria-hidden="true" />
 
 			{/* The main view — full-bleed (owner, graph-view round 1): no
 			    padding on any side; it runs from the sidebar to the right edge
@@ -205,7 +205,7 @@ export function Home({
 			{/* Header floats over the graph — pointer-events-none except the
 			    toggle, so the canvas stays draggable/hoverable around it. Carries
 			    no app-region of its own: the strip's drag comes from the mask
-			    div above, and the toggle's lh-no-drag subtracts from it (it is
+			    div above, and the toggle's mt-no-drag subtracts from it (it is
 			    later in the tree, so the subtraction sticks). */}
 			<header className="pointer-events-none absolute inset-x-0 top-0 flex items-center gap-2 px-3 py-2">
 				<div className="pointer-events-auto">
@@ -302,7 +302,7 @@ export function Home({
 						placeholder={mode === "practice" ? "What do you want to practice?" : "What do you want to learn?"}
 						autoFocus
 						rows={1}
-						className="field-sizing-content lh-input max-h-48 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
+						className="field-sizing-content mt-input max-h-48 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
 					/>
 					{/* No tooltip on the start square — the ↵ glyph is the
 					    affordance (owner, subtlety round 2026-09-25). */}

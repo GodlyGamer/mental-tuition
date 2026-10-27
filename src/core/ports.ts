@@ -9,7 +9,7 @@
  * adapters may import core; core NEVER imports an adapter.
  */
 
-import type { LhMessage } from "./native-messages.ts";
+import type { MtMessage } from "./native-messages.ts";
 import type {
 	ChatRecord,
 	ChatSettings,
@@ -41,7 +41,7 @@ export interface ChatStore {
 	listChats(): ChatSummary[];
 	/** Persist the full native message list (the record IS the agent
 	 * state — Wave B, owner-approved 2026-09-26). */
-	saveMessages(id: string, messages: LhMessage[]): void;
+	saveMessages(id: string, messages: MtMessage[]): void;
 	/** Persist the session plan tree (plan tools call this in execute). */
 	saveTree(id: string, tree: PlanTree): void;
 	/** Append one usage entry to the record's turn log (the money channel,

@@ -7,7 +7,7 @@
  * of "ai" (safe everywhere: server, client, tests). See docs/vision.md.
  */
 import type { CallUsage } from "./chat.ts";
-import type { LhMessage, LhMarkerMessage } from "../native-messages.ts";
+import type { MtMessage, MtMarkerMessage } from "../native-messages.ts";
 import { newHandoffMessage } from "../native-messages.ts";
 
 // ─── Async sub-agent jobs (vision §2.5; plan.md Wave 0 protocol) ────────────
@@ -248,7 +248,7 @@ export interface PdfResult {
 // ─── Sub-agent steer messages (THE ASYNC PROTOCOL §3–4) ─────────────────────
 //
 // Wave B (owner-approved 2026-09-26): steers are NATIVE record messages —
-// LhMarkerMessage customs (role "custom"), the custom-message taxonomy's
+// MtMarkerMessage customs (role "custom"), the custom-message taxonomy's
 // wake members. The model-facing text rides `content` (single-sourced
 // below); the UI payload (the artifact, the abort badge) rides `details`
 // and never reaches the model (toLlmMessages maps the marker to a user
@@ -291,20 +291,20 @@ export interface SteerDetails extends SubagentResultMeta {
  *  is missing or not an invertible artifact steer. The silent route's
  *  whole body. */
 export function setSteerUiInverted(
-	messages: readonly LhMessage[],
+	messages: readonly MtMessage[],
 	messageId: string,
 	inverted: boolean,
-): LhMessage[] {
+): MtMessage[] {
 	return messages.map((m) => {
 		if (m.id !== messageId) return m;
-		const d = (m as LhMarkerMessage).details as Partial<SteerDetails> | undefined;
+		const d = (m as MtMarkerMessage).details as Partial<SteerDetails> | undefined;
 		if (!d || (d.kind !== "demo" && d.kind !== "visual")) return m;
-		return { ...m, details: { ...d, ui: { ...d.ui, inverted } } } as LhMessage;
+		return { ...m, details: { ...d, ui: { ...d.ui, inverted } } } as MtMessage;
 	});
 }
 
 /** Anything the wake pipeline may queue and deliver — a native marker. */
-export type SteerMessage = LhMarkerMessage;
+export type SteerMessage = MtMarkerMessage;
 
 /** Whether a result is the failure shape (html/svg empty, failure brief). */
 export function isSubagentFailure(
@@ -425,7 +425,7 @@ export function buildProbeHandoffSteer(chatId: string): SteerMessage {
 /** True when the transcript already carries this steer — idempotent
  *  delivery for ANY steer kind: every steer id is deterministic per its
  *  event (steer_<jobId> for jobs, steer_probe_<chatId> for the handoff). */
-export function steerDelivered(messages: LhMessage[], steerId: string): boolean {
+export function steerDelivered(messages: MtMessage[], steerId: string): boolean {
 	return messages.some((m) => m.id === steerId);
 }
 

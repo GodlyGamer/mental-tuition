@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Main page — new sidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes ping{0%,100%{opacity:.35}50%{opacity:1}}
+.mono{font-family:'Geist Mono',monospace}
+.lbl{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#6e6e74}
+.lg{position:relative;z-index:0;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:999px;font-family:'Geist',sans-serif;font-size:13.5px;line-height:1;cursor:pointer;user-select:none;color:rgba(255,255,255,.86);text-shadow:0 1px 0 rgba(255,255,255,.1),0 -1px 0 rgba(0,0,0,.35);background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.06) 22%,rgba(255,255,255,.035) 44%,rgba(255,255,255,.02) 62%,rgba(255,255,255,.035) 82%,rgba(255,255,255,.07) 100%),rgba(24,24,28,.55);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1.5px 1px -.5px rgba(255,255,255,.28),inset 0 10px 14px -10px rgba(255,255,255,.16),inset 0 -12px 16px -12px rgba(255,255,255,.14),inset 0 0 16px rgba(0,0,0,.3),0 8px 18px rgba(0,0,0,.5);transition:transform 320ms cubic-bezier(.2,.7,.2,1)}
+.lg::before,.lg::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;background:conic-gradient(from calc(var(--ang) + var(--spin)),#ff5ad1,#ffb547,#f4ff7a,#5dffb0,#49e6ff,#6a7bff,#c86bff,#ff5ad1);opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 700ms cubic-bezier(.2,.7,.2,1),--ang 1400ms cubic-bezier(.2,.7,.2,1)}
+.lg::before{inset:-1px;padding:1.5px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lg::after{inset:-6px;filter:blur(12px);z-index:-1}
+.lg:hover::before{opacity:.9;animation-play-state:running;transition-duration:300ms,1400ms}
+.lg:hover::after{animation-play-state:running}
+.lg:active{transform:scale(.97);transition-duration:90ms}
+.lg:active::before{opacity:1;--ang:220deg;transition-duration:60ms,1400ms}
+.lg:active::after{opacity:.55;--ang:220deg;transition-duration:60ms,1400ms}
+.lg.round{width:40px;padding:0}
+.lg.pri{color:#141416;text-shadow:0 1px 0 rgba(255,255,255,.6);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(244,244,246,.93) 30%,rgba(226,226,231,.9) 66%,rgba(238,238,242,.94));box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px #fff,inset 0 0 0 1px rgba(255,255,255,.6),inset 0 -1.5px 1px -.5px rgba(255,255,255,.95),inset 0 -12px 16px -12px rgba(0,0,0,.2),0 8px 18px rgba(0,0,0,.5)}
+.ib{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:transparent;color:#6e6e74;cursor:pointer}
+.ib:hover{background:rgba(255,255,255,.05);color:#ececee}
+.nav{display:flex;align-items:center;gap:11px;height:34px;padding:0 10px;border-radius:10px;color:#9a9a9f;font-size:13.5px;text-decoration:none;cursor:pointer}
+.nav:hover{background:rgba(255,255,255,.04);color:#ececee}
+.nav.on{color:#f4f4f6;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04) 45%,rgba(255,255,255,.03) 70%,rgba(255,255,255,.06)),rgba(24,24,28,.5);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1px .5px -.5px rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.06),inset 0 -1px 1px -.5px rgba(255,255,255,.18)}
+.nav svg{flex-shrink:0}
+.ses{position:relative;display:flex;flex-direction:column;gap:3px;padding:8px 10px;border-radius:10px;text-decoration:none;cursor:pointer}
+.ses:hover{background:rgba(255,255,255,.04)}
+.ses .t{font-size:13.5px;color:#d8d8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:28px}
+.ses .m{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6e6e74}
+.ses .more{position:absolute;right:6px;top:8px;opacity:0}
+.ses:hover .more{opacity:1}
+.wait{width:5px;height:5px;border-radius:50%;background:#f4f4f6;box-shadow:0 0 6px rgba(255,255,255,.7);animation:ping 2.4s ease-in-out infinite}
+.tab{border:0;background:transparent;padding:2px 0;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#6e6e74;cursor:pointer;border-bottom:1px solid transparent}
+.tab:hover{color:#c8c8cc}
+.tab.on{color:#ececee;border-bottom-color:rgba(255,255,255,.5)}
+.search{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px;border:0;border-radius:10px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);color:#6e6e74;font-family:'Geist',sans-serif;font-size:13px;cursor:text;width:100%;box-sizing:border-box}
+.search:hover{background:rgba(255,255,255,.05)}
+.kbd{margin-left:auto;font-family:'Geist Mono',monospace;font-size:10.5px;color:#55555a;border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:1px 5px}
+.comp{position:relative;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.04) 16%,rgba(255,255,255,.025) 34%,rgba(255,255,255,.018) 55%,rgba(255,255,255,.02) 78%,rgba(255,255,255,.04) 100%),rgba(12,12,14,.7);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 2px 1px -1px rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.06),inset 0 -1.5px 1px -.5px rgba(255,255,255,.16),0 40px 80px rgba(0,0,0,.6)}
+.tray{background:rgba(255,255,255,.025);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 0 1px rgba(255,255,255,.03)}
+.fc{width:2px;height:28px;border-radius:2px;background:#f4f4f6;box-shadow:0 0 8px rgba(255,255,255,.55);animation:blink 1.1s steps(1) infinite}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:#7a7a80;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;cursor:pointer}
+.chip:hover{color:#ececee;background:rgba(255,255,255,.05)}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03) 50%,rgba(255,255,255,.05)),rgba(14,14,16,.6);box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 1.5px .5px -.5px rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.06)}
+.seg span{height:28px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#7a7a80}
+.seg span.on{color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06) 40%,rgba(255,255,255,.04) 70%,rgba(255,255,255,.08)),rgba(28,28,32,.5);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.7),inset 0 -1.5px 1px -.5px rgba(255,255,255,.3)}
+.gseg{display:inline-flex;gap:2px;padding:2px;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.gseg button{border:0;background:transparent;padding:3px 8px;border-radius:999px;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#6e6e74;cursor:pointer}
+.gseg button:hover{color:#c8c8cc}
+.gseg button.on{background:rgba(255,255,255,.1);color:#ececee;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.ghead{display:flex;align-items:center;gap:8px;width:100%;height:30px;margin-top:6px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#9a9a9f;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;cursor:pointer;text-align:left}
+.ghead:hover{color:#ececee;background:rgba(255,255,255,.03)}
+.ghead .cnt{margin-left:auto;color:#55555a}
+.agent{display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;font-size:12.5px}
+.agent .task{color:#6e6e74;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (prefers-reduced-motion: reduce){.fc,.wait{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; display: flex; overflow: hidden; border-radius: 28px; background: #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+
+  <nav aria-label="Main" style="width: 280px; flex-shrink: 0; box-sizing: border-box; height: 100%; display: flex; flex-direction: column; padding: 16px 14px 14px; gap: 18px; background: linear-gradient(180deg, #0b0b0c, #09090a 40%, #070708); box-shadow: inset -1px 0 0 rgba(255,255,255,.06)">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 0 8px">
+      <span style="font-size: 15px; font-weight: 300; letter-spacing: -0.01em; color: #ececee">Mental Tuition</span>
+      <button type="button" class="ib" aria-label="Collapse sidebar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9 4v16"></path></svg></button>
+    </div>
+
+    <div style="display: flex; gap: 8px">
+      <button type="button" class="lg pri" style="flex: 1; justify-content: flex-start; padding: 0 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>New session</span><span class="mono" style="margin-left: auto; font-size: 10.5px; opacity: .5">CTRL N</span></button>
+      <button type="button" class="lg round" aria-label="New practice session" title="New practice session"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"></path></svg></button>
+    </div>
+
+    <button type="button" class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><span>Search everything</span><span class="kbd">CTRL K</span></button>
+
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav on" href="#home" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="12" cy="17" r="2"></circle><path d="M7.8 7.6l3 7.6M16.6 7.4l-3.4 7.8M8 6.8l8-.6"></path></svg><span>Knowledge graph</span></a>
+      <a class="nav" href="#modules"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h3.5v15H5zM10.5 4.5H14v15h-3.5zM16.2 5.2l3.3-.9 3.2 14.5-3.3.8z"></path></svg><span>Modules</span></a>
+      <a class="nav" href="#papers"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z"></path><path d="M14 3.5V8h4M9 12.5h6M9 16h6"></path></svg><span>Practice papers</span></a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-height: 0">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 10px">
+        <span class="lbl">SESSIONS</span>
+        <div class="gseg" role="group" aria-label="Group sessions by">
+          <button type="button" class="{{timeCls}}" aria-pressed="{{byTime}}" onClick="{{setTime}}">TIME</button>
+          <button type="button" class="{{modCls}}" aria-pressed="{{byModule}}" onClick="{{setModule}}">MODULE</button>
+        </div>
+      </div>
+      <div role="tablist" aria-label="Filter sessions" style="display: flex; gap: 14px; padding: 2px 10px 4px">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{f.sel}}" class="{{f.cls}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; overflow-y: auto; min-height: 0">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <sc-if value="{{g.collapsible}}" hint-placeholder-val="{{ false }}">
+            <button type="button" class="ghead" aria-expanded="{{g.openStr}}" onClick="{{g.toggle}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transition: transform 200ms ease; transform: rotate({{g.rot}}deg)"><path d="M9 6l6 6-6 6"></path></svg><span>{{g.label}}</span><span class="cnt">{{g.count}}</span></button>
+          </sc-if>
+          <sc-if value="{{g.plain}}" hint-placeholder-val="{{ true }}">
+            <span class="lbl" style="padding: 10px 10px 2px; font-size: 10px; color: #4e4e53">{{g.label}}</span>
+          </sc-if>
+          <sc-if value="{{g.open}}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{g.items}}" as="s" hint-placeholder-count="2">
+              <a class="ses" href="#{{s.id}}"><span class="t">{{s.t}}</span><span class="m"><sc-if value="{{s.wait}}" hint-placeholder-val="{{ false }}"><span class="wait" aria-hidden="true"></span></sc-if><sc-if value="{{s.practice}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-label="Practice" role="img"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"></path></svg></sc-if>{{s.meta}}</span><span class="more"><span class="ib" style="width: 24px; height: 24px; border-radius: 7px" aria-label="Session options" role="img"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></span></span></a>
+            </sc-for>
+          </sc-if>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06)">
+      <sc-if value="{{hasAgents}}" hint-placeholder-val="{{ true }}">
+        <span class="lbl" style="padding: 2px 10px 4px; font-size: 10px; color: #4e4e53">RUNNING NOW</span>
+        <sc-for list="{{agents}}" as="a" hint-placeholder-count="2"><div class="agent"><span class="wait" aria-hidden="true"></span><span style="color: #d8d8dc; flex-shrink: 0">{{a.n}}</span><span class="task">{{a.task}}</span><span class="mono" style="margin-left: auto; font-size: 10.5px; color: #55555a; flex-shrink: 0">{{a.t}}</span></div></sc-for>
+      </sc-if>
+      <a class="nav" href="#settings" style="margin-top: 4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Settings</span></a>
+    </div>
+  </nav>
+
+  <main style="position: relative; flex: 1; min-width: 0; background: radial-gradient(ellipse 95% 70% at 50% 0%, #121214, #101012, #0e0e0f, #0b0b0c, #09090a, #070708, #050505, #030303, #010101, #000000), #000000">
+    <div class="seg" role="group" aria-label="Graph view" style="position: absolute; right: 24px; top: 20px"><span class="on">CLOUD</span><span>NEURAL</span></div>
+    <span class="lbl" style="position: absolute; left: 50%; top: 46%; transform: translateX(-50%); color: #3e3e43">YOUR KNOWLEDGE GRAPH SITS HERE (03A / 03B)</span>
+
+    <form class="comp" style="position: absolute; left: 50%; bottom: 36px; transform: translateX(-50%); width: 820px; border-radius: 30px; overflow: hidden; margin: 0">
+      <div style="display: flex; align-items: center; gap: 14px; padding: 22px 28px 20px">
+        <span class="fc" aria-hidden="true"></span>
+        <span style="font-size: 22px; font-weight: 300; letter-spacing: -0.01em; color: #4a4a4f">What do you want to learn?</span>
+      </div>
+      <div class="tray" style="margin: 0 8px 8px; border-radius: 24px; padding: 9px; display: flex; align-items: center; gap: 8px">
+        <button type="button" class="lg round" aria-label="Attach files or photos"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
+        <button type="button" class="lg" style="min-width: 200px; justify-content: flex-start; color: #8a8a8f"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M5 11v1a7 7 0 0 0 14 0v-1"></path><path d="M12 19v2.5"></path></svg><span>Dictate</span><span aria-hidden="true" style="margin-left: auto; display: inline-flex; align-items: center; gap: 2px; height: 14px"><i style="display: block; width: 2.5px; height: 3px; border-radius: 2px; background: currentColor"></i><i style="display: block; width: 2.5px; height: 4px; border-radius: 2px; background: currentColor"></i><i style="display: block; width: 2.5px; height: 5px; border-radius: 2px; background: currentColor"></i><i style="display: block; width: 2.5px; height: 4px; border-radius: 2px; background: currentColor"></i><i style="display: block; width: 2.5px; height: 3px; border-radius: 2px; background: currentColor"></i></span></button>
+        <span style="flex-grow: 1"></span>
+        <button type="button" class="chip">NO MODULE ▾</button>
+        <button type="button" class="chip">OPUS 5 ▾</button>
+        <button type="button" class="chip">HIGH ▾</button>
+        <button type="submit" class="lg round pri" aria-label="Start session"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
+      </div>
+    </form>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"agentsRunning":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { group: 'time', filter: 'all', closed: {} };
+    var self = this;
+    this._setTime = function () { self.setState({ group: 'time' }); };
+    this._setModule = function () { self.setState({ group: 'module' }); };
+    this._sessions = [
+      { id: 's1', t: 'Line Integrals.', meta: 'Waiting for you · 3d', wait: true, kind: 'teach', module: '1M1', when: 'pinned' },
+      { id: 's2', t: 'Structures Errors', meta: 'Waiting for you · 1d', wait: true, kind: 'teach', module: 'STRUCTURES 1', when: 'yesterday' },
+      { id: 's3', t: 'all my errors', meta: 'Practice · 2d', kind: 'practice', module: 'NO MODULE', when: 'week' },
+      { id: 's4', t: 'Structures Test 2', meta: 'Teach · 2d', kind: 'teach', module: 'STRUCTURES 1', when: 'week' },
+      { id: 's5', t: 'Structures Test', meta: 'Teach · 2d', kind: 'teach', module: 'STRUCTURES 1', when: 'week' }
+    ];
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var items = this._sessions.filter(function (s) { return st.filter === 'all' || s.kind === st.filter; }).map(function (s) {
+      return { id: s.id, t: s.t, meta: s.meta, wait: !!s.wait, practice: s.kind === 'practice', module: s.module, when: s.when };
+    });
+    var groups = [];
+    function plain(label, list) { if (list.length) groups.push({ label: label, items: list, plain: true, collapsible: false, open: true }); }
+    if (st.group === 'time') {
+      plain('PINNED', items.filter(function (s) { return s.when === 'pinned'; }));
+      plain('YESTERDAY', items.filter(function (s) { return s.when === 'yesterday'; }));
+      plain('THIS WEEK', items.filter(function (s) { return s.when === 'week'; }));
+    } else {
+      ['STRUCTURES 1', '1M1', 'NO MODULE'].forEach(function (m) {
+        var list = items.filter(function (s) { return s.module === m; });
+        if (!list.length) return;
+        var open = !st.closed[m];
+        groups.push({
+          label: m, items: list, count: String(list.length), plain: false, collapsible: true, open: open,
+          openStr: open ? 'true' : 'false', rot: open ? 90 : 0,
+          toggle: function () { var c = Object.assign({}, self.state.closed); c[m] = !c[m]; self.setState({ closed: c }); }
+        });
+      });
+    }
+    var filters = [['all', 'ALL'], ['teach', 'TEACH'], ['practice', 'PRACTICE']].map(function (f) {
+      var on = st.filter === f[0];
+      return { label: f[1], sel: on ? 'true' : 'false', cls: on ? 'tab on' : 'tab', pick: function () { self.setState({ filter: f[0] }); } };
+    });
+    var running = this.props.agentsRunning ?? true;
+    var agents = running ? [
+      { n: 'Researcher', task: 'Bernoulli sources', t: '1:42' },
+      { n: 'PDF reader', task: 'Lecture 4 notes', t: '0:18' }
+    ] : [];
+    return {
+      groups: groups, filters: filters,
+      timeCls: st.group === 'time' ? 'on' : '', modCls: st.group === 'module' ? 'on' : '',
+      byTime: st.group === 'time' ? 'true' : 'false', byModule: st.group === 'module' ? 'true' : 'false',
+      setTime: this._setTime, setModule: this._setModule,
+      agents: agents, hasAgents: agents.length > 0
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -43,7 +43,7 @@ import {
 	MAX_CHAT_IMAGES,
 	type ChatInput,
 	type ChatSettings,
-	type LhMessage,
+	type MtMessage,
 	type ModelSlotName,
 } from "@/src/core";
 import { PlanBlock, PlanPopup, latestTree } from "@/components/plan-block";
@@ -60,7 +60,7 @@ import { ThinkingCard, type PracticeThinkingData } from "@/components/practice-c
 import { GraphContextCard, type GraphContextData } from "@/components/graph-context-card";
 import { TopBar } from "@/components/top-bar";
 import type { ArtifactPartProps, JobRecord, Phase3, QuestionAnswerData, TurnUsage } from "@/src/core";
-import type { LhViewMessage } from "@/src/core";
+import type { MtViewMessage } from "@/src/core";
 import { PhaseChip, PhaseDivider } from "@/components/phase-divider";
 import {
 	CompactionCutDivider,
@@ -183,7 +183,7 @@ function SystemLine({ children, testId }: { children: React.ReactNode; testId?: 
 	);
 }
 
-function isSubagentSteer(m: LhViewMessage): boolean {
+function isSubagentSteer(m: MtViewMessage): boolean {
 	return (m.metadata as { subagentResult?: unknown } | undefined)?.subagentResult != null;
 }
 
@@ -208,7 +208,7 @@ export function Chat({
 }: {
 	chatId: string;
 	title: string;
-	initialMessages: LhMessage[];
+	initialMessages: MtMessage[];
 	/** The session kind (practice sessions, owner 2026-10-04): practice
 	 *  renders no phase chip (no probe→teach arc applies) and a Practice
 	 *  tag rides the header instead. */
@@ -296,7 +296,7 @@ export function Chat({
 				if (!res.ok) throw new Error(`rename failed: ${res.status}`);
 				setTitleText(t);
 				window.dispatchEvent(
-					new CustomEvent("lh:chat-renamed", { detail: { id: chatId, title: t } }),
+					new CustomEvent("mt:chat-renamed", { detail: { id: chatId, title: t } }),
 				);
 			} catch (err) {
 				console.error("rename failed:", err); // keep the old title
@@ -324,12 +324,12 @@ export function Chat({
 			setTitleDraft(titleText);
 			setRenaming(true);
 		};
-		window.addEventListener("lh:kbd-rename-session", onRename);
-		return () => window.removeEventListener("lh:kbd-rename-session", onRename);
+		window.addEventListener("mt:kbd-rename-session", onRename);
+		return () => window.removeEventListener("mt:kbd-rename-session", onRename);
 	}, [titleText]);
 
 	// The OTHER rename surface (wave 6: the sidebar's inline rename): its
-	// commit dispatches the same lh:chat-renamed event this header's rename
+	// commit dispatches the same mt:chat-renamed event this header's rename
 	// does — if it renamed THIS chat, patch the header title in place (the
 	// event is the single source of truth; the header is one more listener).
 	useEffect(() => {
@@ -337,8 +337,8 @@ export function Chat({
 			const { id, title } = (e as CustomEvent<{ id: string; title: string }>).detail;
 			if (id === chatId) setTitleText((prev) => (title !== prev ? title : prev));
 		};
-		window.addEventListener("lh:chat-renamed", onRenamed);
-		return () => window.removeEventListener("lh:chat-renamed", onRenamed);
+		window.addEventListener("mt:chat-renamed", onRenamed);
+		return () => window.removeEventListener("mt:chat-renamed", onRenamed);
 	}, [chatId]);
 
 	// The Esc chain's last link: abort the turn. The background runner
@@ -389,8 +389,8 @@ export function Chat({
 			else if (target === "plan") setPlanOpen(false);
 			// setup closes itself; null = nothing to do — both claimed.
 		};
-		window.addEventListener("lh:kbd-abort-turn", onAbort);
-		return () => window.removeEventListener("lh:kbd-abort-turn", onAbort);
+		window.addEventListener("mt:kbd-abort-turn", onAbort);
+		return () => window.removeEventListener("mt:kbd-abort-turn", onAbort);
 	}, []);
 	const confirmAbort = useCallback(
 		(mode: AbortMode) => {
@@ -614,7 +614,7 @@ export function Chat({
 		void (async () => {
 			const res = await fetch(`/api/chats/${encodeURIComponent(chatId)}`);
 			if (!cancelled && res.ok) {
-				const record = (await res.json().catch(() => null)) as { messages?: LhMessage[] } | null;
+				const record = (await res.json().catch(() => null)) as { messages?: MtMessage[] } | null;
 				if (Array.isArray(record?.messages)) setMessages(record.messages);
 			}
 			if (cancelled) return;
@@ -728,7 +728,7 @@ export function Chat({
 	const syncFromServer = useCallback(async () => {
 		const res = await fetch(`/api/chats/${chatId}`);
 		if (!res.ok) return;
-		const record = (await res.json()) as { messages?: LhMessage[]; turns?: TurnUsage[] };
+		const record = (await res.json()) as { messages?: MtMessage[]; turns?: TurnUsage[] };
 		if (Array.isArray(record.turns)) setTurns(record.turns);
 		if (!Array.isArray(record.messages)) return;
 		setMessages(record.messages);
@@ -766,7 +766,7 @@ export function Chat({
 		try {
 			const res = await fetch(`/api/chats/${chatId}`);
 			if (!res.ok) return;
-			const record = (await res.json()) as { messages?: LhMessage[] };
+			const record = (await res.json()) as { messages?: MtMessage[] };
 			if (!Array.isArray(record.messages)) return;
 			adoptRecord(record.messages);
 		} catch {
@@ -838,7 +838,7 @@ export function Chat({
 	const [figureFocus, setFigureFocus] = useState<{ svg: string; inverted: boolean } | null>(null);
 
 	// Overlay mirrors for the layered-Esc gate (owner 2026-10-04): the
-	// lh:kbd-abort-turn handler reads these at EVENT time — declared here
+	// mt:kbd-abort-turn handler reads these at EVENT time — declared here
 	// beside their states, consumed below wherever the states live.
 	const mermaidFocusRef = useRef(mermaidFocus);
 	mermaidFocusRef.current = mermaidFocus;
@@ -1213,7 +1213,7 @@ export function Chat({
 				    only while the sidebar is CLOSED — an auto-height row would
 				    collapse when it disappears and slide the title + chip up.
 				    60px is an ALIGNMENT, not just a size: it equals the sidebar's
-				    LH wordmark band, so the header's border-b continues that
+				    wordmark band, so the header's border-b continues that
 				    band's bottom edge as one line across the app (owner, round 6). */}
 				<TopBar
 					// While renaming the bar is NOT a drag surface: app-region:drag
@@ -1248,7 +1248,7 @@ export function Chat({
 								spellCheck={false}
 								aria-label="Session title"
 								title="Rename this session"
-								className="lh-no-drag min-w-[8ch] max-w-[70%] shrink-0 bg-transparent font-title text-3xl tracking-tight caret-current outline-none [field-sizing:content]"
+								className="mt-no-drag min-w-[8ch] max-w-[70%] shrink-0 bg-transparent font-title text-3xl tracking-tight caret-current outline-none [field-sizing:content]"
 							/>
 							{/* flex-1 spacer during rename too, so the chips stay at
 							    the right edge; clicks here commit via the header
@@ -1269,7 +1269,7 @@ export function Chat({
 								setTitleDraft(titleText);
 								setRenaming(true);
 							}}
-							className="lh-no-drag -mx-1.5 min-w-4 shrink cursor-text truncate rounded-md px-1.5 text-left font-title text-3xl tracking-tight transition-colors hover:bg-accent"
+							className="mt-no-drag -mx-1.5 min-w-4 shrink cursor-text truncate rounded-md px-1.5 text-left font-title text-3xl tracking-tight transition-colors hover:bg-accent"
 						>
 							{titleText}
 							</button>
@@ -1291,7 +1291,7 @@ export function Chat({
 								blurAfterPointerClick(e);
 								setPlanOpen(true);
 							}}
-							className="lh-no-drag flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+							className="mt-no-drag flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-border hover:text-foreground"
 						>
 							<WaypointsIcon className="size-3.5 text-primary" aria-hidden />
 							Plan
@@ -1443,7 +1443,7 @@ export function Chat({
 												    sits INSIDE the rail, same mono-xs register and same 1ch
 												    rail as the thinking rows — one quote geometry. */}
 												<div className="font-medium uppercase tracking-wide text-muted-foreground">You</div>
-												<div className="lh-prose whitespace-pre-wrap text-foreground">
+												<div className="mt-prose whitespace-pre-wrap text-foreground">
 													{m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n")}
 												</div>
 												{m.parts.some((p) => p.type === "file") && (
@@ -1494,7 +1494,7 @@ export function Chat({
 														const sourceId = textPartMessageId(part.id);
 														const anchor = sourceId && sourceTextParts.get(sourceId) === part.id ? messageAnchorId(sourceId) : undefined;
 														return (
-															<div key={part.id || pi} id={anchor} data-source-message-id={sourceId ?? undefined} className="lh-source-passage">
+															<div key={part.id || pi} id={anchor} data-source-message-id={sourceId ?? undefined} className="mt-source-passage">
 																<MessageResponse>{part.text}</MessageResponse>
 															</div>
 														);

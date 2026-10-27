@@ -6,7 +6,7 @@
  * master. Pure types + protocol docs + tiny pure helpers. See docs/vision.md.
  */
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { LhMessage } from "../native-messages.ts";
+import type { MtMessage } from "../native-messages.ts";
 import type { Phase3 } from "../phases.ts";
 import type { PlanNodeStatus, PlanTree } from "./plan.ts";
 import type { EmissionStats } from "./graph.ts";
@@ -14,7 +14,7 @@ import type { EmissionStats } from "./graph.ts";
 // ─── Chat records (the session store's on-disk format) ───────────────────────
 
 /** One persisted session: data/chats/<id>.json. Wave B (owner-approved
- * 2026-09-26): the stored messages are pi-NATIVE history (LhMessage — the
+ * 2026-09-26): the stored messages are pi-NATIVE history (MtMessage — the
  * agent loop's own shapes, provider/model/usage/thinkingSignature stamped
  * by pi) — the canonical session record IS the agent state; replay is
  * `state.messages = record.messages` + continue(). The client-shaped view
@@ -32,7 +32,7 @@ export interface ChatRecord {
 	title: string;
 	createdAt: string;
 	updatedAt: string;
-	messages: LhMessage[];
+	messages: MtMessage[];
 	/** The session's kind — absent = teach (pre-practice records). */
 	kind?: ChatKind;
 	/** The study module this session logs to (personal fork: the

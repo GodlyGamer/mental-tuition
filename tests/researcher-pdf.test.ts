@@ -66,7 +66,7 @@ const PDF_BYTES = buildPdf([
 
 const tempDirs: string[] = [];
 async function newDir(): Promise<string> {
-	const dir = await fs.mkdtemp(path.join(os.tmpdir(), "lh-test-pdf-"));
+	const dir = await fs.mkdtemp(path.join(os.tmpdir(), "mt-test-pdf-"));
 	tempDirs.push(dir);
 	return dir;
 }

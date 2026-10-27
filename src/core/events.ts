@@ -72,16 +72,16 @@ export type ServerEvent<K extends ServerEventType = ServerEventType> = {
 
 export type ServerEventListener = (event: ServerEvent) => void;
 
-interface LhEventsGlobal {
-	__lhEventBus?: Set<ServerEventListener>;
+interface MtEventsGlobal {
+	__mtEventBus?: Set<ServerEventListener>;
 }
 
 /** The shared listener set — globalThis-backed so every Next module entry
  *  (and every layer) sees ONE bus. Ephemeral by design: a process restart
  *  drops the listeners with their connections; emitters never queue. */
 function listeners(): Set<ServerEventListener> {
-	const g = globalThis as typeof globalThis & LhEventsGlobal;
-	return (g.__lhEventBus ??= new Set());
+	const g = globalThis as typeof globalThis & MtEventsGlobal;
+	return (g.__mtEventBus ??= new Set());
 }
 
 /** Listen. Returns the unsubscribe function — the SSE route's cancel and

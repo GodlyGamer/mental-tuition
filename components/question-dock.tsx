@@ -622,7 +622,7 @@ function QuestionDockForm({
 											// records must not leak either. Same MessageResponse path as the
 											// label (owner, 2026-10-12): descriptions are full markdown —
 											// LaTeX included — not plain text.
-											<MessageResponse className="lh-prose block text-xs text-muted-foreground">
+											<MessageResponse className="mt-prose block text-xs text-muted-foreground">
 												{opt.description}
 											</MessageResponse>
 										)}
@@ -724,7 +724,7 @@ function QuestionDockForm({
 											}
 									}}
 									placeholder="Type your own answer…"
-									className="lh-input w-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+									className="mt-input w-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
 									onClick={(e) => e.stopPropagation()}
 								/>
 							</div>
@@ -889,7 +889,7 @@ function QuestionDockForm({
 							onPaste={pastePhotos}
 							placeholder="Type your answer…"
 							rows={1}
-							className="field-sizing-content lh-input max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
+							className="field-sizing-content mt-input max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
 						/>
 					) : (
 						<textarea
@@ -921,7 +921,7 @@ function QuestionDockForm({
 							placeholder="Why this answer? Whatever comes to mind."
 							rows={1}
 							className={cn(
-								"field-sizing-content lh-input max-h-48 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground/70",
+								"field-sizing-content mt-input max-h-48 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground/70",
 								// Phase-scaled prominence: teaching invites depth,
 								// probing stays quick.
 								phase === "teach" ? "min-h-[4.5rem]" : "min-h-10",

@@ -12,11 +12,11 @@
  */
 import assert from "node:assert";
 import test from "node:test";
-import type { LhViewMessage } from "../src/core/view.ts";
+import type { MtViewMessage } from "../src/core/view.ts";
 import { phaseAt3, phaseTimeline, type Phase3 } from "../src/core/phases.ts";
 
 /** Text-only user message. */
-function user(text: string): LhViewMessage {
+function user(text: string): MtViewMessage {
 	return { id: `u_${text}`, role: "user", parts: [{ type: "text", text }] };
 }
 
@@ -25,7 +25,7 @@ function assistantTool(
 	name: string,
 	state: "input-available" | "output-available" | "output-error",
 	output?: unknown,
-): LhViewMessage {
+): MtViewMessage {
 	return {
 		id: `a_${name}_${state}_${Math.random().toString(36).slice(2, 6)}`,
 		role: "assistant",
@@ -34,7 +34,7 @@ function assistantTool(
 }
 
 /** A quiz call with its parsed input — `nodeId` present iff tagged. */
-function assistantQuiz(input: Record<string, unknown> | undefined): LhViewMessage {
+function assistantQuiz(input: Record<string, unknown> | undefined): MtViewMessage {
 	return {
 		id: `a_quiz_${Math.random().toString(36).slice(2, 6)}`,
 		role: "assistant",
@@ -127,13 +127,13 @@ test("phaseAt3: empty transcript is probe", () => {
 	assert.equal(phaseAt3([]), "probe");
 });
 
-// ─── the native fold (phaseAt3Lh over LhMessage[]) ──────────────────────────
+// ─── the native fold (phaseAt3Lh over MtMessage[]) ──────────────────────────
 
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import { phaseAt3Lh } from "../src/core/phases.ts";
 
 /** A native toolResult (the probe_done conclusion). */
-function toolResult(toolName: string, isError = false): LhMessage {
+function toolResult(toolName: string, isError = false): MtMessage {
 	return {
 		id: `tr_${toolName}_${Math.random().toString(36).slice(2, 6)}`,
 		role: "toolResult",
@@ -142,12 +142,12 @@ function toolResult(toolName: string, isError = false): LhMessage {
 		content: [{ type: "text", text: "ok" }],
 		isError,
 		timestamp: Date.now(),
-	} as LhMessage;
+	} as MtMessage;
 }
 
 /** A native assistant message carrying a quiz toolCall — arguments carry
  *  `nodeId` iff tagged (exactly what the wire would persist). */
-function assistantQuizCall(arguments_: Record<string, unknown>): LhMessage {
+function assistantQuizCall(arguments_: Record<string, unknown>): MtMessage {
 	return {
 		id: `a_${Math.random().toString(36).slice(2, 6)}`,
 		role: "assistant",
@@ -155,7 +155,7 @@ function assistantQuizCall(arguments_: Record<string, unknown>): LhMessage {
 		stopReason: "toolUse",
 		usage: undefined,
 		timestamp: Date.now(),
-	} as unknown as LhMessage;
+	} as unknown as MtMessage;
 }
 
 test("phaseAt3Lh (native fold): probe→plan at the clean probe_done result; plan→teach at the first tagged quiz CALL", () => {
@@ -188,13 +188,13 @@ test("phaseAt3Lh (native fold): probe→plan at the clean probe_done result; pla
 
 test("phaseAt3 + phaseAt3Lh: a tagged explain CALL is the plan→teach seam too", () => {
 	const done = toolResult("probe_done");
-	const explainCall = (args: Record<string, unknown>): LhMessage =>
+	const explainCall = (args: Record<string, unknown>): MtMessage =>
 		({
 			id: "a_explain",
 			role: "assistant",
 			content: [{ type: "toolCall", id: "call_explain", name: "explain", arguments: args }],
 			timestamp: Date.now(),
-		}) as unknown as LhMessage;
+		}) as unknown as MtMessage;
 
 	const tagged = explainCall({ question: "q", correctAnswer: "a", explanation: "e", nodeId: "gravity-basics" });
 	const untagged = explainCall({ question: "q", correctAnswer: "a", explanation: "e" });

@@ -269,7 +269,7 @@ export function MermaidOverlay({
 										: "transform 180ms ease-out, opacity 160ms ease-out",
 							}}
 						>
-							{/* data-lh-overlay-chart: globals.css pins the svg to the
+							{/* data-mt-overlay-chart: globals.css pins the svg to the
 							    wrapper's width (kills mermaid's inline max-width cap)
 							    so the wrapper IS the natural-size box the fit math
 							    centers. FIGURE MODE: a white stage (the figure's
@@ -277,7 +277,7 @@ export function MermaidOverlay({
 							    caller's invert filter riding it, exactly like the
 							    in-card holder. */}
 							<div
-								data-lh-overlay-chart
+								data-mt-overlay-chart
 								className={cn(
 									"[&_svg]:h-auto [&_svg]:w-full",
 									rawSvg !== undefined && "bg-white",

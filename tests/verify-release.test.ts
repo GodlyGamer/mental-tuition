@@ -162,7 +162,7 @@ describe("release gate — packaging-config drift guard", () => {
 		["win artifactName", (config) => { (config.win as Record<string, unknown>).artifactName = "${productName}-${version}-setup.${ext}"; }],
 		["mac artifactName", (config) => { (config.mac as Record<string, unknown>).artifactName = "${productName}-${version}.${ext}"; }],
 		["top-level artifactName", (config) => { config.artifactName = "${name}-${version}.${ext}"; }],
-		["productName", (config) => { config.productName = "learnharness"; }],
+		["productName", (config) => { config.productName = "mentaltuition"; }],
 		["mac targets", (config) => { (config.mac as Record<string, unknown>).target = [{ target: "dmg", arch: ["arm64"] }]; }],
 		["win target", (config) => { (config.win as Record<string, unknown>).target = [{ target: "appx", arch: ["x64"] }]; }],
 		["linux targets", (config) => { (config.linux as Record<string, unknown>).target = [{ target: "AppImage", arch: ["x64"] }]; }],
@@ -176,7 +176,7 @@ describe("release gate — packaging-config drift guard", () => {
 			const pkg = label === "package name" ? { ...realPkg, name: "other" } : realPkg;
 			const verdict = verifyConfigAssumptions(config, pkg);
 			assert.ok(!verdict.ok);
-			assert.match(verdict.errors.join("\n"), /expected names no longer hold|would not land in the draft|no longer "learnharness"|productName is /);
+			assert.match(verdict.errors.join("\n"), /expected names no longer hold|would not land in the draft|no longer "mentaltuition"|productName is /);
 		});
 	}
 });
@@ -205,7 +205,7 @@ describe("release gate — asset inventory", () => {
 describe("release gate — updater reference hygiene", () => {
 	it("accepts bare asset names only", () => {
 		assert.ok(isPlainAssetName("MentalTuition-0.2.0-arm64.dmg"));
-		for (const bad of ["", ".", "..", "../LearnHarness.zip", "dist/LearnHarness.zip", "https://evil.example/app.zip",
+		for (const bad of ["", ".", "..", "../MentalTuition.zip", "dist/MentalTuition.zip", "https://evil.example/app.zip",
 			"http://evil.example/app.zip", "file:///etc/passwd", "C:\\app.zip", "~x/app.zip", "app.zip?q=1", "app.zip#x"]) {
 			assert.equal(isPlainAssetName(bad), false, bad);
 		}
@@ -375,7 +375,7 @@ describe("release gate — CLI (offline, repo config)", () => {
 	}
 
 	function workspace(tagForm: "v" | "bare" = "v", version = VERSION) {
-		const root = fs.mkdtempSync(path.join(os.tmpdir(), "lh-release-gate-"));
+		const root = fs.mkdtempSync(path.join(os.tmpdir(), "mt-release-gate-"));
 		const release = healthyRelease(version, tagForm);
 		fs.writeFileSync(path.join(root, "releases.json"), JSON.stringify([release]));
 		fs.mkdirSync(path.join(root, "metadata"));

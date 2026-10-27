@@ -114,7 +114,7 @@ const NODE_COLOR_TOKEN = "--primary";
 
 /** Per-device graph camera persistence (zoom+pan view state). v1 in the
  *  key: the stored shape is the renderer's d3 transform {k, x, y}. */
-const CAMERA_STORAGE_KEY = "lh.graph.camera.v1";
+const CAMERA_STORAGE_KEY = "mt.graph.camera.v1";
 
 // ---- Render settings (the settings-panel controls) ------------------------
 //
@@ -976,12 +976,12 @@ export function GraphView({
 	// Search panel state: the query text + the settings section toggle.
 	const [query, setQuery] = useState("");
 	// ⌘F (shortcut wave C): the find event focuses the node search —
-	// surface-scoped, dispatched as lh:kbd-find (only this page listens).
+	// surface-scoped, dispatched as mt:kbd-find (only this page listens).
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => {
 		const onFind = () => searchInputRef.current?.focus();
-		window.addEventListener("lh:kbd-find", onFind);
-		return () => window.removeEventListener("lh:kbd-find", onFind);
+		window.addEventListener("mt:kbd-find", onFind);
+		return () => window.removeEventListener("mt:kbd-find", onFind);
 	}, []);
 	// Render settings: SERVER-persisted (data/render-settings.json via
 	// /api/graph/render-settings) — sizes AND the region/physics sections
@@ -1181,7 +1181,7 @@ export function GraphView({
 
 	/* Deletion refresh (wave 6 chunk A): the DELETE /api/chats/:id response
 	   carries the new graphRevision, and the sidebar (which owns the delete
-	   flow) announces it as lh:graph-revision. The status poll above can't
+	   flow) announces it as mt:graph-revision. The status poll above can't
 	   see a deletion — no pipeline run ever disappears from the feed for
 	   it — so this event is the one seam. Refetch the snapshot and the
 	   costs on every announcement: deletions are rare, a redundant fetch
@@ -1191,13 +1191,13 @@ export function GraphView({
 			setRefreshTick((t) => t + 1);
 			refreshCosts();
 		};
-		window.addEventListener("lh:graph-revision", onRevision);
-		return () => window.removeEventListener("lh:graph-revision", onRevision);
+		window.addEventListener("mt:graph-revision", onRevision);
+		return () => window.removeEventListener("mt:graph-revision", onRevision);
 	}, [refreshCosts]);
 
 	/* Live rename labels (rename-shuffle fix, 2026-09-23): a session
 	   rename anywhere (sidebar inline row, chat header) announces itself
-	   as lh:chat-renamed {id, title} — and the birth-session partition
+	   as mt:chat-renamed {id, title} — and the birth-session partition
 	   means that title IS the cluster label. The label update goes
 	   through the renderer's label-only channel (setClusterLabels): NO
 	   new snapshot object, NO setData, NO geometry rebuild — so the
@@ -1217,8 +1217,8 @@ export function GraphView({
 			rendererRef.current?.setClusterLabels(new Map([[id, title]]));
 			setLabelTick((t) => t + 1);
 		};
-		window.addEventListener("lh:chat-renamed", onRenamed);
-		return () => window.removeEventListener("lh:chat-renamed", onRenamed);
+		window.addEventListener("mt:chat-renamed", onRenamed);
+		return () => window.removeEventListener("mt:chat-renamed", onRenamed);
 	}, []);
 
 	// The node context menu (node interlude): right-click a node → Delete.
@@ -1233,7 +1233,7 @@ export function GraphView({
 		if (ctxNode === null) return;
 		const onPointerDown = (e: PointerEvent) => {
 			const target = e.target as Node;
-			if (target instanceof Element && target.closest("[data-lh-menu]")) return;
+			if (target instanceof Element && target.closest("[data-mt-menu]")) return;
 			if (ctxAnchorRef.current?.contains(target)) return;
 			setCtxNode(null);
 		};
@@ -1548,7 +1548,7 @@ export function GraphView({
 					if (selected && nodeIds.includes(selected.node.id)) setSelected(null);
 					// The wave-6 chain: every listener refetches on this. Clusters
 					// shrink / unrender below the minimum on the server's read.
-					window.dispatchEvent(new CustomEvent("lh:graph-revision", { detail: { graphRevision } }));
+					window.dispatchEvent(new CustomEvent("mt:graph-revision", { detail: { graphRevision } }));
 				}}
 			/>
 
@@ -1565,7 +1565,7 @@ export function GraphView({
 			    Coverage renders even when the graph is EMPTY — an empty
 			    graph with unextracted sessions is exactly when it matters
 			    (extract → the graph gains nodes).
-			    lh-no-drag (2026-09-17): home.tsx's floating drag strip
+			    mt-no-drag (2026-09-17): home.tsx's floating drag strip
 			    underlays this row — Electron's drag mask ignores z-index,
 			    so without an explicit carve-out the controls were
 			    unclickable in the desktop app (owner report). The old
@@ -1580,7 +1580,7 @@ export function GraphView({
 			    against the full-bleed parent) — the row NEVER wraps (owner
 			    rejected the two-row fold); in narrow windows the search is
 			    the flexible element and shrinks instead. */}
-			<div className="lh-no-drag lh-wco-floating absolute right-2 top-2 z-10 flex max-w-[calc(100%-5.5rem)] flex-col items-end gap-2">
+			<div className="mt-no-drag mt-wco-floating absolute right-2 top-2 z-10 flex max-w-[calc(100%-5.5rem)] flex-col items-end gap-2">
 			{/* z-20 (2026-09-20): the row paints above the cost number below
 			    it — without this, the later-in-DOM cost control layered over
 			    the settings/coverage dropdowns (owner report), still hoverable
@@ -1632,10 +1632,10 @@ export function GraphView({
 					// Positioned imperatively in the layout effect above; hidden
 					// until placed so the flip never flashes in the wrong spot.
 					style={{ visibility: "hidden", left: 0, top: 0 }}
-					// lh-no-drag: the card is placed anywhere on the canvas —
+					// mt-no-drag: the card is placed anywhere on the canvas —
 					// when it lands in the top strip it must stay interactive
 					// over home.tsx's drag surface (2026-09-17).
-					className="lh-no-drag absolute z-10 w-80 max-w-[calc(100%-1rem)] rounded-xl border bg-card p-4 text-left shadow-lg"
+					className="mt-no-drag absolute z-10 w-80 max-w-[calc(100%-1rem)] rounded-xl border bg-card p-4 text-left shadow-lg"
 				>
 					<div className="text-sm font-medium leading-snug">{selected.node.name}</div>
 					<div className="mt-1 text-xs leading-relaxed text-muted-foreground">{selected.node.statement}</div>
@@ -1681,7 +1681,7 @@ export function GraphView({
 			    and owns its selection.
 			    LAST CHILD OF THE ROOT, DELIBERATELY (owner, 2026-09-29
 			    night): app-region subtraction resolves by DOM order, not
-			    z-index — mounted earlier, the chrome's lh-no-drag column
+			    z-index — mounted earlier, the chrome's mt-no-drag column
 			    punched dead zones through the overlay's TopBar drag band
 			    (over the counts, around the search field). A full-bleed
 			    surface covering a drag band must paint AFTER everything it

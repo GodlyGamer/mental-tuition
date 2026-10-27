@@ -13,15 +13,15 @@
 # WHY A SWITCH, NOT AN ENV SCRUB: a script cannot merely unset shell
 # *_API_KEY vars — Next injects .env.local (the dev secrets) into the
 # server env at boot, so a "fresh" instance would silently federate the
-# real keys. LH_IGNORE_ENV_KEYS=1 (the keys seam, src/server/keys.ts)
+# real keys. MT_IGNORE_ENV_KEYS=1 (the keys seam, src/server/keys.ts)
 # deletes every managed key var from the process after Next's env load:
 # pi-ai reads provider keys from process.env NATIVELY at every request,
 # so deletion hides keys from the whole app, model engines included.
 #
-#   LH_DATA_DIR     → .fresh-data/ (wiped each launch unless --keep)
-#   LH_AUTH_FILE    → .fresh-data/auth.json (NEVER the repo-root auth.json
+#   MT_DATA_DIR     → .fresh-data/ (wiped each launch unless --keep)
+#   MT_AUTH_FILE    → .fresh-data/auth.json (NEVER the repo-root auth.json
 #                     — that file may symlink the real keys)
-#   LH_IGNORE_ENV_KEYS=1
+#   MT_IGNORE_ENV_KEYS=1
 #
 # Safe to rerun. The data dir is disposable scratch — never copy it back.
 
@@ -84,15 +84,15 @@ else
 fi
 mkdir -p "$DATA_DIR"
 
-export LH_DATA_DIR="$DATA_DIR"
-export LH_AUTH_FILE="$DATA_DIR/auth.json"
-export LH_IGNORE_ENV_KEYS=1
+export MT_DATA_DIR="$DATA_DIR"
+export MT_AUTH_FILE="$DATA_DIR/auth.json"
+export MT_IGNORE_ENV_KEYS=1
 export PORT
 
 echo "── fresh-user instance ─────────────────────────────────"
 echo "  URL      : http://localhost:$PORT"
 echo "  data dir : $DATA_DIR ($( [ "$KEEP" = "true" ] && echo 'kept across runs' || echo 'wiped next launch unless --keep' ))"
-echo "  keys     : env keys hidden (LH_IGNORE_ENV_KEYS=1), auth.json empty"
+echo "  keys     : env keys hidden (MT_IGNORE_ENV_KEYS=1), auth.json empty"
 echo "─────────────────────────────────────────────────────────"
 
 cd "$ROOT"

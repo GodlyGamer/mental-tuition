@@ -408,7 +408,7 @@ export type QuestionKind = "quiz" | "ask" | "explain";
 export type SelectMode = "single-select" | "multi-select";
 export type QuestionMode = SelectMode | "text";
 
-/** Full question data — stored in the `lh_question` custom entry. */
+/** Full question data — stored in the `mt_question` custom entry. */
 export interface QuestionData {
 	id: string;
 	kind: QuestionKind;
@@ -430,7 +430,7 @@ export interface QuestionData {
 	createdAt: string;
 }
 
-/** The learner's answer — full structured record, stored in `lh_question_answered`.
+/** The learner's answer — full structured record, stored in `mt_question_answered`.
  *  NO questionId (owner, tool-result diet 2026-10-02): it was the
  *  toolCallId restated — the toolResult message already carries it. */
 export interface QuestionAnswerData {

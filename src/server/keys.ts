@@ -25,7 +25,7 @@
  * generic status rows (no catalog form to edit through — only curated
  * keys have shapes and docs; core/auth-keys.ts).
  *
- * THE FRESH-USER SWITCH (owner, interlude 2026-09-22): LH_IGNORE_ENV_KEYS=1
+ * THE FRESH-USER SWITCH (owner, interlude 2026-09-22): MT_IGNORE_ENV_KEYS=1
  * makes every env key invisible APP-WIDE — the exact new-user simulation
  * (a fresh empty data dir + the switch = zero keys, zero federated
  * providers, setup stage 1). Under the switch real env vars are DELETED
@@ -55,7 +55,7 @@ import { authStore } from "../store/auth.ts";
 
 // The once-per-process boot record — globalThis anchor (HMR re-imports the
 // module; the snapshot must not re-run and misread fill-gapped vars as real
-// env). Same pattern as globalThis.__lhExtractionRuns.
+// env). Same pattern as globalThis.__mtExtractionRuns.
 interface AuthBoot {
 	/** Vars that were in the REAL env at first init — env precedence's
 	 *  untouchable set. Fill-gapped vars are everything else we set. */
@@ -63,7 +63,7 @@ interface AuthBoot {
 	/** Vars WE put into process.env (the file's reflection) — deletable. */
 	fillGap: Set<string>;
 }
-const BOOT_KEY = Symbol.for("lh.authBoot");
+const BOOT_KEY = Symbol.for("mt.authBoot");
 
 function boot(): AuthBoot {
 	const g = globalThis as Record<symbol, AuthBoot | undefined>;
@@ -89,7 +89,7 @@ export function providerKeyList() {
  *  invisible app-wide — deleted from the process at boot, file keys only.
  *  Read live per call (the launcher exports it before boot). */
 export function envKeysIgnored(): boolean {
-	return process.env.LH_IGNORE_ENV_KEYS === "1";
+	return process.env.MT_IGNORE_ENV_KEYS === "1";
 }
 
 /**

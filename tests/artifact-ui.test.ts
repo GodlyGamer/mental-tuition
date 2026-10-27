@@ -7,7 +7,7 @@
  * or a non-artifact message id, and the record actually carrying the flag
  * after a write.
  *
- * Runs under an isolated LH_DATA_DIR (the chat-birth-stamp discipline:
+ * Runs under an isolated MT_DATA_DIR (the chat-birth-stamp discipline:
  * the seam is set before any config-loading import, so every app-module
  * import is dynamic).
  */
@@ -18,8 +18,8 @@ import * as path from "node:path";
 import { after, before, describe, it } from "node:test";
 
 // ── the seam, BEFORE any config-loading import ──────────────────────────────
-const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "lh-artifact-ui-"));
-process.env.LH_DATA_DIR = TMP_DATA;
+const TMP_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "mt-artifact-ui-"));
+process.env.MT_DATA_DIR = TMP_DATA;
 
 type Post = (req: Request, ctx: { params: Promise<{ id: string }> }) => Promise<Response>;
 let POST: Post;

@@ -28,7 +28,7 @@ import type { GraphStore } from "../../core/ports.ts";
 import { emit } from "../../core/events.ts";
 import { settleGraphLayout } from "../../core/layout-settle.ts";
 import { batchRuns, coverageOf, messageViewLines } from "../../core/coverage.ts";
-import type { LhMessage } from "../../core/native-messages.ts";
+import type { MtMessage } from "../../core/native-messages.ts";
 import { auditorGraphTools } from "../tools/graph.ts";
 import { runSubmitAgent, healStringifiedArrays } from "./submit-agent.ts";
 
@@ -132,7 +132,7 @@ export function transcriptView(record: ChatRecord): string {
  *  every proposition to the passage it came from (the session submit's
  *  required messageId). The shared markdown engine stays reserved for the
  *  future user-facing export. */
-function proseView(messages: ReadonlyArray<LhMessage>, title?: string): string {
+function proseView(messages: ReadonlyArray<MtMessage>, title?: string): string {
 	const lines = messages.flatMap((message) => messageViewLines(message, message.id));
 	const head = title && title.length > 0 ? `# ${title}\n\n` : "";
 	return head + lines.join("\n\n");
@@ -645,8 +645,8 @@ export interface RunningExtraction {
 	controller: AbortController;
 }
 
-interface LhExtractionGlobal {
-	__lhExtractionRuns?: {
+interface MtExtractionGlobal {
+	__mtExtractionRuns?: {
 		/** In-flight pipeline runs, keyed chatId (chat) / src id (notes). */
 		running: Map<string, RunningExtraction>;
 		/** The single-flight guard, shared by every pipeline instance. */
@@ -659,7 +659,7 @@ interface LhExtractionGlobal {
 	 *  chain — the audit+merge critical section runs one job at a time,
 	 *  process-wide. globalThis for the same module-instance reason as
 	 *  the run registries. */
-	__lhAuditLock?: { tail: Promise<void> };
+	__mtAuditLock?: { tail: Promise<void> };
 	/** The EXTRACT SEMAPHORE (owner, 2026-09-28): 3 concurrent extractor
 	 *  calls process-wide — the provider-facing rate stance (the import
 	 *  route's old 3-wide pool doctrine, now global). Per-chunk jobs fan
@@ -674,9 +674,9 @@ interface LhExtractionGlobal {
  *  one truth — the same idiom as the turn, wake, and abort registries
  *  (moved 2026-09-19, the observability-accuracy wave; also makes the
  *  single-flight guard cross route instances). */
-function runs(): NonNullable<LhExtractionGlobal["__lhExtractionRuns"]> {
-	const g = globalThis as typeof globalThis & LhExtractionGlobal;
-	return (g.__lhExtractionRuns ??= { running: new Map(), inFlight: new Set(), lastStartedAt: 0 });
+function runs(): NonNullable<MtExtractionGlobal["__mtExtractionRuns"]> {
+	const g = globalThis as typeof globalThis & MtExtractionGlobal;
+	return (g.__mtExtractionRuns ??= { running: new Map(), inFlight: new Set(), lastStartedAt: 0 });
 }
 
 /** In-flight pipeline runs (oldest first) — the /api/graph/status payload. */
@@ -878,8 +878,8 @@ export function createExtractionPipeline(deps: ExtractionPipelineDeps): Extracti
 	 *  successors never hang). */
 	async function withAuditLock<T>(jobKey: string, kind: "chat" | "notes", label: string | undefined, critical: () => Promise<T>): Promise<T> {
 		setPhase(jobKey, "waiting", kind, label);
-		const g = globalThis as typeof globalThis & LhExtractionGlobal;
-		const lock = (g.__lhAuditLock ??= { tail: Promise.resolve() });
+		const g = globalThis as typeof globalThis & MtExtractionGlobal;
+		const lock = (g.__mtAuditLock ??= { tail: Promise.resolve() });
 		const prev = lock.tail;
 		let release!: () => void;
 		lock.tail = new Promise<void>((resolve) => (release = resolve));

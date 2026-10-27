@@ -82,7 +82,7 @@ export function geminiErrorText(message: string): string {
  *  coding-assistant voice or try its built-in file/terminal tools (those
  *  requests are refused here, and the fallback was writing text instead of
  *  calling the app's picture and demo jobs). */
-export const ANTIGRAVITY_TEACHER_PREAMBLE = `You are the teacher in LearnHarness, a tutoring app. You are not a coding assistant: do not write code unless the learner asks for code, and do not describe yourself as an assistant or an AI model.
+export const ANTIGRAVITY_TEACHER_PREAMBLE = `You are the teacher in Mental Tuition, a tutoring app. You are not a coding assistant: do not write code unless the learner asks for code, and do not describe yourself as an assistant or an AI model.
 
 Your own built-in tools (reading and writing files, the terminal, the browser) are NOT available in this app and will be refused. Use only the tools listed for you here. For a picture or a diagram, call the app's drawing or visual tool as instructed below; never write a picture as text, ASCII art or a code block in place of calling it.
 
@@ -129,9 +129,9 @@ export function antigravityProvider(googleModels: readonly Model<Api>[]): Provid
 
 // ─── the server binary and the learner's sign-in ────────────────────────────
 
-/** The server executable (LH_ANTIGRAVITY_ACP points at a test fake). */
+/** The server executable (MT_ANTIGRAVITY_ACP points at a test fake). */
 function serverCommand(): { cmd: string; args: string[]; cwd: string } {
-	const override = process.env.LH_ANTIGRAVITY_ACP;
+	const override = process.env.MT_ANTIGRAVITY_ACP;
 	if (override) return override.endsWith(".mjs") ? { cmd: process.execPath, args: [override], cwd: path.dirname(override) } : { cmd: override, args: [], cwd: path.dirname(override) };
 	const { cmd, args } = installedAntigravity();
 	return { cmd, args, cwd: path.dirname(cmd) };
@@ -174,7 +174,7 @@ interface CapturedCall {
 
 async function startToolServer(tools: readonly Tool[], onCall: (c: CapturedCall) => void) {
 	const httpServer = http.createServer(async (req, res) => {
-		const server = new McpServer({ name: "lh", version: "1.0.0" }, { capabilities: { tools: {} } });
+		const server = new McpServer({ name: "mt", version: "1.0.0" }, { capabilities: { tools: {} } });
 		server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
 			tools: tools.map((t) => ({
 				name: t.name,
@@ -304,7 +304,7 @@ class AcpServer {
 	private answer(id: number | string, method: string, params: Json): void {
 		if (method === "session/request_permission") {
 			const toolCall = (params.toolCall ?? {}) as { _meta?: { mcp?: { server?: string } } };
-			const ours = toolCall._meta?.mcp?.server === "lh";
+			const ours = toolCall._meta?.mcp?.server === "mt";
 			const options = (params.options ?? []) as { optionId: string; kind?: string }[];
 			const pick = ours
 				? (options.find((o) => o.kind === "allow_once") ?? options.find((o) => o.kind?.startsWith("allow")))
@@ -431,7 +431,7 @@ async function run(
 		fail("error", "Gemini isn't installed on this computer. Open Settings → This computer and install it.");
 		return;
 	}
-	if (!process.env.LH_ANTIGRAVITY_ACP && !antigravitySignedIn()) {
+	if (!process.env.MT_ANTIGRAVITY_ACP && !antigravitySignedIn()) {
 		fail("error", LOGIN_HINT);
 		return;
 	}
@@ -445,7 +445,7 @@ async function run(
 	let contextUsed = 0;
 	let server: AcpServer | null = null;
 	let toolServer: Awaited<ReturnType<typeof startToolServer>> | null = null;
-	const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "lh-agy-"));
+	const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "mt-agy-"));
 	const onAbort = () => {
 		if (server && sessionId) server.notify("session/cancel", { sessionId });
 	};
@@ -460,7 +460,7 @@ async function run(
 		});
 		const session = (await server.request("session/new", {
 			cwd,
-			mcpServers: tools.length ? [{ type: "http", name: "lh", url: toolServer.url, headers: [] }] : [],
+			mcpServers: tools.length ? [{ type: "http", name: "mt", url: toolServer.url, headers: [] }] : [],
 			_meta: { antigravity: { systemPrompt: { append: ANTIGRAVITY_TEACHER_PREAMBLE + getCurrentSystemPrompt(context.messages) + TRANSCRIPT_NOTE_PROSE } } },
 		})) as { sessionId?: string };
 		if (!session.sessionId) throw new Error("Antigravity did not start a session");

@@ -1,10 +1,10 @@
 /**
- * LearnHarness — the Electron shell (wrapper milestone, 2026-09-17).
+ * Mental Tuition — the Electron shell (wrapper milestone, 2026-09-17).
  *
  * What this process is and is not:
  *   IS:  a thin launcher + security guard around the app's real server —
  *        `next build`'s standalone server.js (Next 16), spawned as a child
- *        on 127.0.0.1 with the BYOK auth file and the LH_DATA_DIR seam.
+ *        on 127.0.0.1 with the BYOK auth file and the MT_DATA_DIR seam.
  *   NOT: a host for any app logic. Everything — teacher turns, extraction,
  *        the graph — runs in the Next server, unchanged.
  *
@@ -19,7 +19,7 @@
  *   - keys ride the child's ENV, never argv; auth.json (BYOK) is a flat
  *     {VAR: value} JSON map, plaintext, mode 0600 — server-managed since
  *     the auth-keys wave (2026-09-19): the child reads/writes it DIRECTLY
- *     (LH_AUTH_FILE below) and reflects values into its own env. The old
+ *     (MT_AUTH_FILE below) and reflects values into its own env. The old
  *     spawn-time env injection retired with that wave — a copy made here
  *     would shadow every settings-page key change until restart.
  */
@@ -36,32 +36,35 @@ const path = require("node:path");
 // renderer owns the number; this is the IPC widen target).
 const SIDEBAR_AUTOCLOSE = 928;
 
-// The personal fork's name (2026-10-24): MentalTuition. The appId stays
-// com.learnharness.LearnHarness so 0.3.6+ installs over 0.3.5 and keeps
-// updating from the same feed.
-const PRODUCT_NAME = "MentalTuition";
-const OLD_PRODUCT_NAME = "LearnHarness";
+// The personal fork's name: MentalTuition (2026-10-24), then "Mental
+// Tuition" (2026-10-27) with its own appId com.mentaltuition.MentalTuition —
+// 0.3.x installs don't update over it; uninstall the old build once.
+const PRODUCT_NAME = "Mental Tuition";
+// Earlier userData folder names, newest first: migrateUserData copies the
+// first one that exists.
+const OLD_PRODUCT_NAMES = ["MentalTuition", "LearnHarness"];
 
 // APP NAME → userData (owner, 2026-10-10): the Application Support dir is
 // exactly the product name in dev AND packaged. Packaged Electron would
-// otherwise derive it from package.json "name" (now lowercase
-// "learnharness"), and productName metadata alone doesn't reach app.name.
-// Must run before the LH_DEV_URL suffix below — dev becomes
-// "MentalTuition-dev".
+// otherwise derive it from package.json "name" (lowercase "mentaltuition"),
+// and productName metadata alone doesn't reach app.name. Must run before
+// the MT_DEV_URL suffix below — dev becomes "Mental Tuition-dev".
 app.setName(PRODUCT_NAME);
 
-/** The rename moved userData from %APPDATA%\LearnHarness to
- *  %APPDATA%\MentalTuition. Once (the marker file), before anything reads
- *  it, copy the old folder over — the keys (auth.json), this machine's
- *  workspace choice and setup record, the Gemini download — leaving
- *  Chromium's caches behind and never overwriting a file already there.
- *  The old folder stays as it was. Runs from main(), after the
- *  single-instance lock. */
+/** Each rename moved userData (%APPDATA%\LearnHarness → MentalTuition →
+ *  Mental Tuition). Once (the marker file), before anything reads it, copy
+ *  the newest old folder over — the keys (auth.json), localStorage, this
+ *  machine's workspace choice and setup record, the Gemini download —
+ *  leaving Chromium's caches behind and never overwriting a file already
+ *  there. The old folder stays as it was. Dev copies from the old "-dev"
+ *  folders. Runs from main(), after the single-instance lock. */
 function migrateUserData() {
 	const next = app.getPath("userData");
-	const old = path.join(app.getPath("appData"), OLD_PRODUCT_NAME);
-	const marker = path.join(next, ".migrated-from-learnharness");
-	if (!fs.existsSync(old) || fs.existsSync(marker)) return;
+	const suffix = process.env.MT_DEV_URL ? "-dev" : "";
+	const marker = path.join(next, ".migrated-from-mentaltuition");
+	if (fs.existsSync(marker)) return;
+	const old = OLD_PRODUCT_NAMES.map((name) => path.join(app.getPath("appData"), name + suffix)).find((dir) => fs.existsSync(dir));
+	if (!old) return;
 	const caches = new Set(["Cache", "Code Cache", "GPUCache", "DawnGraphiteCache", "DawnWebGPUCache", "Shared Dictionary", "blob_storage"]);
 	try {
 		fs.cpSync(old, next, {
@@ -84,15 +87,18 @@ const LOCAL_DIR = () => path.join(app.getPath("userData"), "local");
 /* ── The workspace (personal fork, 2026-10-24) ─────────────────────────────
  * Everything the learner makes lives in ONE folder they pick, meant to sit
  * in Google Drive so a PC and a laptop share it:
- *   <workspace>/data/      chats, graph, settings (LH_DATA_DIR)
- *   <workspace>/study/     the practice-paper tree (LH_STUDY_DIR)
+ *   <workspace>/data/      chats, graph, settings (MT_DATA_DIR)
+ *   <workspace>/study/     the practice-paper tree (MT_STUDY_DIR)
  *   <workspace>/.claude/   the paper skills, refreshed from the app on launch
  * The choice is per machine (userData/workspace.json): Drive's letter can
  * differ between computers. Sign-ins, keys (auth.json), logs and the
  * Antigravity download stay in userData. Drive can't merge two computers
- * writing at once, so <workspace>/.lh-open.json says who has it open. */
+ * writing at once, so <workspace>/.mt-open.json says who has it open. */
 const WORKSPACE_FILE = () => path.join(app.getPath("userData"), "workspace.json");
-const OPEN_FILE = (ws) => path.join(ws, ".lh-open.json");
+const OPEN_FILE = (ws) => path.join(ws, ".mt-open.json");
+// Builds before the 2026-10-27 rename write .lh-open.json: read it too until
+// both computers are on the new build.
+const LEGACY_OPEN_FILE = (ws) => path.join(ws, ".lh-open.json");
 const OPEN_STALE_MS = 3 * 60 * 1000;
 let workspace = null;
 let openHeartbeat = null;
@@ -126,9 +132,9 @@ async function pickWorkspace({ first }) {
 			const { response } = await dialog.showMessageBox({
 				type: "info",
 				title: PRODUCT_NAME,
-				message: "Choose where MentalTuition keeps your work",
+				message: "Choose where Mental Tuition keeps your work",
 				detail:
-					"Pick or create a folder in Google Drive (for example My Drive\\MentalTuition). Your chats, knowledge graph, settings and study modules go there, so your other computer can use them too.\n\nYou can change it later in Settings → This computer.",
+					"Pick or create a folder in Google Drive (for example My Drive\\Mental Tuition). Your chats, knowledge graph, settings and study modules go there, so your other computer can use them too.\n\nYou can change it later in Settings → This computer.",
 				buttons: ["Choose folder…", "Quit"],
 				defaultId: 0,
 				cancelId: 1,
@@ -136,7 +142,7 @@ async function pickWorkspace({ first }) {
 			if (response === 1) return null;
 		}
 		const result = await dialog.showOpenDialog({
-			title: "MentalTuition folder",
+			title: "Mental Tuition folder",
 			defaultPath: workspace ?? driveFolder(),
 			buttonLabel: "Use this folder",
 			properties: ["openDirectory", "createDirectory", "promptToCreate"],
@@ -174,14 +180,19 @@ function refreshWorkspaceSkills(ws) {
 
 /** Warn when another computer has the workspace open; then claim it. */
 async function claimWorkspace(ws) {
-	try {
-		const other = JSON.parse(fs.readFileSync(OPEN_FILE(ws), "utf-8"));
+	for (const file of [OPEN_FILE(ws), LEGACY_OPEN_FILE(ws)]) {
+		let other;
+		try {
+			other = JSON.parse(fs.readFileSync(file, "utf-8"));
+		} catch {
+			continue; /* nobody has it open */
+		}
 		const age = Date.now() - Date.parse(other.at);
 		if (other.host && other.host !== os.hostname() && age < OPEN_STALE_MS) {
 			const { response } = await dialog.showMessageBox({
 				type: "warning",
 				title: PRODUCT_NAME,
-				message: `MentalTuition looks open on ${other.host}`,
+				message: `Mental Tuition looks open on ${other.host}`,
 				detail:
 					"Using the same folder on two computers at once can make Google Drive keep conflicting copies of your chats and graph. Close it there first, or open it here anyway.",
 				buttons: ["Open anyway", "Quit"],
@@ -189,9 +200,8 @@ async function claimWorkspace(ws) {
 				cancelId: 1,
 			});
 			if (response === 1) return false;
+			break;
 		}
-	} catch {
-		/* nobody has it open */
 	}
 	const beat = () => {
 		try {
@@ -220,15 +230,15 @@ function releaseWorkspace(ws) {
 /** The server's view of the workspace (config.ts). */
 function workspaceEnv(ws) {
 	return {
-		LH_WORKSPACE_DIR: ws,
-		LH_DATA_DIR: path.join(ws, "data"),
-		LH_STUDY_DIR: path.join(ws, "study"),
-		LH_LOCAL_DIR: LOCAL_DIR(),
+		MT_WORKSPACE_DIR: ws,
+		MT_DATA_DIR: path.join(ws, "data"),
+		MT_STUDY_DIR: path.join(ws, "study"),
+		MT_LOCAL_DIR: LOCAL_DIR(),
 	};
 }
 
 /** The packaged standalone server (extraResources → Resources/server).
- *  In dev LH_DEV_URL short-circuits everything: no spawn, no packaging —
+ *  In dev MT_DEV_URL short-circuits everything: no spawn, no packaging —
  *  the window points at the running `next dev` server (full HMR). */
 function serverEntry() {
 	// extraResources ships the whole .next payload under server/standalone/
@@ -246,7 +256,7 @@ function serverEntry() {
 // the helper prints "BROWSER_SERVICE_CDP <port>" on stdout once the CDP
 // endpoint listens. Lifetime: parent IPC disconnect/death = quit.
 // MUST run before the single-instance lock — a helper is a second
-// instance of this very binary, and before the LH_DEV_URL redirect — the
+// instance of this very binary, and before the MT_DEV_URL redirect — the
 // helper owns no user data at all.
 if (process.argv.includes("--browser-service")) {
 	const { waitForBrowserService } = require("./browser-service-readiness.cjs");
@@ -282,11 +292,11 @@ if (process.argv.includes("--browser-service")) {
 		}
 	})();
 } else {
-	// Dev shell (LH_DEV_URL) runs BESIDE the packaged app, not instead of it:
+	// Dev shell (MT_DEV_URL) runs BESIDE the packaged app, not instead of it:
 	// its own userData so (a) the single-instance lock — checked below — doesn't
 	// silently kill it, and (b) it never reads/writes the real app's
 	// localStorage, auth.json, or logs. Must run before the lock check.
-	if (process.env.LH_DEV_URL) {
+	if (process.env.MT_DEV_URL) {
 		app.setPath("userData", `${app.getPath("userData")}-dev`);
 	}
 
@@ -336,7 +346,7 @@ function freePort() {
 
 /** BYOK keys: auth.json in userData, flat {VAR: value} map, 0600 —
  *  SERVER-MANAGED since the auth-keys wave (2026-09-19). This shell no
- *  longer reads or injects it: the child gets LH_AUTH_FILE below and does
+ *  longer reads or injects it: the child gets MT_AUTH_FILE below and does
  *  its own read/reflect/write, so a key saved in the settings page takes
  *  effect on the next model call — no restart. Real environment variables
  *  still win over the file inside the child (its documented rule). */
@@ -348,7 +358,7 @@ function log(line) {
 	// piped run) must not die on its next log line when the pipe breaks.
 	// The file below stays the durable channel.
 	try {
-		console.log(`[lh ${stamp}] ${line}`);
+		console.log(`[mt ${stamp}] ${line}`);
 	} catch {
 		/* stdout gone — userData/logs/main.log still carries it */
 	}
@@ -380,7 +390,7 @@ function startServer(port) {
 					// The auth/keys store — the child reads AND writes this file itself
 					// (no env injection anymore: a spawn-time copy would shadow every
 					// settings-page key change until restart; env wins over file).
-					LH_AUTH_FILE: AUTH_FILE(),
+					MT_AUTH_FILE: AUTH_FILE(),
 				},
 				stdio: ["ignore", "pipe", "pipe"],
 			},
@@ -450,13 +460,13 @@ function createWindow(url) {
 		title: PRODUCT_NAME,
 		// Merged chrome (owner, 2026-09-17): the system title bar is gone;
 		// the app's own 60px header bands ARE the title bar. The traffic
-		// lights float over the sidebar's LH wordmark band, vertically
+		// lights float over the sidebar's wordmark band, vertically
 		// Aligned to the PHASE PILL's drawn box, not the band's geometric
 		// center (owner ask, 2026-09-17): macOS centers each 12px circle at
 		// y+6.75, and the pill box center measures 29.25 in the running app
 		// (band 0–59.5, pill box 19–39.5) — y 22.5 lands the circles at
 		// 29.25, exactly on the pill. Wordmark gutter: components/sidebar.tsx.
-		// Dragging comes from the renderer's .lh-drag bands (app/globals.css).
+		// Dragging comes from the renderer's .mt-drag bands (app/globals.css).
 		...(process.platform === "darwin"
 			? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 16, y: 22.5 } }
 			: {
@@ -466,7 +476,7 @@ function createWindow(url) {
 				// the renderer's 60 CSS px bar: zooming out would cover its border.
 				// The renderer reserves the actual width via env(titlebar-area-*).
 				// Transparent so the theme's lit ground shows behind the
-				// controls; the symbol color follows the theme ("lh:theme").
+				// controls; the symbol color follows the theme ("mt:theme").
 				titleBarOverlay: titleBarOverlayFor("dark"),
 				// Keep the custom bar alone; Alt reveals the native menu.
 				autoHideMenuBar: true,
@@ -490,7 +500,7 @@ function createWindow(url) {
 		// below it even a wrapped chrome row gets cramped and the chat header
 		// (lights gutter 92 + toggle + title) runs out of room. The sidebar
 		// auto-closes below 928 = 640 + 288 (sidebar) in the renderer
-		// (components/sidebar.tsx, SIDEBAR_AUTOCLOSE); its "lh:expand-window"
+		// (components/sidebar.tsx, SIDEBAR_AUTOCLOSE); its "mt:expand-window"
 		// IPC widens the window back to that threshold.
 		minWidth: 640,
 		minHeight: 600,
@@ -529,12 +539,12 @@ function createWindow(url) {
 
 	void win.loadURL(url);
 	// Zoom truth reaches the renderer for EVERY load (reload, nav): the
-	// renderer's --lh-zoom must never go stale. The fallback catcher below
+	// renderer's --mt-zoom must never go stale. The fallback catcher below
 	// covers ⌘= / layout variants the menu's ⌘Plus may not claim — menu-
 	// claimed keys never reach before-input-event, so exactly one of the
 	// two applies any given zoom keypress.
 	win.webContents.on("did-finish-load", () => {
-		win.webContents.send("lh:zoom", win.webContents.getZoomFactor());
+		win.webContents.send("mt:zoom", win.webContents.getZoomFactor());
 	});
 	win.webContents.on("before-input-event", (event, input) => {
 		if (input.type !== "keyDown" || !(input.meta || input.control)) return;
@@ -555,8 +565,8 @@ function createWindow(url) {
  * hiddenInset) drift out of relation to the scaled chrome: the graph
  * button rides away from them zoomed in, content slides under them
  * zoomed out. Here zoom is explicit: a factor ladder, applied through
- * setZoomFactor, and broadcast to the renderer ("lh:zoom" — it publishes
- * --lh-zoom so gutter lengths can divide by it and stay PHYSICAL-
+ * setZoomFactor, and broadcast to the renderer ("mt:zoom" — it publishes
+ * --mt-zoom so gutter lengths can divide by it and stay PHYSICAL-
  * constant). The traffic lights themselves stay at their construction
  * position ({x:16, y:22.5} — Electron 44 has NO runtime setter, only
  * the BrowserWindow option), which is HIG-correct anyway: native lights
@@ -582,14 +592,14 @@ const ZOOM_LADDER = [0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
  *  - THE UPDATER CAN NEVER TAKE THE APP DOWN: every event and check is
  *    caught and logged (feed down, disk full, bad signature — all just
  *    log lines; the app keeps working, update or no update).
- *  - LH_UPDATE_FEED (env): overrides the baked GitHub feed with a generic
+ *  - MT_UPDATE_FEED (env): overrides the baked GitHub feed with a generic
  *    local server — the pre-release verification drill (serve
  *    latest-mac.yml + zip + blockmap from any localhost HTTP dir and
  *    watch a real installed copy find/download/restart). Test-only seam.
  *
  * Install path: the downloaded update applies on quit (autoInstallOnAppQuit
  * — Squirrel.Mac stages natively and swaps on relaunch). The renderer
- * banner asks for an immediate restart via "lh:update-install"; we kill
+ * banner asks for an immediate restart via "mt:update-install"; we kill
  * the child server FIRST — deterministic ordering: the server lives
  * inside the .app bundle Squirrel is about to replace (extraResources),
  * and before-quit alone would race the swap. */
@@ -599,7 +609,7 @@ let autoUpdater = null; // electron-updater's, packaged builds only
 function broadcastUpdateStatus(status) {
 	for (const win of BrowserWindow.getAllWindows()) {
 		try {
-			win.webContents.send("lh:update-status", status);
+			win.webContents.send("mt:update-status", status);
 		} catch {
 			/* window mid-teardown — the next push retries */
 		}
@@ -632,7 +642,7 @@ function checkForUpdates({ manual = false } = {}) {
 			// update-downloaded. Manual checks additionally answer directly.
 			if (!manual) return;
 			const version = result?.updateInfo?.version;
-			if (!version) dialog.showMessageBox({ type: "info", message: "You're up to date.", detail: `MentalTuition ${app.getVersion()} is the latest version.` });
+			if (!version) dialog.showMessageBox({ type: "info", message: "You're up to date.", detail: `Mental Tuition ${app.getVersion()} is the latest version.` });
 		})
 		.catch((err) => {
 			log(`update check failed: ${err?.message ?? err}`);
@@ -661,10 +671,10 @@ function setupAutoUpdater() {
 		log(`auto-update: electron-updater unavailable (${err?.message ?? err}) — updates disabled`);
 		return;
 	}
-	const feed = process.env.LH_UPDATE_FEED;
+	const feed = process.env.MT_UPDATE_FEED;
 	if (feed) {
 		autoUpdater.setFeedURL({ provider: "generic", url: feed });
-		log(`auto-update: LH_UPDATE_FEED override → ${feed}`);
+		log(`auto-update: MT_UPDATE_FEED override → ${feed}`);
 	}
 	autoUpdater.autoDownload = true;
 	autoUpdater.autoInstallOnAppQuit = true;
@@ -695,7 +705,7 @@ function zoomStep(win, dir) {
 function applyZoom(win, factor) {
 	factor = Math.min(2, Math.max(0.75, factor)); // ladder clamps; ⌘0 = 1
 	win.webContents.setZoomFactor(factor);
-	win.webContents.send("lh:zoom", factor);
+	win.webContents.send("mt:zoom", factor);
 }
 
 /** macOS needs an application menu with the Edit roles — without one,
@@ -725,7 +735,7 @@ function installMenu() {
 				{ type: "separator" },
 				// OWNED zoom (see applyZoom): the roles change zoomLevel
 				// silently; these broadcast the factor and re-seat the
-				// traffic lights. The renderer's --lh-zoom depends on
+				// traffic lights. The renderer's --mt-zoom depends on
 				// hearing every change.
 				{
 					label: "Actual Size",
@@ -752,7 +762,15 @@ function installMenu() {
 }
 
 async function main() {
-	if (!process.env.LH_DEV_URL) migrateUserData();
+	migrateUserData();
+	// The credit (owner, 2026-10-27): Mental Tuition is built on Amos
+	// Blomqvist's LearnHarness, AGPL-3.0.
+	app.setAboutPanelOptions({
+		applicationName: PRODUCT_NAME,
+		applicationVersion: app.getVersion(),
+		credits: "Built on LearnHarness by Amos Blomqvist (github.com/amosblomqvist/learnharness). AGPL-3.0.",
+		copyright: "© 2026 Amos Blomqvist (LearnHarness) · © 2026 Youssouf Diallo (Mental Tuition)",
+	});
 	app.on("window-all-closed", () => {
 		// macOS convention: the app stays resident, reactivated from the Dock.
 		if (process.platform !== "darwin") app.quit();
@@ -768,10 +786,10 @@ async function main() {
 
 	await app.whenReady();
 
-	// Dev mode: point at a running `next dev` server (LH_DEV_URL) — no
+	// Dev mode: point at a running `next dev` server (MT_DEV_URL) — no
 	// spawn, no packaging, full HMR. The rest of this shell still applies
 	// (guards, menu, single instance).
-	const devUrl = process.env.LH_DEV_URL;
+	const devUrl = process.env.MT_DEV_URL;
 	const url = devUrl ?? `http://127.0.0.1:${await freePort()}`;
 	if (!devUrl) {
 		workspace = readWorkspace() ?? (await pickWorkspace({ first: true }));
@@ -797,11 +815,11 @@ async function main() {
 	// interval fire after it below. setupAutoUpdater's contract: failures
 	// are log lines — this can never block boot.
 	setupAutoUpdater();
-	ipcMain.on("lh:update-install", () => installUpdateNow());
+	ipcMain.on("mt:update-install", () => installUpdateNow());
 	// Settings → This computer → Change folder…: pick, move the open-marker,
 	// restart the server on the new folder (same port, so the window's origin
 	// and storage stay), reload.
-	ipcMain.handle("lh:workspace:change", async (event) => {
+	ipcMain.handle("mt:workspace:change", async (event) => {
 		if (devUrl) return false; // dev runs on the repo's own folders
 		const win = BrowserWindow.fromWebContents(event.sender);
 		const next = await pickWorkspace({ first: false });
@@ -828,15 +846,15 @@ async function main() {
 	// accommodate a narrow window + open sidebar. Top-left stays fixed, the
 	// window grows right. No-op when already wide.
 	// The renderer's first paint can race did-finish-load — it asks for
-	// the current factor itself (mirrors "lh:zoom" pushes).
-	ipcMain.handle("lh:zoom:get", (event) => BrowserWindow.fromWebContents(event.sender)?.webContents.getZoomFactor() ?? 1);
+	// the current factor itself (mirrors "mt:zoom" pushes).
+	ipcMain.handle("mt:zoom:get", (event) => BrowserWindow.fromWebContents(event.sender)?.webContents.getZoomFactor() ?? 1);
 	// The renderer's theme (Mentaljineer skin): the native window controls'
 	// symbols must stay readable on the Light ground. No-op on macOS (no overlay).
-	ipcMain.on("lh:theme", (event, mode) => {
+	ipcMain.on("mt:theme", (event, mode) => {
 		if (process.platform === "darwin") return;
 		BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(titleBarOverlayFor(mode));
 	});
-	ipcMain.on("lh:expand-window", (event) => {
+	ipcMain.on("mt:expand-window", (event) => {
 		const win = BrowserWindow.fromWebContents(event.sender);
 		if (!win) return;
 		const { x, y, width, height } = win.getBounds();

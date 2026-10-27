@@ -13,7 +13,7 @@
  * a fuzzy search that auto-expands matching clusters.
  *
  * ROUND 2 (owner refinements, 2026-09-29 late): the top bar is THE
- * shared TopBar (h-15, lh-drag + select-none, sidebar reopen, standard
+ * shared TopBar (h-15, mt-drag + select-none, sidebar reopen, standard
  * title size); PROMINENT indentation carries the hierarchy — the ONLY
  * lines left are the separators between cluster groups (vertical column
  * hairlines and per-row lines are gone); statement rows are PLAIN (no
@@ -125,9 +125,9 @@ describe("ChainTableBody — clusters (the outermost layer)", () => {
 });
 
 describe("ChainTableBody — THE shared TopBar + the lines law (owner, round 2)", () => {
-	it("the body renders the standardized top bar: h-15, lh-drag, select-none, NO title (serif = session name, always), close X", () => {
+	it("the body renders the standardized top bar: h-15, mt-drag, select-none, NO title (serif = session name, always), close X", () => {
 		const html = render();
-		assert.ok(html.includes("lh-drag"), "the window-drag band");
+		assert.ok(html.includes("mt-drag"), "the window-drag band");
 		assert.ok(html.includes("select-none"), "dragging never highlights the bar");
 		assert.ok(html.includes("h-15"), "the standard height");
 		assert.ok(!html.includes(">Chains<"), "NO title (owner round 11): the serif register always names a session");

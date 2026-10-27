@@ -1,25 +1,29 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/lh_banner_dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/lh_banner_light.png">
-    <img src="docs/assets/lh_banner_light.png" alt="LearnHarness" width="640">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mt_mark_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/mt_mark_light.svg">
+    <img src="docs/assets/mt_mark_light.svg" alt="Mental Tuition dragon mark" width="96">
   </picture>
 </p>
+
+<h1 align="center">Mental Tuition</h1>
 
 <p align="center"><strong>An agent harness for learning.</strong></p>
 
 <p align="center">
-  <a href="https://learnharness.ai">Download</a> ·
+  <a href="https://github.com/GodlyGamer/MentalTuition/releases">Download</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="docs/development.md">Documentation</a> ·
-  <a href="https://github.com/amosblomqvist/learnharness/issues">Issues</a>
+  <a href="https://github.com/GodlyGamer/MentalTuition/issues">Issues</a>
 </p>
 
-LearnHarness uses AI agents to plan and teach lessons from your current understanding to your goal. It builds a detailed picture of what you understand and how you reason. That picture is updated as you learn.
+<p align="center">Built on <a href="https://github.com/amosblomqvist/learnharness">LearnHarness</a> by Amos Blomqvist.</p>
+
+Mental Tuition uses AI agents to plan and teach lessons from your current understanding to your goal. It builds a detailed picture of what you understand and how you reason. That picture is updated as you learn.
 
 Instead of just giving you an explanation, it uses your answers and thinking to decide what you need next. Teaching builds understanding one reasoning step at a time. Practice makes it usable. A persistent knowledge graph carries it across sessions.
 
-![LearnHarness teaching session](docs/assets/teaching-session.png)
+![Mental Tuition teaching session](docs/assets/teaching-session.png)
 
 ## How it works
 
@@ -38,23 +42,23 @@ What you are taught accumulates as propositions and reasoning chains: individual
 
 Future teaching sessions can read the graph instead of starting from scratch. Practice sessions can draw their material from it. It stores the ideas and their connections, not ratings of your ability.
 
-![LearnHarness knowledge graph](docs/assets/knowledge-graph.png)
+![Mental Tuition knowledge graph](docs/assets/knowledge-graph.png)
 
 ## Download and get started
 
-**[Download from learnharness.ai](https://learnharness.ai)** · [GitHub Releases](https://github.com/amosblomqvist/learnharness/releases)
+**[Download from GitHub Releases](https://github.com/GodlyGamer/MentalTuition/releases)**
 
 - **macOS (Apple Silicon):** signed and notarized DMG. Drag the app to Applications.
 - **Windows (x64):** run the installer. It is currently unsigned; Windows may show an “unknown publisher” or SmartScreen warning.
 - **Linux (x64):** make the AppImage executable and open it, or install the Debian/Ubuntu `.deb`.
 
-Add your provider API key and choose your models, then start a session with what you want to understand. LearnHarness supports 30+ provider options, including OpenAI, Anthropic, Google, DeepSeek, and OpenRouter. Optional dictation and web search use separate service keys.
+Add your provider API key and choose your models, then start a session with what you want to understand. Mental Tuition supports 30+ provider options, including OpenAI, Anthropic, Google, DeepSeek, and OpenRouter. Optional dictation and web search use separate service keys.
 
 All three platforms support in-app updates.
 
 ## Your keys, your data
 
-- **Your keys and models.** No LearnHarness subscription or markup. You pay your providers for usage; a live cost meter shows model costs.
+- **Your keys and models.** No Mental Tuition subscription or markup. You pay your providers for usage; a live cost meter shows model costs.
 - **Local storage.** Your chats, graph, settings, and API keys live on your machine. Learning records are plain files you can inspect.
 - **External services.** Models run through your configured providers. Model requests send the context needed for the task; web research and dictation also contact external services. Local storage does not mean offline processing.
 - **Inspectable behavior.** System prompts are visible and editable. The app is open source under the AGPL-3.0 license.
@@ -82,9 +86,9 @@ Check the login at any time with `npm run login -- status`.
 
 ### The Windows app
 
-`npm.cmd run desktop:dist:win` builds `dist/MentalTuition-<version>-x64-setup.exe` (the personal build is called MentalTuition; its settings live in `%APPDATA%\MentalTuition`). The installer isn't signed, so the first time Windows says "Windows protected your PC": choose **More info → Run anyway**. Releases are on [this fork's Releases page](https://github.com/GodlyGamer/learnharness/releases), and the app updates itself from there.
+`npm.cmd run desktop:dist:win` builds `dist/MentalTuition-<version>-x64-setup.exe` (the personal build is called Mental Tuition; its settings live in `%APPDATA%\Mental Tuition`, copied once from the older `MentalTuition` or `LearnHarness` folder). The installer isn't signed, so the first time Windows says "Windows protected your PC": choose **More info → Run anyway**. Releases are on [this fork's Releases page](https://github.com/GodlyGamer/MentalTuition/releases), and the app updates itself from there.
 
-- **Your folder:** on first launch the app asks where to keep your work. Pick a folder in Google Drive (for example `My Drive\MentalTuition`) and your PC and laptop share chats, the knowledge graph, settings and study modules. The app warns you if the folder is already open on your other computer, because Drive can't merge two computers writing at once.
+- **Your folder:** on first launch the app asks where to keep your work. Pick a folder in Google Drive (for example `My Drive\Mental Tuition`) and your PC and laptop share chats, the knowledge graph, settings and study modules. The app warns you if the folder is already open on your other computer, because Drive can't merge two computers writing at once.
 - **Set up this computer:** the next screen signs you in to Claude, can install Gemini and sign you in with Google, and can install the paper tools (Python with sympy, numpy and PyMuPDF; MiKTeX; Strawberry Perl) through winget and pip. These stay per machine; they're in Settings → This computer afterwards.
 
 ## Development and support
@@ -97,10 +101,17 @@ npm test           # deterministic, no LLM, no network
 
 See the [development guide](docs/development.md), [architecture](docs/architecture.md), and [desktop release guide](docs/desktop-release.md).
 
-Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/amosblomqvist/learnharness/issues).
+Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/GodlyGamer/MentalTuition/issues).
 
-## License
+## License and credit
 
-[AGPL-3.0](LICENSE)
+[AGPL-3.0](LICENSE).
+
+Mental Tuition is built on [LearnHarness](https://github.com/amosblomqvist/learnharness) by Amos Blomqvist.
+
+- © 2026 Amos Blomqvist: LearnHarness
+- © 2026 Youssouf Diallo: Mental Tuition's changes
+
+Both are released under the AGPL-3.0.
 
 The app is free and open forever. If we ever charge for anything, it will be for convenience — managed keys, hosting — never for features you can run locally.

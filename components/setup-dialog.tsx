@@ -320,13 +320,13 @@ export function SetupDialog({
 			if (!(e.target instanceof Element)) return;
 			const t = e.target;
 			if (keyMenuOpen) {
-				if (t.closest("[data-lh-menu]") || t.closest('[data-testid="setup-key-provider"]')) return;
+				if (t.closest("[data-mt-menu]") || t.closest('[data-testid="setup-key-provider"]')) return;
 				setKeyMenuOpen(false);
 			}
 			if (openMenu === null) return;
 			const triggerTestid =
 				openMenu.kind === "model" ? `setup-trigger-${openMenu.slot}` : `setup-thinking-${openMenu.slot}`;
-			if (t.closest("[data-lh-menu]") || t.closest(`[data-testid="${triggerTestid}"]`)) return;
+			if (t.closest("[data-mt-menu]") || t.closest(`[data-testid="${triggerTestid}"]`)) return;
 			setOpenMenu(null);
 		};
 		document.addEventListener("keydown", onKey);
@@ -394,7 +394,7 @@ export function SetupDialog({
 
 	return createPortal(
 		<div
-			className="lh-scrim fixed inset-0 z-50 flex items-center justify-center"
+			className="mt-scrim fixed inset-0 z-50 flex items-center justify-center"
 			data-testid="setup-backdrop"
 			{...backdropDismiss}
 		>
@@ -403,7 +403,7 @@ export function SetupDialog({
 				aria-modal="true"
 				aria-label="Set up your models"
 				data-testid="setup-dialog"
-				className="settings-dialog-pop flex max-h-[85vh] w-[640px] max-w-[90vw] flex-col overflow-hidden rounded-2xl lh-sheet shadow-xl"
+				className="settings-dialog-pop flex max-h-[85vh] w-[640px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-sheet shadow-xl"
 				onClick={(e) => e.stopPropagation()}
 			>
 				<header className="flex h-15 shrink-0 items-center gap-3 border-b border-border px-5">

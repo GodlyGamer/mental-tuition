@@ -11,7 +11,7 @@ describe("the reading-thinking field (owner round, 2026-10-07)", () => {
 			<ReadingThinkingField value="" onChange={() => {}} claim={false} />,
 		);
 		// The fix (empirically diagnosed): Source Sans 3's font box (22px at
-		// 16px) exceeds lh-input's 20px line box by 1px; Chromium counts that
+		// 16px) exceeds mt-input's 20px line box by 1px; Chromium counts that
 		// in scrollHeight and a zero-padding field-sizing textarea becomes a
 		// permanent 1px scroll (a bar shown empty AND at every expansion below
 		// max-h). py-0.5 absorbs it — the composer/dock fields get the same

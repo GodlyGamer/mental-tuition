@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Graph — neural cube view</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#c8c8cc}a:hover{color:#ececee}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes lg-spin{to{--spin:360deg}}
+@keyframes world-turn{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
+@keyframes face-cam{from{transform:rotateY(0deg)}to{transform:rotateY(-360deg)}}
+.cap{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#9a9a9f}
+.scene{position:absolute;inset:0;perspective:1700px;perspective-origin:50% 42%;cursor:grab;touch-action:none;user-select:none;outline:none}
+.scene.dragging{cursor:grabbing}
+.drag{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.world{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;animation:world-turn 80s linear infinite}
+.bb2{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.scene:hover .world,.scene:hover .bb{animation-play-state:paused}
+.world > *{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.face{box-sizing:border-box;pointer-events:none}
+.syn{height:1px;transform-origin:0 50%;background:#f2f2f3;pointer-events:none;transition:opacity 320ms ease}
+.mist{width:1.6px;height:1.6px;border-radius:50%;background:#f2f2f3;pointer-events:none}
+.bb{position:absolute;left:0;top:0;transform-style:preserve-3d;animation:face-cam 80s linear infinite}
+.dotn{position:absolute;border-radius:50%;background:#f2f2f3;pointer-events:none}
+.nb{position:absolute;left:-15px;top:-15px;width:30px;height:30px;padding:0;margin:0;border:0;border-radius:50%;background:transparent;cursor:pointer;display:grid;place-items:center}
+.core{border-radius:50%;background:#f2f2f3;transition:transform 300ms cubic-bezier(.2,.7,.2,1),opacity 300ms ease}
+.ring{position:absolute;inset:3px;border-radius:50%;padding:1.5px;background:conic-gradient(from var(--spin),#ff5ad1,#ffb547,#f4ff7a,#5dffb0,#49e6ff,#6a7bff,#c86bff,#ff5ad1);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;animation:lg-spin 3.2s linear infinite paused;transition:opacity 300ms ease}
+.nb:hover .ring,.nb:focus-visible .ring{opacity:1;animation-play-state:running}
+.nb:hover .core{transform:scale(1.35)}
+.nlbl{position:absolute;left:14px;top:-7px;font-family:'Geist Mono',monospace;font-size:11px;color:#ececee;white-space:nowrap;pointer-events:none;transition:opacity 300ms ease}
+.clbl{position:absolute;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.14em;color:#c8c8cc;white-space:nowrap;pointer-events:none;transition:opacity 300ms ease}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03) 50%,rgba(255,255,255,.05)),rgba(18,18,21,.6);box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 1.5px .5px -.5px rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1px 1px -.5px rgba(255,255,255,.2)}
+.seg span{height:28px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:#9a9a9f}
+.seg span.on{color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.07) 40%,rgba(255,255,255,.04) 70%,rgba(255,255,255,.09)),rgba(28,28,32,.5);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 1.5px .5px -.5px rgba(255,255,255,.8),inset 0 -1.5px 1px -.5px rgba(255,255,255,.35),inset 0 0 12px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion: reduce){.world,.bb{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; box-sizing: border-box; padding: 52px 64px; display: flex; flex-direction: column; gap: 26px; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse 95% 80% at 50% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000), #000000; color: #f2f2f3; font-family: 'Geist', sans-serif">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <span class="cap" style="text-transform: uppercase">03B · Knowledge graph · neural view · the alternative to 03A</span>
+    <h1 style="margin: 0; font-size: 36px; font-weight: 200; letter-spacing: -0.02em; line-height: 1.15">Your knowledge as a neural network, held in a glass cube.</h1>
+    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #9a9a9f; max-width: 960px">The cube turns slowly, one revolution every 80 seconds. Topics are bright neurons, smaller neurons fill out each subject, and synapses link them, with nothing else in the cube. Drag to turn it any way you like (arrow keys work too) and double-click to reset. Hovering anywhere pauses the auto-turn; hovering a topic spins the same spectrum ring as a button and lights its connections. A Cloud / Neural switch lets you pick a view.</p>
+  </div>
+
+  <div style="position: relative; width: 1312px; height: 660px; border-radius: 22px; overflow: hidden; background: radial-gradient(ellipse 70% 60% at 50% 46%, #0a0a0b, #09090a, #070708, #060606, #040404, #020202, #000000), #000000; border: 1px solid rgba(255,255,255,.08)">
+    <div aria-hidden="true" style="position: absolute; left: 520px; top: 420px; width: 300px; height: 180px; border-radius: 50%; background: conic-gradient(from 200deg, #ff5ad1, #ffb547, #f4ff7a, #5dffb0, #49e6ff, #6a7bff, #c86bff, #ff5ad1); filter: blur(60px); opacity: 0.16"></div>
+    <div class="scene {{dragCls}}" tabindex="0" role="application" aria-label="Neural graph. Drag or use the arrow keys to rotate; double-click to reset." onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" onDoubleClick="{{reset}}" onKeyDown="{{key}}">
+      <div class="drag" style="{{dragSt}}">
+      <div class="world">
+        <sc-for list="{{faces}}" as="f" hint-placeholder-count="0"><div class="face" style="{{f.st}}"></div></sc-for>
+        <sc-for list="{{syns}}" as="s" hint-placeholder-count="0"><div class="syn" style="{{s.st}}"></div></sc-for>
+        <sc-for list="{{neurons}}" as="n" hint-placeholder-count="0"><div style="{{n.pos}}"><div class="bb"><div class="bb2" style="{{cam}}"><span class="dotn" style="{{n.st}}"></span></div></div></div></sc-for>
+        <sc-for list="{{clusters}}" as="c" hint-placeholder-count="0"><div style="{{c.pos}}"><div class="bb"><div class="bb2" style="{{cam}}"><span class="clbl" style="{{c.st}}">{{c.t}}</span></div></div></div></sc-for>
+        <sc-for list="{{topics}}" as="n" hint-placeholder-count="0"><div style="{{n.pos}}"><div class="bb"><div class="bb2" style="{{cam}}"><button type="button" class="nb" aria-label="{{n.t}}" onMouseEnter="{{n.enter}}" onMouseLeave="{{n.leave}}" onFocus="{{n.enter}}" onBlur="{{n.leave}}"><span class="core" style="{{n.st}}"></span><span class="ring"></span></button><span class="nlbl" style="{{n.lst}}">{{n.t}}</span></div></div></div></sc-for>
+      </div>
+      </div>
+    </div>
+
+    <div style="position: absolute; left: 22px; top: 20px; display: flex; flex-direction: column; gap: 6px" class="cap"><span style="color: #c8c8cc">NEURAL VIEW</span><span>DRAG TO ROTATE · DOUBLE-CLICK TO RESET</span><span>HOVER A TOPIC TO TRACE IT</span></div>
+    <div style="position: absolute; right: 22px; top: 18px" class="seg" role="group" aria-label="Graph view"><span>CLOUD</span><span class="on">NEURAL</span></div>
+    <div style="position: absolute; right: 22px; top: 70px; display: grid; grid-template-columns: repeat(3, 4px); gap: 10px 8px" aria-hidden="true">
+      <span style="width: 3px; height: 3px; border-radius: 50%; background: #9a9a9f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #9a9a9f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4a4f"></span>
+      <span style="width: 3px; height: 3px; border-radius: 50%; background: #9a9a9f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4a4f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4a4f"></span>
+      <span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4a4f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #9a9a9f"></span><span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4a4f"></span>
+    </div>
+    <div style="position: absolute; left: 22px; right: 22px; bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px" class="cap"><span style="color: #c8c8cc">{{readout}}</span><span>CUBE 440 · 80 S / REV</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { hover: null, rx: -14, ry: 0, dragging: false };
+    var self = this;
+    this._down = function (e) {
+      if (e.button !== 0) return;
+      self._d = { x: e.clientX, y: e.clientY, rx: self.state.rx, ry: self.state.ry };
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      self.setState({ dragging: true });
+    };
+    this._move = function (e) {
+      var d = self._d;
+      if (!d) return;
+      var ry = d.ry + (e.clientX - d.x) * 0.35;
+      var rx = Math.max(-85, Math.min(85, d.rx - (e.clientY - d.y) * 0.35));
+      self.setState({ rx: rx, ry: ry });
+    };
+    this._up = function () { self._d = null; if (self.state.dragging) self.setState({ dragging: false }); };
+    this._reset = function () { self.setState({ rx: -14, ry: 0 }); };
+    this._key = function (e) {
+      var s = self.state, step = 10;
+      if (e.key === 'ArrowLeft') self.setState({ ry: s.ry - step });
+      else if (e.key === 'ArrowRight') self.setState({ ry: s.ry + step });
+      else if (e.key === 'ArrowUp') self.setState({ rx: Math.min(85, s.rx + step) });
+      else if (e.key === 'ArrowDown') self.setState({ rx: Math.max(-85, s.rx - step) });
+      else return;
+      e.preventDefault();
+    };
+  }
+  build() {
+    if (this._g) return this._g;
+    var seed = 41;
+    function r() {
+      seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    function gauss() { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+    function clamp(v) { return Math.max(-200, Math.min(200, v)); }
+    var C = [
+      { t: 'FLUIDS', x: -105, y: -75, z: 70 },
+      { t: 'STRUCTURES', x: 110, y: -85, z: -75 },
+      { t: 'ENGINEERING MATHS', x: 5, y: 105, z: 25 }
+    ];
+    var raw = [
+      ['Bernoulli', 0, 1.0, -10, 0, 10], ['Continuity', 0, 0.8, 45, -30, -20], ['Hydrostatics', 0, 0.75, -50, 40, 25], ['Manometers', 0, 0.5, -60, -45, -30], ['Pipe flow', 0, 0.6, 30, 45, 50],
+      ['Trusses', 1, 0.9, 0, -10, 0], ['Method of joints', 1, 0.6, 55, 40, 30], ['Equilibrium', 1, 0.8, -55, 35, 20], ['Free-body diagrams', 1, 0.5, 30, -55, -45],
+      ['Integration by parts', 2, 0.7, -60, -15, 20], ['Taylor series', 2, 0.6, 45, 30, -35], ['Complex numbers', 2, 0.5, 50, -40, 40], ['ODEs', 2, 0.8, -15, 45, -20]
+    ];
+    var pts = raw.map(function (a, i) { var c = C[a[1]]; return { i: i, t: a[0], c: a[1], w: a[2], x: c.x + a[3], y: c.y + a[4], z: c.z + a[5], topic: true }; });
+    var topicCount = pts.length;
+    C.forEach(function (c, ci) {
+      for (var k = 0; k < 22; k++) pts.push({ i: pts.length, c: ci, x: clamp(c.x + gauss() * 62), y: clamp(c.y + gauss() * 55), z: clamp(c.z + gauss() * 62), topic: false });
+    });
+    for (var k = 0; k < 12; k++) pts.push({ i: pts.length, c: -1, x: (r() - 0.5) * 360, y: (r() - 0.5) * 360, z: (r() - 0.5) * 360, topic: false });
+    var seen = {}, syns = [];
+    function link(a, b, strong) {
+      var key = Math.min(a.i, b.i) + '-' + Math.max(a.i, b.i);
+      if (seen[key]) return; seen[key] = 1;
+      syns.push({ a: a, b: b, strong: strong });
+    }
+    var named = [[0,1],[0,2],[0,4],[2,3],[1,4],[0,3],[5,6],[5,7],[5,8],[7,6],[7,8],[9,12],[12,10],[10,11],[9,10],[7,2],[4,12],[1,7],[11,6]];
+    named.forEach(function (e) { link(pts[e[0]], pts[e[1]], true); });
+    pts.forEach(function (p) {
+      if (p.topic) return;
+      var d = pts.filter(function (q) { return q !== p; }).map(function (q) { return { q: q, d: (q.x - p.x) * (q.x - p.x) + (q.y - p.y) * (q.y - p.y) + (q.z - p.z) * (q.z - p.z) }; }).sort(function (u, v) { return u.d - v.d; });
+      link(p, d[0].q, false); link(p, d[1].q, false);
+    });
+    syns.forEach(function (s) {
+      var dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, dz = s.b.z - s.a.z, h = Math.sqrt(dx * dx + dz * dz);
+      s.geo = 'width:' + Math.sqrt(dx * dx + dy * dy + dz * dz).toFixed(1) + 'px;transform:translate3d(' + s.a.x.toFixed(1) + 'px,' + s.a.y.toFixed(1) + 'px,' + s.a.z.toFixed(1) + 'px) rotateY(' + (Math.atan2(-dz, dx) * 180 / Math.PI).toFixed(2) + 'deg) rotateZ(' + (Math.atan2(dy, h) * 180 / Math.PI).toFixed(2) + 'deg);';
+    });
+    var faces = [];
+    [[440, 0.34], [426, 0.16], [412, 0.08]].forEach(function (cfg) {
+      var s = cfg[0], hs = s / 2;
+      ['translateZ(' + hs + 'px)', 'rotateY(180deg) translateZ(' + hs + 'px)', 'rotateY(90deg) translateZ(' + hs + 'px)', 'rotateY(-90deg) translateZ(' + hs + 'px)', 'rotateX(90deg) translateZ(' + hs + 'px)', 'rotateX(-90deg) translateZ(' + hs + 'px)'].forEach(function (tf) {
+        faces.push({ st: 'left:' + (-hs) + 'px;top:' + (-hs) + 'px;width:' + s + 'px;height:' + s + 'px;border:1px solid rgba(255,255,255,' + cfg[1] + ');transform:' + tf + ';' });
+      });
+    });
+    var mist = [];
+    C.forEach(function (c) {
+      for (var k = 0; k < 95; k++) {
+        mist.push({ st: 'transform:translate3d(' + clamp(c.x + gauss() * 78).toFixed(1) + 'px,' + clamp(c.y + gauss() * 68).toFixed(1) + 'px,' + clamp(c.z + gauss() * 78).toFixed(1) + 'px);opacity:' + (0.18 + r() * 0.45).toFixed(2) + ';' });
+      }
+    });
+    this._g = { pts: pts, topicCount: topicCount, syns: syns, faces: faces, mist: mist, C: C };
+    return this._g;
+  }
+  renderVals() {
+    var g = this.build(), h = this.state.hover, self = this;
+    function pos(p) { return 'transform:translate3d(' + p.x.toFixed(1) + 'px,' + p.y.toFixed(1) + 'px,' + p.z.toFixed(1) + 'px);'; }
+    var lit = {};
+    if (h !== null) { lit[h] = 1; g.syns.forEach(function (s) { if (s.a.i === h) lit[s.b.i] = 1; if (s.b.i === h) lit[s.a.i] = 1; }); }
+    var syns = g.syns.map(function (s) {
+      var touch = h !== null && (s.a.i === h || s.b.i === h);
+      var o = h === null ? (s.strong ? 0.42 : 0.13) : (touch ? 0.9 : 0.05);
+      return { st: s.geo + 'opacity:' + o + ';' };
+    });
+    var topics = [], neurons = [];
+    g.pts.forEach(function (p) {
+      var dim = h !== null && !lit[p.i];
+      if (p.topic) {
+        var s = 5 + 5 * p.w;
+        topics.push({
+          t: p.t,
+          pos: pos(p),
+          st: 'width:' + s.toFixed(1) + 'px;height:' + s.toFixed(1) + 'px;opacity:' + (dim ? 0.3 : 1) + ';box-shadow:0 0 ' + (8 + 10 * p.w).toFixed(0) + 'px rgba(255,255,255,.6);',
+          lst: 'opacity:' + (h === null ? (p.w >= 0.75 ? 0.75 : 0) : (lit[p.i] ? 1 : 0)) + ';',
+          enter: function () { self.setState({ hover: p.i }); },
+          leave: function () { if (self.state.hover === p.i) self.setState({ hover: null }); }
+        });
+      } else {
+        var sz = 2.6;
+        neurons.push({ pos: pos(p), st: 'left:' + (-sz / 2) + 'px;top:' + (-sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;opacity:' + (dim ? 0.15 : (lit[p.i] ? 1 : 0.7)) + ';' });
+      }
+    });
+    var clusters = g.C.map(function (c) { return { t: c.t, pos: 'transform:translate3d(' + c.x + 'px,' + (c.y + 118) + 'px,' + c.z + 'px);', st: 'opacity:' + (h === null ? 0.8 : 0.25) + ';' }; });
+    var readout;
+    if (h === null) readout = 'NEURAL VIEW · 13 TOPICS · ' + (g.pts.length - g.topicCount) + ' NEURONS · ' + g.syns.length + ' SYNAPSES';
+    else {
+      var p = g.pts[h], links = g.syns.filter(function (s) { return s.a.i === h || s.b.i === h; }).length;
+      readout = p.t.toUpperCase() + ' · ' + g.C[p.c].t + ' · ' + links + ' SYNAPSES';
+    }
+    var rx = this.state.rx, ry = this.state.ry;
+    return {
+      faces: g.faces, mist: g.mist, syns: syns, topics: topics, neurons: neurons, clusters: clusters, readout: readout,
+      dragSt: 'transform:rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg);',
+      cam: 'transform:rotateY(' + (-ry).toFixed(2) + 'deg) rotateX(' + (-rx).toFixed(2) + 'deg);',
+      dragCls: this.state.dragging ? 'dragging' : '',
+      down: this._down, move: this._move, up: this._up, reset: this._reset, key: this._key
+    };
+  }
+}
+</script>
+</body>
+</html>

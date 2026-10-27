@@ -33,7 +33,7 @@ import { chatStore } from "../src/store/chats.ts";
 import { activeProblemOf, needsContinuation } from "../src/core/index.ts";
 import { PATHS } from "../config.ts";
 import { CONCLUDE_ACK_TEXT } from "../src/core/contracts/chat.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { MtMessage } from "../src/core/native-messages.ts";
 import type { ToolResultMessage } from "@earendil-works/pi-ai";
 
 // The BYOK key-presence gate reads env-first (chat-flow.test.ts's idiom).
@@ -147,7 +147,7 @@ describe("practice flow (scripted model)", () => {
 		// ── Turn 1: the opening text; the agent poses ──
 		await drainTurn(post(chat.id, { type: "text", text: "practice group theory" }), factory);
 		const afterPose = chatStore.getChat(chat.id)!.messages;
-		const ack = afterPose[afterPose.length - 1] as LhMessage & ToolResultMessage;
+		const ack = afterPose[afterPose.length - 1] as MtMessage & ToolResultMessage;
 		assert.equal(ack.role, "toolResult");
 		assert.equal(ack.toolName, "problem");
 		assert.equal(ack.isError, false);
@@ -162,7 +162,7 @@ describe("practice flow (scripted model)", () => {
 		const afterConclude = chatStore.getChat(chat.id)!.messages;
 		const concludeAck = afterConclude.find(
 			(m) => (m as ToolResultMessage).role === "toolResult" && (m as ToolResultMessage).toolName === "conclude",
-		) as LhMessage & ToolResultMessage;
+		) as MtMessage & ToolResultMessage;
 		assert.ok(concludeAck, "the conclude ack persisted");
 		// Owner round 16: the ack carries the turn-ends law (no more tools,
 		// the learner's go-ahead paces the next problem).
@@ -214,7 +214,7 @@ describe("practice flow (scripted model)", () => {
 		const msgs = chatStore.getChat(chat.id)!.messages;
 		const synth = msgs.find(
 			(m) => (m as ToolResultMessage).role === "toolResult" && (m as ToolResultMessage).toolName === "conclude",
-		) as (LhMessage & ToolResultMessage) | undefined;
+		) as (MtMessage & ToolResultMessage) | undefined;
 		assert.ok(synth, "the synthesized conclude result persisted");
 		assert.ok(
 			(synth.content[0] as { text: string }).text.includes(CONCLUDE_ACK_TEXT),

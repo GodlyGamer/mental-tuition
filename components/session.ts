@@ -15,13 +15,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import type { ChatInput, LhMessage, QuestionAnswerData } from "@/src/core";
+import type { ChatInput, MtMessage, QuestionAnswerData } from "@/src/core";
 import { SessionModel, type SessionState } from "@/components/session-core";
 
 export interface UseChatSessionOptions {
 	chatId: string;
 	/** The native record seed (server-rendered page or a full sync). */
-	initialMessages: LhMessage[];
+	initialMessages: MtMessage[];
 	/** Reattach on mount: a turn is running server-side with no live view. */
 	initiallyInFlight?: boolean;
 }
@@ -79,7 +79,7 @@ export function useChatSession({ chatId, initialMessages, initiallyInFlight }: U
 	// (submitted: send, answer, session start, reattach, wake attach) the
 	// sidebar learns it without waiting for its 2.5s poll; at settle the
 	// event clears the row and triggers one immediate refetch. The model
-	// stays pure; this adapter owns the window seam (the lh:chat-renamed
+	// stays pure; this adapter owns the window seam (the mt:chat-renamed
 	// pattern).
 	const prevStatusRef = useRef(state.status);
 	useEffect(() => {
@@ -89,7 +89,7 @@ export function useChatSession({ chatId, initialMessages, initiallyInFlight }: U
 		const running = state.status === "submitted" || state.status === "streaming";
 		const wasRunning = was === "submitted" || was === "streaming";
 		if (running === wasRunning) return; // submitted→streaming: still running; error↔ready: not
-		window.dispatchEvent(new CustomEvent("lh:turn-state", { detail: { id: chatId, running } }));
+		window.dispatchEvent(new CustomEvent("mt:turn-state", { detail: { id: chatId, running } }));
 	}, [state.status, chatId]);
 
 	// The reattach settled terminal → the sync-and-continue seam (chat.tsx).
@@ -115,8 +115,8 @@ export function useChatSession({ chatId, initialMessages, initiallyInFlight }: U
 		(problemCallId: string) => void model.dismissProblem(problemCallId),
 		[model],
 	);
-	const setMessages = useCallback((record: LhMessage[]) => model.setMessages(record), [model]);
-	const adoptRecord = useCallback((record: LhMessage[]) => model.adoptRecord(record), [model]);
+	const setMessages = useCallback((record: MtMessage[]) => model.setMessages(record), [model]);
+	const adoptRecord = useCallback((record: MtMessage[]) => model.adoptRecord(record), [model]);
 	const stop = useCallback(() => model.stop(), [model]);
 	const clearError = useCallback(() => model.clearError(), [model]);
 	const resumeStream = useCallback(() => void model.resumeStream(), [model]);

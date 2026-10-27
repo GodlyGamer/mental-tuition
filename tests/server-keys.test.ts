@@ -6,7 +6,7 @@
  *  - saves/deletes take effect immediately (file + process.env together);
  *  - unknown file vars are preserved and surfaced, never editable.
  *
- * LH_AUTH_FILE redirects to a fresh tmp dir BEFORE the imports (the seam is
+ * MT_AUTH_FILE redirects to a fresh tmp dir BEFORE the imports (the seam is
  * module-load bound); the \"real env\" var is set before src/server/keys.ts
  * first loads so the boot snapshot treats it as real environment. All
  * values here are throwaway test strings — never real secrets.
@@ -34,9 +34,9 @@ for (const varName of [
 	delete process.env[varName];
 }
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "lh-server-keys-"));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "mt-server-keys-"));
 const AUTH = path.join(TMP, "auth.json");
-process.env.LH_AUTH_FILE = AUTH;
+process.env.MT_AUTH_FILE = AUTH;
 
 // The file BEFORE first boot: a shadowed OpenRouter (env will differ) + an
 // unknown var that must survive every write and surface as a generic row.

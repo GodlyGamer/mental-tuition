@@ -12,9 +12,9 @@ second pillar of input).
 - **Provider**: `components/keyboard-shortcuts.tsx` — one window-level
   keydown listener (bubble phase, mounted once in AppShell). Normalizes
   keys to `mod+d`-style strings, resolves overrides, dispatches
-  `lh:kbd-<action-id>` window CustomEvents. Surfaces listen for their
-  own events (matching the pre-existing `lh:chat-renamed` seam style).
-- **Persistence**: overrides live under localStorage `lh:keymap` as
+  `mt:kbd-<action-id>` window CustomEvents. Surfaces listen for their
+  own events (matching the pre-existing `mt:chat-renamed` seam style).
+- **Persistence**: overrides live under localStorage `mt:keymap` as
   `{actionId: binding}` merged over defaults. No editor yet — the
   settings milestone owns key map editing.
 - **displayOnly entries**: the registry also lists SURFACE-owned keys
@@ -42,20 +42,20 @@ second pillar of input).
 
 | Action | Binding | Seam |
 |---|---|---|
-| Toggle dictation | ⌘D | `lh:kbd-toggle-dictation` (dictation.tsx) |
-| Model selector | ⌘K | `lh:kbd-open-model-picker` (model-picker.tsx) |
-| Cycle thinking level | Shift+Tab | `lh:kbd-cycle-thinking` (model-picker.tsx) |
-| Toggle sidebar | ⌘B | `lh:toggle-sidebar` (sidebar.tsx) |
-| Sessions search | ⌘⇧F | `lh:kbd-sessions-search` (sidebar.tsx) |
+| Toggle dictation | ⌘D | `mt:kbd-toggle-dictation` (dictation.tsx) |
+| Model selector | ⌘K | `mt:kbd-open-model-picker` (model-picker.tsx) |
+| Cycle thinking level | Shift+Tab | `mt:kbd-cycle-thinking` (model-picker.tsx) |
+| Toggle sidebar | ⌘B | `mt:toggle-sidebar` (sidebar.tsx) |
+| Sessions search | ⌘⇧F | `mt:kbd-sessions-search` (sidebar.tsx) |
 | Walk search results | ↑ / ↓ *in the search field* | sidebar.tsx (cycles the filtered rows, wraps) |
 | Open search result | Enter *in the search field* | sidebar.tsx (walked row, else the first match) |
 | ~~Cycle session~~ | ~~⌥↑ / ⌥↓~~ | RETIRED (owner, 2026-10-10) — the search walk above replaces it |
 | ~~Open selected session~~ | ~~⌥Enter~~ | RETIRED (owner, 2026-10-10) — the search Enter above replaces it |
 | Jump to graph (home) | ⌘G | router.push in keyboard-shortcuts.tsx |
 | New session | ⌘N | router.push in keyboard-shortcuts.tsx |
-| Rename session | F2 | `lh:kbd-rename-session` (chat.tsx) |
+| Rename session | F2 | `mt:kbd-rename-session` (chat.tsx) |
 | Cheat sheet | ? | keyboard-shortcuts.tsx |
-| Find (graph: node search) | ⌘F | `lh:kbd-find` (graph-view.tsx; chat transcript search rides the same event when that feature lands) |
+| Find (graph: node search) | ⌘F | `mt:kbd-find` (graph-view.tsx; chat transcript search rides the same event when that feature lands) |
 
 ## Model menu keyboard machine (owner polish, 2026-09-17)
 

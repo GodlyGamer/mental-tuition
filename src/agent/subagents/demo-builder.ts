@@ -42,7 +42,7 @@ export interface DemoBuilderOptions {
 	abortSignal?: AbortSignal;
 	/** Money channel: one call per agent step, folded into JobRecord.usage. */
 	onUsage?: (usage: Usage) => void;
-	/** Debug: raw provider-event recording key (LH_PROVIDER_EVENTS=1). */
+	/** Debug: raw provider-event recording key (MT_PROVIDER_EVENTS=1). */
 	chatId?: string;
 }
 

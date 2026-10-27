@@ -73,12 +73,12 @@ describe("derivedPalette — the dark curve keeps today's relationships", () => 
 describe("appearanceVars — the mapping the provider applies", () => {
 	it("factory appearance: only the always-applied tokens move", () => {
 		const vars = appearanceVars(resolveAppearance(undefined));
-		assert.equal(vars["--lh-prose-size"], "16px");
-		assert.equal(vars["--lh-heading-weight"], "700");
+		assert.equal(vars["--mt-prose-size"], "16px");
+		assert.equal(vars["--mt-heading-weight"], "700");
 		assert.equal(vars["--font-prose"], undefined, "no font override at factory");
 		assert.equal(vars["--font-title"], undefined, "Geist titles stay");
 		assert.equal(vars["--background"], undefined, "factory palette untouched");
-		assert.equal(vars["--lh-ink-strong"], undefined, "default ink");
+		assert.equal(vars["--mt-ink-strong"], undefined, "default ink");
 	});
 
 	it("full delta: every knob lands on its token", () => {
@@ -94,17 +94,17 @@ describe("appearanceVars — the mapping the provider applies", () => {
 		assert.equal(vars["--background"], "#101820");
 		assert.equal(vars["--card"], "#182028", "raised +8 per channel: 10→18, 18→20, 20→28");
 		assert.equal(vars["--font-prose"], `"Georgia", var(--font-sans3), ui-sans-serif, system-ui, sans-serif`);
-		assert.equal(vars["--lh-prose-size"], "18px");
-		assert.equal(vars["--font-title"], `"lh-cmu", serif`, "serif on → CMU titles");
-		assert.equal(vars["--lh-heading-weight"], "700");
-		assert.equal(vars["--lh-ink-strong"], "#ff0000");
-		assert.equal(vars["--lh-ink-italic"], "#00ff00");
+		assert.equal(vars["--mt-prose-size"], "18px");
+		assert.equal(vars["--font-title"], `"mt-cmu", serif`, "serif on → CMU titles");
+		assert.equal(vars["--mt-heading-weight"], "700");
+		assert.equal(vars["--mt-ink-strong"], "#ff0000");
+		assert.equal(vars["--mt-ink-italic"], "#00ff00");
 	});
 
 	it("sessionNameSerif true alone: titles move, nothing else does", () => {
 		const vars = appearanceVars(resolveAppearance({ sessionNameSerif: true }));
-		assert.equal(vars["--font-title"], `"lh-cmu", serif`);
-		assert.equal(vars["--lh-title-weight"], "700");
+		assert.equal(vars["--font-title"], `"mt-cmu", serif`);
+		assert.equal(vars["--mt-title-weight"], "700");
 		assert.equal(Object.keys(vars).length, 5, "prose-size, heading-weight, and the three title vars only");
 	});
 });
@@ -125,10 +125,10 @@ describe("staleVarNames — the removal half of application (owner repro: resets
 		assert.ok(stale.includes("--background"));
 		assert.ok(stale.includes("--font-prose"));
 		assert.ok(stale.includes("--font-title"), "serif toggle back OFF must clear the title override");
-		assert.ok(stale.includes("--lh-ink-strong"));
-		assert.ok(stale.includes("--lh-ink-italic"));
-		assert.ok(!stale.includes("--lh-prose-size"), "always-applied tokens never go stale");
-		assert.ok(!stale.includes("--lh-heading-weight"), "always-applied tokens never go stale");
+		assert.ok(stale.includes("--mt-ink-strong"));
+		assert.ok(stale.includes("--mt-ink-italic"));
+		assert.ok(!stale.includes("--mt-prose-size"), "always-applied tokens never go stale");
+		assert.ok(!stale.includes("--mt-heading-weight"), "always-applied tokens never go stale");
 	});
 
 	it("an empty background commit (null = factory) frees the palette vars", () => {

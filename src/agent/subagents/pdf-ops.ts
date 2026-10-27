@@ -235,5 +235,5 @@ export function renderDir(filePath: string): string {
 		h ^= abs.charCodeAt(i);
 		h = Math.imul(h, 0x01000193) >>> 0;
 	}
-	return path.join("/tmp", `lh-pdf-${h.toString(16).padStart(8, "0")}`);
+	return path.join("/tmp", `mt-pdf-${h.toString(16).padStart(8, "0")}`);
 }
