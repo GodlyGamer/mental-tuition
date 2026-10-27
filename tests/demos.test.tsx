@@ -47,7 +47,7 @@ import { SubagentSteerCard } from "../components/artifacts/steer-card.tsx";
 import { DispatchCard } from "../components/artifacts/dispatch-card.tsx";
 import { JobCard, PdfJobCard } from "../components/artifacts/job-card.tsx";
 import { ToolCallCard } from "../components/artifacts/tool-call-card.tsx";
-import { JobsContext } from "../components/jobs-context.ts";
+import { ArtifactPlacementContext, JobsContext, artifactPlacement } from "../components/jobs-context.ts";
 import { demoInputSchema, jobTools, pdfInputSchema, visualInputSchema } from "../src/agent/tools/jobs.ts";
 import { runDemoBuilder } from "../src/agent/subagents/demo-builder.ts";
 import { headlessOverride, type DemoRunResult, type HeadlessApi } from "../src/agent/subagents/headless.ts";
@@ -343,6 +343,65 @@ describe("dispatch card rendering (the tool-call ack box)", () => {
 		);
 		assert.match(html, /PDF reader/);
 		assert.match(html, /delivered/);
+	});
+});
+
+describe("results show in place (owner, 2026-10-27)", () => {
+	const SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><circle cx="50" cy="50" r="20"/></svg>';
+	const visualJob = (result?: unknown): JobRecord =>
+		({ id: "jv", kind: "visual", chatId: "c", toolCallId: "cv", status: "running", activity: "delivering result", result, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) as JobRecord;
+
+	it("the dispatch card turns into the figure as soon as the job has a result, before delivery", () => {
+		const html = renderToStaticMarkup(
+			<JobsContext.Provider value={[visualJob({ svg: SVG })]}>
+				<DispatchCard toolCallId="cv" kind="visual" />
+			</JobsContext.Provider>,
+		);
+		assert.match(html, /visual-svg/);
+		assert.ok(!html.includes("Figure agent"), "the running card is gone");
+	});
+
+	it("still running with no result: the live activity card", () => {
+		const html = renderToStaticMarkup(
+			<JobsContext.Provider value={[visualJob()]}>
+				<DispatchCard toolCallId="cv" kind="visual" />
+			</JobsContext.Provider>,
+		);
+		assert.match(html, /Figure agent/);
+	});
+
+	it("after delivery the steer card stays silent and the dispatch shows the delivered copy", () => {
+		const steer = buildSubagentSteer({ id: "jv", kind: "visual", toolCallId: "cv" }, { svg: SVG, notes: "n" });
+		const toolMessage = { id: "a1", role: "assistant", parts: [{ type: "tool-visual", toolCallId: "cv", state: "output-available" }] };
+		const steerView = projectNative([steer])[0]!;
+		const placement = artifactPlacement([toolMessage as never, steerView]);
+		assert.ok(placement.inPlace.has("cv"));
+		assert.equal(placement.delivered.get("cv")?.messageId, steerView.id);
+		const steerHtml = renderToStaticMarkup(
+			<ArtifactPlacementContext.Provider value={placement}>
+				<SubagentSteerCard message={steerView as never} />
+			</ArtifactPlacementContext.Provider>,
+		);
+		assert.equal(steerHtml, "", "no second copy at the delivery");
+		const dispatchHtml = renderToStaticMarkup(
+			<JobsContext.Provider value={[{ ...visualJob(), status: "done" } as JobRecord]}>
+				<ArtifactPlacementContext.Provider value={placement}>
+					<DispatchCard toolCallId="cv" kind="visual" />
+				</ArtifactPlacementContext.Provider>
+			</JobsContext.Provider>,
+		);
+		assert.match(dispatchHtml, /visual-svg/);
+	});
+
+	it("a steer whose dispatch isn't in the transcript still renders at the delivery", () => {
+		const steer = buildSubagentSteer({ id: "jv", kind: "visual", toolCallId: "cv" }, { svg: SVG, notes: "n" });
+		const steerView = projectNative([steer])[0]!;
+		const html = renderToStaticMarkup(
+			<ArtifactPlacementContext.Provider value={artifactPlacement([steerView])}>
+				<SubagentSteerCard message={steerView as never} />
+			</ArtifactPlacementContext.Provider>,
+		);
+		assert.match(html, /visual-svg/);
 	});
 });
 

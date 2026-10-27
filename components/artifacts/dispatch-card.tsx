@@ -2,9 +2,10 @@
 
 import { useContext } from "react";
 import { CheckIcon, SettingsIcon, XIcon } from "lucide-react";
-import { JobsContext } from "@/components/jobs-context";
+import { ArtifactPlacementContext, IN_PLACE_KINDS, JobsContext } from "@/components/jobs-context";
+import { SubagentArtifactView } from "@/components/artifacts/steer-card";
 import { ChatActionsContext } from "@/components/chat";
-import { isModelsRefusal, isProviderKeyRefusal, type JobKind, type JobRecord } from "@/src/core";
+import { isModelsRefusal, isProviderKeyRefusal, type JobKind, type JobRecord, type SubagentArtifactData } from "@/src/core";
 import { BrailleSpinner } from "@/components/braille-spinner";
 
 /**
@@ -18,6 +19,12 @@ import { BrailleSpinner } from "@/components/braille-spinner";
  *   done/error  → quiet one-liner ("delivered" / "failed") — the artifact
  *                 itself arrives in the steer message right below, so the
  *                 box must not duplicate it.
+ *
+ * IN PLACE (owner, 2026-10-27): research, demo and visual results render
+ * HERE instead — as soon as the job has a result, even while a pending
+ * question holds its delivery back (the wake waits for the answer), and
+ * still after delivery (the steer card then stays silent). The delivered
+ * copy wins when present: it carries the pinned invert state.
  */
 const KIND_LABEL: Record<JobKind, string> = {
 	research: "Research agent",
@@ -29,7 +36,23 @@ const KIND_LABEL: Record<JobKind, string> = {
 export function DispatchCard({ toolCallId, kind }: { toolCallId: string; kind: JobKind }) {
 	const jobs = useContext(JobsContext);
 	const job = jobs.find((j) => j.toolCallId === toolCallId) ?? null;
+	const { delivered } = useContext(ArtifactPlacementContext);
 	const label = KIND_LABEL[kind];
+
+	if (IN_PLACE_KINDS.has(kind)) {
+		const steer = delivered.get(toolCallId);
+		const result = steer?.data.result ?? (job?.result as SubagentArtifactData["result"] | undefined);
+		if (result) {
+			return (
+				<SubagentArtifactView
+					kind={kind}
+					result={result}
+					messageId={steer?.messageId}
+					inverted={steer?.data.ui?.inverted ?? false}
+				/>
+			);
+		}
+	}
 
 	if (!job || job.status === "running") {
 		return <DispatchActivityCard job={job} label={label} />;

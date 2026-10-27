@@ -1,9 +1,11 @@
 "use client";
 
+import { useContext } from "react";
 import { CheckIcon, CircleX } from "lucide-react";
-import type { PdfResult, ResearchResult, SubagentArtifactData } from "@/src/core";
+import type { JobKind, PdfResult, ResearchResult, SubagentArtifactData, SubagentResultMeta } from "@/src/core";
 import type { MtViewMessage } from "@/src/core";
 import { isSubagentFailure } from "@/src/core";
+import { ArtifactPlacementContext, IN_PLACE_KINDS } from "@/components/jobs-context";
 import { DemoOutputCard } from "@/components/artifacts/demo-card";
 import { PdfBriefCard, ResearchBriefCard } from "@/components/artifacts/job-card";
 import { VisualOutputCard } from "@/components/artifacts/visual-card";
@@ -24,10 +26,17 @@ import { VisualOutputCard } from "@/components/artifacts/visual-card";
  *   demo / visual — the artifact itself (sandboxed iframe / sanitized SVG).
  *     The sub-agent's verification notes are model-facing glue and do NOT
  *     render; only a failure note does.
+ *
+ * In place (owner, 2026-10-27): research, demo and visual results render at
+ * their DISPATCH card (dispatch-card.tsx) the moment the job finishes, so
+ * this card stays silent for them when the transcript holds the dispatch.
  */
 export function SubagentSteerCard({ message }: { message: MtViewMessage }) {
+	const placement = useContext(ArtifactPlacementContext);
 	const artifactPart = message.parts.find((p) => p.type === "data-subagent-artifact");
 	const data = artifactPart?.data as SubagentArtifactData | undefined;
+	const callId = (message.metadata as { subagentResult?: SubagentResultMeta } | undefined)?.subagentResult?.toolCallId;
+	if (data && IN_PLACE_KINDS.has(data.kind) && callId && placement.inPlace.has(callId)) return null;
 	// The abort steer (2026-09 dock semantics): its message-type part is
 	// data-subagent-aborted (the custom-message scheme — the part, not
 	// metadata, is the marker) — a quiet chip, mirroring the complete-badge.
@@ -42,23 +51,40 @@ export function SubagentSteerCard({ message }: { message: MtViewMessage }) {
 			</div>
 		);
 	}
-	switch (data.kind) {
+	return <SubagentArtifactView kind={data.kind} result={data.result} messageId={message.id} inverted={data.ui?.inverted ?? false} />;
+}
+
+/** One job result, drawn the same wherever it sits (the delivery card or,
+ *  in place, the dispatch card). `messageId` is the delivered steer's —
+ *  absent before delivery, when the invert switch works but isn't saved. */
+export function SubagentArtifactView({
+	kind,
+	result,
+	messageId,
+	inverted = false,
+}: {
+	kind: JobKind;
+	result: SubagentArtifactData["result"];
+	messageId?: string;
+	inverted?: boolean;
+}) {
+	switch (kind) {
 		case "research":
-			return isSubagentFailure("research", data.result as ResearchResult) ? (
-				<ResearchBriefCard output={data.result} />
+			return isSubagentFailure("research", result as ResearchResult) ? (
+				<ResearchBriefCard output={result} />
 			) : (
-				<ResearchCompleteBadge result={data.result as ResearchResult} />
+				<ResearchCompleteBadge result={result as ResearchResult} />
 			);
 		case "pdf":
-			return isSubagentFailure("pdf", data.result as PdfResult) ? (
-				<PdfBriefCard output={data.result} />
+			return isSubagentFailure("pdf", result as PdfResult) ? (
+				<PdfBriefCard output={result} />
 			) : (
-				<PdfCompleteBadge result={data.result as PdfResult} />
+				<PdfCompleteBadge result={result as PdfResult} />
 			);
 		case "demo":
-			return <DemoOutputCard output={data.result} messageId={message.id} initialInverted={data.ui?.inverted ?? false} />;
+			return <DemoOutputCard output={result} messageId={messageId} initialInverted={inverted} />;
 		case "visual":
-			return <VisualOutputCard output={data.result} messageId={message.id} initialInverted={data.ui?.inverted ?? false} />;
+			return <VisualOutputCard output={result} messageId={messageId} initialInverted={inverted} />;
 	}
 }
 
