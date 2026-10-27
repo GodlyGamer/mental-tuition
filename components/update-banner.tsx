@@ -41,7 +41,7 @@ export default function UpdateBanner() {
 			<button
 				type="button"
 				onClick={() => window.mt?.installUpdate?.()}
-				className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent/80"
+				className="mt-btn-primary rounded-full px-3 py-1.5 text-sm font-medium"
 			>
 				Restart
 			</button>

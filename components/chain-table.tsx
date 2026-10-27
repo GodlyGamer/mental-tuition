@@ -265,7 +265,7 @@ export function ChainTableBody({
 					data-testid="chain-table-close"
 					onClick={onClose}
 					aria-label="Close chains"
-					className="mt-no-drag flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-card/80 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					className="mt-btn mt-no-drag flex size-8 shrink-0 items-center justify-center rounded-lg border"
 				>
 					<XIcon className="size-4" />
 				</button>
@@ -500,7 +500,7 @@ export function ChainTableBody({
 							type="button"
 							data-testid="chain-clear"
 							onClick={onClear}
-							className="rounded-full px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+							className="mt-iri rounded-full px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 						>
 							Clear
 						</button>
@@ -510,7 +510,7 @@ export function ChainTableBody({
 								data-testid="chain-practice-done"
 								onClick={onSelect}
 								aria-label={`Done picking — ${selection.size} ${selection.size === 1 ? "proposition" : "propositions"} selected`}
-								className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+								className="mt-btn-primary flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
 							>
 								<DumbbellIcon aria-hidden="true" className="size-3.5" />
 								Done
@@ -527,7 +527,7 @@ export function ChainTableBody({
 								data-testid="chain-delete"
 								onClick={onDelete}
 								aria-label={`Delete ${selection.size} selected ${selection.size === 1 ? "node" : "nodes"}`}
-								className="flex items-center gap-1.5 rounded-full border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
+								className="mt-iri flex items-center gap-1.5 rounded-full border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
 							>
 								<Trash2Icon aria-hidden="true" className="size-3.5" />
 								Delete
@@ -551,7 +551,7 @@ function Expander({ open, onClick, testid, label }: { open: boolean; onClick: ()
 			onClick={onClick}
 			aria-label={label}
 			aria-expanded={open}
-			className="flex h-5 w-3.5 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+			className="mt-iri flex h-5 w-3.5 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
 		>
 			<ChevronRightIcon className={`size-3.5 transition-transform ${open ? "rotate-90" : ""}`} />
 		</button>

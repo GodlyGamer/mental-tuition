@@ -209,7 +209,7 @@ export function CoverageMenuBody({
 				data-testid="ctx-extract"
 				onClick={onExtract}
 				disabled={busy || complete}
-				className="flex items-center justify-center rounded-lg border px-2 py-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+				className="mt-btn flex items-center justify-center rounded-lg border px-2 py-1 disabled:opacity-40"
 			>
 				{busy ? "Running" : "Extract"}
 			</button>
@@ -309,7 +309,7 @@ export function CoverageRing({ chatId, refreshKey = 0 }: { chatId: string; refre
 					data-testid="coverage-ring"
 					onClick={() => setOpen((o) => !o)}
 					aria-expanded={open}
-					className="relative flex size-5 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+					className="mt-iri relative flex size-5 cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80"
 				>
 					{/* The donut: track + fill. The whole ring pulses while a run
 					    is in flight (motion = the working-state signal). */}

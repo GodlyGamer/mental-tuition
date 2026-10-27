@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<script dangerouslySetInnerHTML={{ __html: KEYS_BOOT + THEME_BOOT }} />
 			</head>
 			<body className="min-h-dvh antialiased">
-			{/* The ground: one faint light from above, film grain over it. */}
+			{/* The ground: one faint light from above (no grain — Hot Glass). */}
 			<div className="mt-ground" aria-hidden="true" />
 			{/* The notification channel rides OUTSIDE everything: sidebar, dock,
 				 and pages all subscribe as the polls retire (push S3, 2026-10-02). */}

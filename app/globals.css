@@ -27,42 +27,58 @@
 	outline: none;
 }
 
-/* THE MENTALJINEER SKIN (personal fork, 2026-10-24) — the Youssouf Diallo
-   design system: monochrome light, liquid glass and film grain. Dark is the
-   primary theme; Light and Nocturne mirror it ([data-theme] on <html>, set
-   by components/settings/appearance.tsx). The design-system tokens come
-   first; the app's shadcn tokens (--background, --card, …) map onto them,
-   so every existing utility picks the skin up with no component edits.
-   Surfaces: --card is a translucent glass fill (inline cards sit straight on
-   the ground); floating surfaces add blur via .mt-glass / the floating-card
-   rule further down. */
+/* THE HOT GLASS SKIN (approved redesign, docs/design/hot-glass/SPEC.md;
+   2026-10-27, after the 2026-10-24 Mentaljineer skin). Clean, sharp, NO
+   GRAIN anywhere: a near-black ground, liquid glass (domed body, bright top
+   rim, bottom caustic, dark refraction edge), silver edges at rest and an
+   iridescent spectrum only on interaction. Dark is the primary theme; Light
+   and Nocturne mirror it ([data-theme] on <html>, set by
+   components/settings/appearance.tsx). The design-system tokens come first;
+   the app's shadcn tokens (--background, --card, …) map onto them. The
+   material tokens (--mt-panel-*, --mt-btn-*, --mt-pri-*, --mt-iri-*) carry
+   the board values per theme (Material.html, Main.html, Themes.html). */
 :root,
 :root[data-theme="dark"] {
 	color-scheme: dark;
 	--blur-glass: 24px;
-	--blur-glass-sm: 12px;
-	--glass-sheen: linear-gradient(160deg, #ffffff33, #ffffff31, #ffffff2c, #ffffff24, #ffffff1b, #ffffff13, #ffffff0b, #ffffff06, #ffffff02, #ffffff01, #ffffff03, #ffffff06, #ffffff0b, #ffffff0f, #ffffff13, #ffffff14);
-	--grain-white: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.6 -0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-	--grain-black: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.4 -0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 
-	--void: #050505;
+	--void: #000000;
 	--line: rgba(255, 255, 255, 0.12);
 	--glass-fill: rgba(255, 255, 255, 0.06);
-	--glass-edge: rgba(255, 255, 255, 0.22);
 	--silver: #c8c8cc;
 	--chrome: #ececee;
 	--on-chrome: #0e0e0f;
 	--ink: #f2f2f3;
 	--ink-muted: #9a9a9f;
 	--signal-down: #ff8a7a;
-	--shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px rgba(0, 0, 0, 0.55);
-	--shadow-glass-sm: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 20px rgba(0, 0, 0, 0.45);
 	--scrim: rgba(0, 0, 0, 0.55);
 	--sheet: rgba(20, 20, 22, 0.78);
-	--spotlight-top: radial-gradient(ellipse 95% 80% at 50% 0%, #393b40, #393b40, #383a3e, #36383c, #33353a, #303237, #2d2f33, #292b2f, #25272a, #212225, #1d1e21, #18191c, #141517, #101113, #0d0d0e, #090a0b, #070707, #050505);
-	--grain-image: var(--grain-white);
-	--grain-blend: overlay;
-	--grain: 0.12;
+	/* Near-pure black (SPEC §2): a barely-there top light, no white lift. */
+	--spotlight-top: radial-gradient(ellipse 95% 80% at 50% 0%, #161618, #151517, #131315, #111113, #0f0f10, #0d0d0e, #0b0b0c, #09090a, #070708, #060606, #050505, #040404, #030303, #020202, #010101, #000000);
+
+	/* Liquid glass (SPEC §3; Material.html, Main.html). */
+	--mt-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.06) 16%, rgba(255, 255, 255, 0.035) 34%, rgba(255, 255, 255, 0.025) 55%, rgba(255, 255, 255, 0.03) 78%, rgba(255, 255, 255, 0.06) 100%), rgba(18, 18, 21, 0.55);
+	--mt-panel-deep-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.06) 16%, rgba(255, 255, 255, 0.035) 34%, rgba(255, 255, 255, 0.025) 55%, rgba(255, 255, 255, 0.03) 78%, rgba(255, 255, 255, 0.06) 100%), rgba(12, 12, 14, 0.7);
+	--mt-panel-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), inset 0 2px 1px -1px rgba(255, 255, 255, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.22), inset 0 40px 60px -48px rgba(255, 255, 255, 0.18), 0 40px 80px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+	--mt-btn-ink: rgba(255, 255, 255, 0.86);
+	--mt-btn-tsh: 0 1px 0 rgba(255, 255, 255, 0.14), 0 -1px 0 rgba(0, 0, 0, 0.35), 0 0 14px rgba(255, 255, 255, 0.2);
+	--mt-btn-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.09) 22%, rgba(255, 255, 255, 0.05) 44%, rgba(255, 255, 255, 0.03) 62%, rgba(255, 255, 255, 0.05) 82%, rgba(255, 255, 255, 0.1) 100%), rgba(28, 28, 32, 0.5);
+	--mt-btn-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 1.5px 0.5px -0.5px rgba(255, 255, 255, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.09), inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.4), inset 0 10px 14px -10px rgba(255, 255, 255, 0.24), inset 0 -12px 16px -12px rgba(255, 255, 255, 0.2), inset 0 0 16px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+	/* Hover held on (Main.html .hov — e.g. Dictate while listening). */
+	--mt-btn-held-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 1.5px 0.5px -0.5px rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.5), inset 0 10px 14px -10px rgba(255, 255, 255, 0.32), inset 0 -12px 16px -12px rgba(255, 255, 255, 0.26), inset 0 0 16px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+	--mt-pri-ink: #141416;
+	--mt-pri-tsh: 0 1px 0 rgba(255, 255, 255, 0.6);
+	--mt-pri-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 244, 246, 0.93) 30%, rgba(226, 226, 231, 0.9) 66%, rgba(238, 238, 242, 0.94));
+	--mt-pri-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 1.5px 0.5px -0.5px #ffffff, inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.95), inset 0 -12px 16px -12px rgba(0, 0, 0, 0.2), 0 12px 28px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+	/* The interaction spectrum (SPEC §4). */
+	--mt-iri-1: #ff5ad1;
+	--mt-iri-2: #ffb547;
+	--mt-iri-3: #f4ff7a;
+	--mt-iri-4: #5dffb0;
+	--mt-iri-5: #49e6ff;
+	--mt-iri-6: #6a7bff;
+	--mt-iri-7: #c86bff;
+	--mt-iri-glow: 0.55;
 
 	--radius: 12px;
 	--background: var(--void);
@@ -100,21 +116,36 @@
 	--void: #f4f4f4;
 	--line: rgba(0, 0, 0, 0.12);
 	--glass-fill: rgba(255, 255, 255, 0.55);
-	--glass-edge: rgba(255, 255, 255, 0.95);
 	--silver: #5a5a5e;
 	--chrome: #1a1a1c;
 	--on-chrome: #f2f2f3;
 	--ink: #0e0e0f;
 	--ink-muted: #58585d;
 	--signal-down: #b3261e;
-	--shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(0, 0, 0, 0.04), 0 24px 48px rgba(0, 0, 0, 0.12);
-	--shadow-glass-sm: inset 0 1px 0 rgba(255, 255, 255, 1), 0 6px 16px rgba(0, 0, 0, 0.1);
 	--scrim: rgba(40, 40, 44, 0.28);
 	--sheet: rgba(250, 250, 250, 0.82);
 	--spotlight-top: radial-gradient(ellipse 95% 80% at 50% 0%, #ffffff, #ffffff, #fefefe, #fcfcfc, #fafafa, #f8f8f8, #f5f5f5, #f2f2f2, #efefef, #ededed, #eaeaea, #e8e8e8, #e6e6e6, #e4e4e4, #e3e3e3, #e1e1e1, #e1e1e1, #e0e0e0);
-	--grain-image: var(--grain-black);
-	--grain-blend: multiply;
-	--grain: 0.072;
+	/* Frosted white glass, dark primary, deeper spectrum (Themes.html). */
+	--mt-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66) 26%, rgba(255, 255, 255, 0.55) 60%, rgba(255, 255, 255, 0.75)), rgba(245, 245, 247, 0.5);
+	--mt-panel-deep-bg: var(--mt-panel-bg);
+	--mt-panel-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 2px 1px -1px #ffffff, inset 0 -1.5px 1px -0.5px #ffffff, 0 20px 40px rgba(0, 0, 0, 0.1);
+	--mt-btn-ink: #1a1a1c;
+	--mt-btn-tsh: 0 1px 0 rgba(255, 255, 255, 0.9);
+	--mt-btn-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.72) 26%, rgba(255, 255, 255, 0.5) 56%, rgba(255, 255, 255, 0.62) 82%, rgba(255, 255, 255, 0.85)), rgba(236, 236, 240, 0.4);
+	--mt-btn-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14), inset 0 1.5px 0.5px -0.5px #ffffff, inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 -1.5px 1px -0.5px #ffffff, inset 0 -12px 16px -12px rgba(0, 0, 0, 0.08), inset 0 0 14px rgba(0, 0, 0, 0.05), 0 10px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+	--mt-btn-held-shadow: var(--mt-btn-shadow);
+	--mt-pri-ink: #f2f2f3;
+	--mt-pri-tsh: none;
+	--mt-pri-bg: linear-gradient(180deg, #3a3a3e, #26262a 30%, #1a1a1c 66%, #2a2a2e);
+	--mt-pri-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), inset 0 1.5px 0.5px -0.5px rgba(255, 255, 255, 0.45), inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.2), 0 8px 18px rgba(0, 0, 0, 0.2);
+	--mt-iri-1: #e0359f;
+	--mt-iri-2: #f08a00;
+	--mt-iri-3: #c9c400;
+	--mt-iri-4: #00b26e;
+	--mt-iri-5: #0098c8;
+	--mt-iri-6: #3d4fe0;
+	--mt-iri-7: #9a3ee0;
+	--mt-iri-glow: 0.45;
 	--muted: rgba(0, 0, 0, 0.04);
 	--accent: rgba(0, 0, 0, 0.06);
 }
@@ -124,20 +155,36 @@
 	--void: #070d33;
 	--line: rgba(180, 200, 255, 0.16);
 	--glass-fill: rgba(120, 150, 255, 0.08);
-	--glass-edge: rgba(200, 215, 255, 0.3);
 	--silver: #b9c6ff;
 	--chrome: #e9e4f2;
 	--on-chrome: #070d33;
 	--ink: #eef1ff;
 	--ink-muted: #aeb8e6;
 	--signal-down: #ffb3c7;
-	--shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px rgba(2, 6, 30, 0.55);
-	--shadow-glass-sm: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 20px rgba(2, 6, 30, 0.45);
 	--scrim: rgba(2, 5, 24, 0.6);
 	--sheet: rgba(14, 24, 84, 0.8);
 	--spotlight-top: radial-gradient(ellipse 95% 80% at 50% 0%, #1d2f96, #1d2f95, #1c2e93, #1b2d90, #1a2b8b, #192985, #17277f, #162478, #142170, #121f68, #101c5f, #0e1957, #0c164f, #0b1448, #0a1242, #08103c, #080e37, #070d33);
-	--grain-blend: soft-light;
-	--grain: 0.18;
+	/* Cobalt glass, pink caustic, pastel spectrum (Themes.html). */
+	--mt-panel-bg: linear-gradient(180deg, rgba(200, 215, 255, 0.14), rgba(170, 190, 255, 0.07) 22%, rgba(140, 160, 255, 0.04) 55%, rgba(255, 190, 225, 0.08)), rgba(14, 24, 84, 0.6);
+	--mt-panel-deep-bg: var(--mt-panel-bg);
+	--mt-panel-shadow: 0 0 0 1px rgba(2, 6, 30, 0.6), inset 0 2px 1px -1px rgba(230, 236, 255, 0.6), inset 0 -1.5px 1px -0.5px rgba(255, 190, 225, 0.3), 0 24px 48px rgba(2, 6, 30, 0.55);
+	--mt-btn-ink: #eef1ff;
+	--mt-btn-tsh: 0 1px 0 rgba(230, 236, 255, 0.18), 0 -1px 0 rgba(2, 6, 30, 0.4), 0 0 14px rgba(200, 215, 255, 0.3);
+	--mt-btn-bg: linear-gradient(180deg, rgba(200, 215, 255, 0.22), rgba(170, 190, 255, 0.12) 22%, rgba(140, 160, 255, 0.06) 50%, rgba(150, 170, 255, 0.06) 76%, rgba(255, 190, 225, 0.14)), rgba(14, 24, 84, 0.45);
+	--mt-btn-shadow: 0 0 0 1px rgba(2, 6, 30, 0.7), inset 0 1.5px 0.5px -0.5px rgba(230, 236, 255, 0.85), inset 0 0 0 1px rgba(200, 215, 255, 0.12), inset 0 -1.5px 1px -0.5px rgba(255, 190, 225, 0.5), inset 0 10px 14px -10px rgba(220, 230, 255, 0.26), inset 0 -12px 16px -12px rgba(255, 170, 220, 0.26), inset 0 0 16px rgba(2, 6, 30, 0.3), 0 12px 28px rgba(2, 6, 30, 0.55);
+	--mt-btn-held-shadow: var(--mt-btn-shadow);
+	--mt-pri-ink: #070d33;
+	--mt-pri-tsh: none;
+	--mt-pri-bg: linear-gradient(180deg, #f6f3fb, #ebe6f4 30%, #dcd5ea 66%, #e9e4f2);
+	--mt-pri-shadow: 0 0 0 1px rgba(2, 6, 30, 0.6), inset 0 1.5px 0.5px -0.5px #ffffff, inset 0 -1.5px 1px -0.5px rgba(255, 255, 255, 0.9), inset 0 -12px 16px -12px rgba(7, 13, 51, 0.2), 0 10px 22px rgba(2, 6, 30, 0.5);
+	--mt-iri-1: #ff8ad8;
+	--mt-iri-2: #ffc28a;
+	--mt-iri-3: #f6ffb0;
+	--mt-iri-4: #8affd0;
+	--mt-iri-5: #8aeaff;
+	--mt-iri-6: #a8b4ff;
+	--mt-iri-7: #d6a0ff;
+	--mt-iri-glow: 0.6;
 	--muted: rgba(140, 170, 255, 0.07);
 	--accent: rgba(160, 185, 255, 0.14);
 }
@@ -238,9 +285,10 @@ body {
 	color: var(--void);
 }
 
-/* ── Liquid glass ────────────────────────────────────────────────────────
-   The ground: one faint light from above, fine grain over it (mounted once
-   in app/layout.tsx). Glass surfaces blur whatever passes beneath them. */
+/* ── Hot Glass ───────────────────────────────────────────────────────────
+   The ground: one faint light from above (mounted once in app/layout.tsx).
+   No grain anywhere (SPEC §1). If long dark gradients band on a screen,
+   the agreed fix is an invisible ≤2% dither — ask first (SPEC §2). */
 .mt-ground {
 	position: fixed;
 	inset: 0;
@@ -248,41 +296,162 @@ body {
 	pointer-events: none;
 	background: var(--spotlight-top), var(--void);
 }
-.mt-ground::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	background-image: var(--grain-image);
-	background-size: 200px 200px;
-	mix-blend-mode: var(--grain-blend);
-	opacity: var(--grain);
+
+/* THE PANEL (SPEC §3, the boards' .lgp): composer, dialogs, popovers,
+   docks, floating cards. Plain silver edges at rest, no colour (SPEC §5).
+   The component keeps its own radius (panels 20–36px). Borders go
+   transparent rather than away, so nothing shifts by a pixel. Unlayered:
+   wins over bg-card / shadow-* utilities. */
+.mt-panel,
+.mt-panel-deep {
+	border-color: transparent;
+	background: var(--mt-panel-bg);
+	-webkit-backdrop-filter: blur(28px) saturate(160%);
+	backdrop-filter: blur(28px) saturate(160%);
+	box-shadow: var(--mt-panel-shadow);
+}
+/* The composer's darker body (Composer.html). */
+.mt-panel-deep {
+	background: var(--mt-panel-deep-bg);
 }
 
-/* A floating glass surface (docks, composer, menus, pills). */
-.mt-glass {
-	border: 1px solid var(--glass-edge);
-	background-color: var(--glass-fill);
-	background-image: var(--glass-sheen);
-	-webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
-	backdrop-filter: blur(var(--blur-glass)) saturate(140%);
-	box-shadow: var(--shadow-glass);
+/* THE BUTTON (SPEC §3, the boards' .lg): every pill and round button —
+   type sits inside the glass. Size and radius stay the component's. */
+.mt-btn {
+	border-color: transparent;
+	color: var(--mt-btn-ink);
+	text-shadow: var(--mt-btn-tsh);
+	background: var(--mt-btn-bg);
+	-webkit-backdrop-filter: blur(14px) saturate(160%);
+	backdrop-filter: blur(14px) saturate(160%);
+	box-shadow: var(--mt-btn-shadow);
 }
-.mt-glass-sm {
-	-webkit-backdrop-filter: blur(var(--blur-glass-sm)) saturate(140%);
-	backdrop-filter: blur(var(--blur-glass-sm)) saturate(140%);
-	box-shadow: var(--shadow-glass-sm);
+/* Primary (send, New session — the boards' .pri): the same rims on a
+   white body (dark glass on Light). */
+.mt-btn-primary {
+	border-color: transparent;
+	color: var(--mt-pri-ink);
+	text-shadow: var(--mt-pri-tsh);
+	background: var(--mt-pri-bg);
+	box-shadow: var(--mt-pri-shadow);
 }
-/* A sheet: the denser glass dialogs and big panels sit on. */
-.mt-sheet {
-	border: 1px solid var(--glass-edge);
-	background-color: var(--sheet);
-	background-image: var(--glass-sheen);
-	-webkit-backdrop-filter: blur(32px) saturate(140%);
-	backdrop-filter: blur(32px) saturate(140%);
-	box-shadow: var(--shadow-glass);
+
+/* THE IRIDESCENT RIM (SPEC §4, Main.html) on every button, chip, toggle:
+   .mt-btn and .mt-btn-primary carry it; .mt-iri gives it to a control
+   with no glass body (quiet text buttons, chips, toggles). At rest: none.
+   Hover: a 1.5px conic spectrum rim spinning once per 3.2s at .9. Press:
+   full rim, the blurred glow, the hue jumps 220°, scale .97. Heat-in 60ms,
+   cool-down 700ms while the hue keeps turning over 1.4s. The spin is
+   paused unless hovered, pressed or keyboard-focused: idle controls never
+   repaint. Keyboard focus shows the hover rim (owner, 2026-10-27 — the
+   no-ring law above still hides the browser outline).
+   Each control is its own stacking context (the glass buttons already are,
+   through backdrop-filter — exactly as on the boards): the z-index:-1 glow
+   paints over the body and under the label, and no parent is touched, so
+   no dropdown gets trapped in a new stacking context. */
+@property --mt-ang {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
 }
-/* The sidebar: a full-height glass pane, edge on the content side only. */
+@property --mt-spin {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
+}
+@keyframes mt-spin {
+	to {
+		--mt-spin: 360deg;
+	}
+}
+/* In a layer so positioning utilities (absolute, fixed) still win. */
+@layer components {
+	:is(.mt-btn, .mt-btn-primary, .mt-iri) {
+		position: relative;
+		isolation: isolate;
+	}
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri) {
+	transition:
+		scale 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+		color 150ms ease,
+		background-color 150ms ease,
+		opacity 150ms ease;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri)::before,
+:is(.mt-btn, .mt-btn-primary, .mt-iri)::after {
+	content: "";
+	position: absolute;
+	border-radius: inherit;
+	pointer-events: none;
+	background: conic-gradient(from calc(var(--mt-ang) + var(--mt-spin)), var(--mt-iri-1), var(--mt-iri-2), var(--mt-iri-3), var(--mt-iri-4), var(--mt-iri-5), var(--mt-iri-6), var(--mt-iri-7), var(--mt-iri-1));
+	opacity: 0;
+	animation: mt-spin 3.2s linear infinite paused;
+	transition:
+		opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+		--mt-ang 1400ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri)::before {
+	inset: -1px;
+	padding: 1.5px;
+	-webkit-mask:
+		linear-gradient(#000 0 0) content-box,
+		linear-gradient(#000 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri)::after {
+	inset: -6px;
+	filter: blur(12px);
+	z-index: -1;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):is(:hover, :focus-visible)::before,
+.mt-held::before {
+	opacity: 0.9;
+	animation-play-state: running;
+	transition-duration: 300ms, 1400ms;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):is(:hover, :focus-visible)::after,
+.mt-held::after {
+	animation-play-state: running;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active {
+	scale: 0.97;
+	transition-duration: 90ms;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active::before {
+	opacity: 1;
+	--mt-ang: 220deg;
+	transition-duration: 60ms, 1400ms;
+}
+:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active::after {
+	opacity: var(--mt-iri-glow);
+	--mt-ang: 220deg;
+	transition-duration: 60ms, 1400ms;
+}
+/* Hover held on (Main.html .hov): the rim spins and the rims brighten —
+   e.g. Dictate while listening. */
+.mt-btn.mt-held {
+	box-shadow: var(--mt-btn-held-shadow);
+}
+/* Reduced motion: no spin, no hue turn, no squash — fade only. */
+@media (prefers-reduced-motion: reduce) {
+	:is(.mt-btn, .mt-btn-primary, .mt-iri)::before,
+	:is(.mt-btn, .mt-btn-primary, .mt-iri)::after {
+		animation: none;
+		transition-property: opacity;
+	}
+	:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active {
+		scale: none;
+	}
+	:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active::before,
+	:is(.mt-btn, .mt-btn-primary, .mt-iri):not(:disabled):active::after {
+		--mt-ang: 0deg;
+	}
+}
+
+/* The sidebar: a full-height glass pane, edge on the content side only
+   (restyled in the sidebar wave). */
 .mt-glass-pane {
 	border-right: 1px solid var(--line);
 	background-color: var(--glass-fill);
@@ -297,26 +466,16 @@ body {
 }
 
 /* Every FLOATING card the app draws (bg-card + a drop shadow: the composer,
-   docks, menus, popovers, dialogs, tooltips) becomes sheet glass without
-   touching the components; floating PILLS (rounded-full) take the clearer
-   glass fill. Inline transcript cards (no shadow) keep the translucent fill
-   only — they sit straight on the ground and stay cheap to scroll.
-   Unlayered CSS beats the utility layer. */
+   docks, menus, popovers, dialogs, tooltips) becomes the PANEL without
+   touching the components. Inline transcript cards (no shadow) keep the
+   translucent fill only — they sit straight on the ground and stay cheap
+   to scroll. Unlayered CSS beats the utility layer. */
 :is(.bg-card, .bg-popover, .bg-card\/50, .bg-card\/60, .bg-card\/80, .bg-card\/85, .bg-card\/95):is(.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl) {
-	border-color: var(--glass-edge);
-	background-color: var(--sheet);
-	background-image: var(--glass-sheen);
-	-webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
-	backdrop-filter: blur(var(--blur-glass)) saturate(140%);
-	box-shadow: var(--shadow-glass);
-}
-:is(.bg-card, .bg-card\/50, .bg-card\/85):is(.shadow-lg, .shadow-xl).rounded-full {
-	background-color: var(--glass-fill);
-	box-shadow: var(--shadow-glass-sm);
-}
-/* Primary buttons: the chrome pill. */
-.bg-primary {
-	box-shadow: var(--shadow-glass-sm);
+	border-color: transparent;
+	background: var(--mt-panel-bg);
+	-webkit-backdrop-filter: blur(28px) saturate(160%);
+	backdrop-filter: blur(28px) saturate(160%);
+	box-shadow: var(--mt-panel-shadow);
 }
 
 /* The theme switch (Settings → Appearance): three swatches in a glass pill. */

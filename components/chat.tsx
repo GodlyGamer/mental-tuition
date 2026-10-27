@@ -1257,7 +1257,7 @@ export function Chat({
 								blurAfterPointerClick(e);
 								setPlanOpen(true);
 							}}
-							className="mt-no-drag flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+							className="mt-iri mt-no-drag flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-border hover:text-foreground"
 						>
 							<WaypointsIcon className="size-3.5 text-primary" aria-hidden />
 							Plan
@@ -1614,7 +1614,7 @@ export function Chat({
 										type="button"
 										data-testid="setup-cta"
 										onClick={() => setSetupOpen(true)}
-										className="rounded-sm border border-border bg-card px-3 py-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50 hover:bg-accent cursor-pointer"
+										className="mt-btn rounded-full border px-3 py-1.5 font-ui text-xs cursor-pointer"
 									>
 										Set up your models
 									</button>

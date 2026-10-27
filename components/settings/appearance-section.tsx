@@ -190,11 +190,12 @@ export function AppearanceSection({
 	return (
 		<>
 			<SettingsRow label="Theme" hint={THEME_LABEL[appearance?.mode ?? resolved.mode]} testid="row-mode">
-				<div className="mt-theme-switch mt-glass mt-glass-sm" role="group" aria-label="theme" data-testid="select-mode">
+				<div className="mt-theme-switch mt-panel" role="group" aria-label="theme" data-testid="select-mode">
 					{APPEARANCE_MODES.map((mode) => (
 						<button
 							key={mode}
 							type="button"
+							className="mt-iri"
 							aria-pressed={(appearance?.mode ?? resolved.mode) === mode}
 							aria-label={THEME_LABEL[mode]}
 							title={THEME_LABEL[mode]}
@@ -240,7 +241,7 @@ export function AppearanceSection({
 								aria-expanded={fontMenuOpen}
 								data-testid="font-trigger"
 								onClick={openFontMenu}
-								className="flex h-7 min-w-20 items-center gap-1 rounded-sm border border-border bg-background px-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50"
+								className="mt-btn flex h-7 min-w-20 items-center gap-1 rounded-sm border px-1.5 font-ui text-xs"
 							>
 								<span className="min-w-0 flex-1 truncate">{appearance?.fontFamily || DEFAULT_READING_FONT}</span>
 								<span aria-hidden className="text-muted-foreground">

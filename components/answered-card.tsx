@@ -218,7 +218,7 @@ export function AnsweredCard({ answer, input }: { answer: QuestionAnswerData; in
 					<button
 						type="button"
 						onClick={() => setWhyOpen((v) => !v)}
-						className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+						className="mt-iri text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
 					>
 						{whyOpen ? "Hide why" : "Why"}
 					</button>

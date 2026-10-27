@@ -34,9 +34,12 @@ second pillar of input).
   no client request to abort). Every element/document-level Esc handler
   that acts calls `e.stopPropagation()` so the window chain never
   double-fires. The session search claims Esc to blur back to normal.
-- **Focus ring**: browser Tab-focus is gone, so `:focus-visible` stays
-  unstyled (an earlier experimental outline was live-rejected — inputs
-  showed a red ring on plain click-focus).
+- **Focus ring**: the browser outline stays hidden everywhere (an earlier
+  experimental outline was live-rejected — inputs showed a red ring on
+  plain click-focus). Since Hot Glass (owner, 2026-10-27), keyboard focus
+  on a button, chip or toggle shows the hover rim instead: the spinning
+  spectrum of `.mt-btn` / `.mt-btn-primary` / `.mt-iri` on
+  `:focus-visible` (app/globals.css). Mouse focus shows nothing.
 
 ## Key map (Wave A — global)
 

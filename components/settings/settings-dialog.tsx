@@ -269,7 +269,7 @@ export function SettingsDialogBody({
 			aria-modal="true"
 			aria-label="Settings"
 			data-testid="settings-dialog"
-			className="settings-dialog-pop flex h-[620px] max-h-[85vh] w-[920px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-sheet shadow-xl"
+			className="settings-dialog-pop flex h-[620px] max-h-[85vh] w-[920px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-panel"
 			onClick={(e) => e.stopPropagation()}
 		>
 			{/* Header — the app's quiet CMU title language. */}
@@ -285,7 +285,7 @@ export function SettingsDialogBody({
 					type="button"
 					aria-label="Close settings"
 					data-testid="settings-close"
-					className="ml-auto size-7 rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					className="mt-iri ml-auto size-7 rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 					onClick={onClose}
 				>
 					<svg

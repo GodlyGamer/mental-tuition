@@ -345,7 +345,7 @@ export function GraphCostControl({ costs }: { costs: GraphCostSummary }) {
 				type="button"
 				aria-expanded={open}
 				onClick={() => setOpen((o) => !o)}
-				className={`rounded-lg px-2 py-1 text-xs tabular-nums transition-colors hover:bg-accent ${
+				className={`mt-iri rounded-lg px-2 py-1 text-xs tabular-nums transition-colors hover:bg-accent ${
 					open ? "text-foreground" : "text-muted-foreground hover:text-foreground"
 				}`}
 			>
@@ -461,7 +461,7 @@ function GraphSettingsControl({
 				type="button"
 				aria-expanded={open}
 				onClick={() => setOpen((o) => !o)}
-				className={`flex size-9 items-center justify-center rounded-xl border bg-card/85 shadow-lg backdrop-blur transition-colors hover:bg-accent ${
+				className={`mt-btn flex size-9 items-center justify-center rounded-xl border ${
 					open ? "text-foreground" : "text-muted-foreground hover:text-foreground"
 				}`}
 			>
@@ -892,7 +892,7 @@ export function GraphChromeRow({
 							type="button"
 							onClick={onOpenChains}
 							data-testid="open-chain-table"
-							className="flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
+							className="mt-iri flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
 						>
 							<ListTreeIcon className="size-3" />
 							Chains
@@ -926,7 +926,7 @@ export function GraphChromeRow({
 						disabled={importing}
 						onClick={() => fileInputRef.current?.click()}
 						data-testid="import-notes"
-					className="flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
+					className="mt-iri flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
 				>
 						<UploadIcon className="size-3" />
 						{importing ? "Importing…" : "Import notes…"}

@@ -237,7 +237,7 @@ function MetadataPopover({
 					});
 				}}
 				aria-expanded={open}
-				className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
+				className="mt-iri flex items-center gap-1 rounded-md text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
 			>
 				Metadata
 			</button>

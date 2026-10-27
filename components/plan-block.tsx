@@ -901,7 +901,7 @@ export function PlanPopup({ messages, onClose }: { messages: readonly PopupMessa
 					onClick={onClose}
 					aria-label="Close"
 					data-testid="plan-popup-close"
-					className="ml-auto rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					className="mt-iri ml-auto rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 				>
 					<XIcon className="size-4" />
 				</button>
@@ -954,7 +954,7 @@ export function PlanPopup({ messages, onClose }: { messages: readonly PopupMessa
 									type="button"
 									aria-label="Zoom out"
 									onClick={() => stepZoom(1 / 1.25)}
-									className="pointer-events-auto flex size-7 items-center justify-center rounded-md border border-border/70 bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground"
+									className="mt-btn pointer-events-auto flex size-7 items-center justify-center rounded-md border"
 								>
 									<MinusIcon className="size-3.5" />
 								</button>
@@ -965,7 +965,7 @@ export function PlanPopup({ messages, onClose }: { messages: readonly PopupMessa
 									aria-label="Fit plan to screen"
 									onClick={fitView}
 									data-testid="plan-popup-fit"
-									className="pointer-events-auto flex size-7 items-center justify-center rounded-md border border-border/70 bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground"
+									className="mt-btn pointer-events-auto flex size-7 items-center justify-center rounded-md border"
 								>
 									<MaximizeIcon className="size-3.5" />
 								</button>
@@ -975,7 +975,7 @@ export function PlanPopup({ messages, onClose }: { messages: readonly PopupMessa
 									type="button"
 									aria-label="Zoom in"
 									onClick={() => stepZoom(1.25)}
-									className="pointer-events-auto flex size-7 items-center justify-center rounded-md border border-border/70 bg-card/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground"
+									className="mt-btn pointer-events-auto flex size-7 items-center justify-center rounded-md border"
 								>
 									<PlusIcon className="size-3.5" />
 								</button>

@@ -42,9 +42,9 @@ interface SetupStatus extends Live {
 
 const card = "rounded-2xl border bg-card p-4";
 const pill =
-	"inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40";
+	"mt-btn inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40";
 const primary =
-	"inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
+	"mt-btn-primary inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40";
 const label = "text-[11px] uppercase tracking-widest text-muted-foreground";
 
 const busy = (l: Login | Job | null) => l !== null && (l.status === "running" || l.status === "starting" || l.status === "waiting");

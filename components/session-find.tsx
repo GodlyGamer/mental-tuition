@@ -159,7 +159,7 @@ export function SessionFind({ scopeRef, scrollContextRef }: {
 	};
 
 	if (!open) return null;
-	const buttonClass = "flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40";
+	const buttonClass = "mt-iri flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40";
 	return (
 		<div
 			role="search"

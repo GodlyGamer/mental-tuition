@@ -159,7 +159,7 @@ export function SetupKeysBody({
 						data-testid="setup-key-provider"
 						aria-expanded={menuOpen}
 						onClick={onToggleMenu}
-						className="flex h-7 w-full items-center gap-1 rounded-sm border border-border bg-background px-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50"
+						className="mt-btn flex h-7 w-full items-center gap-1 rounded-sm border px-1.5 font-ui text-xs"
 					>
 						<span className="min-w-0 flex-1 truncate text-left">{provider ? provider.label : "Pick a provider…"}</span>
 						<span aria-hidden className="text-muted-foreground">
@@ -199,7 +199,7 @@ export function SetupKeysBody({
 							onClick={onSave}
 							disabled={saving || !value.trim()}
 							data-testid="setup-key-save"
-							className="shrink-0 rounded-sm border border-border bg-background px-3 py-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50 disabled:cursor-not-allowed disabled:opacity-40"
+							className="mt-btn shrink-0 rounded-full border px-3 py-1.5 font-ui text-xs disabled:cursor-not-allowed disabled:opacity-40"
 						>
 							{saving ? "Saving…" : "Save key"}
 						</button>
@@ -403,7 +403,7 @@ export function SetupDialog({
 				aria-modal="true"
 				aria-label="Set up your models"
 				data-testid="setup-dialog"
-				className="settings-dialog-pop flex max-h-[85vh] w-[640px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-sheet shadow-xl"
+				className="settings-dialog-pop flex max-h-[85vh] w-[640px] max-w-[90vw] flex-col overflow-hidden rounded-2xl mt-panel"
 				onClick={(e) => e.stopPropagation()}
 			>
 				<header className="flex h-15 shrink-0 items-center gap-3 border-b border-border px-5">
@@ -414,7 +414,7 @@ export function SetupDialog({
 						aria-label="Close setup"
 						data-testid="setup-close"
 						onClick={onClose}
-						className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
+						className="mt-iri ml-auto rounded-md text-muted-foreground transition-colors hover:text-foreground"
 					>
 						✕
 					</button>
@@ -480,7 +480,7 @@ export function SetupDialog({
 												data-testid={`setup-trigger-${slot}`}
 												aria-expanded={openMenu?.slot === slot && openMenu.kind === "model"}
 												onClick={() => setOpenMenu(openMenu?.slot === slot && openMenu.kind === "model" ? null : { slot, kind: "model" })}
-												className="flex h-7 min-w-40 w-full items-center gap-1 rounded-sm border border-border bg-background px-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50"
+												className="mt-btn flex h-7 min-w-40 w-full items-center gap-1 rounded-sm border px-1.5 font-ui text-xs"
 											>
 												<span className="min-w-0 flex-1 truncate">{entry ? prettyModel(entry.id) : "Pick a model…"}</span>
 												<span aria-hidden className="text-muted-foreground">
@@ -535,7 +535,7 @@ export function SetupDialog({
 												aria-expanded={openMenu?.slot === slot && openMenu.kind === "thinking"}
 												disabled={!entry}
 												onClick={() => setOpenMenu(openMenu?.slot === slot && openMenu.kind === "thinking" ? null : { slot, kind: "thinking" })}
-												className="flex h-7 w-24 items-center gap-1 rounded-sm border border-border bg-background px-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50 disabled:cursor-not-allowed disabled:opacity-40"
+												className="mt-btn flex h-7 w-24 items-center gap-1 rounded-sm border px-1.5 font-ui text-xs disabled:cursor-not-allowed disabled:opacity-40"
 											>
 												<span className="min-w-0 flex-1 truncate text-left">
 													{entry ? (level ? THINKING_LABEL[level] ?? level : "…") : "—"}
@@ -573,7 +573,7 @@ export function SetupDialog({
 								data-testid="setup-save"
 								disabled={!allPicked || saving}
 								onClick={() => void save()}
-								className="rounded-sm border border-border bg-background px-3 py-1.5 font-ui text-xs text-foreground transition-colors hover:border-muted-foreground/50 disabled:cursor-not-allowed disabled:opacity-40"
+								className="mt-btn-primary rounded-full px-3 py-1.5 font-ui text-xs disabled:cursor-not-allowed disabled:opacity-40"
 							>
 								{saving ? "Saving…" : "Save models"}
 							</button>

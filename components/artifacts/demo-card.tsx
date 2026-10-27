@@ -195,7 +195,7 @@ function DemoFrame({
 						title="Download as HTML"
 						onClick={() => downloadFile(`${slugFilename(title)}.html`, html, "text/html")}
 						data-testid="demo-download"
-						className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+						className="mt-iri rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 					>
 						<DownloadIcon className="size-3.5" />
 					</button>
@@ -258,7 +258,7 @@ export function DemoErrorChip({
 				<button
 					type="button"
 					onClick={onSend}
-					className="rounded-md border border-red-500/40 px-2 py-1 text-xs font-medium hover:bg-red-500/15"
+					className="mt-iri rounded-md border border-red-500/40 px-2 py-1 text-xs font-medium hover:bg-red-500/15"
 					data-testid="demo-error-send"
 				>
 					Send to teacher

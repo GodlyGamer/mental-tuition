@@ -147,7 +147,7 @@ export function VisualOutputCard({
 						title="Download as SVG"
 						onClick={() => downloadFile("figure.svg", result.svg, "image/svg+xml")}
 						data-testid="visual-download"
-						className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+						className="mt-iri rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 					>
 						<DownloadIcon className="size-3.5" />
 					</button>
@@ -158,7 +158,7 @@ export function VisualOutputCard({
 							title="Open fullscreen"
 							onClick={() => overlay.openFigure(result.svg, inverted)}
 							data-testid="visual-open"
-							className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+							className="mt-iri rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
 						>
 							<MaximizeIcon className="size-3.5" />
 						</button>

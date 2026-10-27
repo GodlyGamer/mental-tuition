@@ -223,7 +223,7 @@ export function DeleteSessionBody({
 					data-testid="delete-cancel"
 					onClick={onClose}
 					disabled={busy}
-					className="rounded-sm px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+					className="mt-iri rounded-sm px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
 				>
 					Cancel
 				</button>
@@ -232,7 +232,7 @@ export function DeleteSessionBody({
 					data-testid="delete-confirm"
 					onClick={onRun}
 					disabled={busy}
-					className="rounded-sm border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-40"
+					className="mt-iri rounded-sm border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-40"
 				>
 					{busy ? "Deleting…" : "Delete"}
 				</button>

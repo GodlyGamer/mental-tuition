@@ -270,7 +270,7 @@ function MenuTrigger({
 			onClick={() => {
 				if (!disabled) onClick();
 			}}
-			className={`flex h-7 items-center gap-1 rounded-sm border border-border bg-background px-1.5 font-ui text-xs text-foreground transition-colors ${
+			className={`mt-btn flex h-7 items-center gap-1 rounded-sm border px-1.5 font-ui text-xs ${
 				disabled ? "cursor-not-allowed" : "hover:border-muted-foreground/50"
 			} ${widthClass}`}
 		>
@@ -780,7 +780,7 @@ export function AgentSection({
 											data-testid={`quiz-mechanics-${m}`}
 											onClick={() => onSectionChange(composeQuizMechanics(agent, m))}
 											className={cn(
-												"h-8 rounded-md px-3 text-sm font-medium transition-colors",
+												"mt-iri h-8 rounded-md px-3 text-sm font-medium transition-colors",
 												active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
 											)}
 										>

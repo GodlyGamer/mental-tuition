@@ -101,9 +101,9 @@ const json = (method: string, body: unknown): RequestInit => ({
 // Shared chrome — the Mentaljineer glass vocabulary.
 const card = "rounded-2xl border bg-card p-4";
 const pill =
-	"inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40";
+	"mt-btn inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40";
 const primary =
-	"inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
+	"mt-btn-primary inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40";
 const label = "text-[11px] uppercase tracking-widest text-muted-foreground";
 
 // ─── the view ───────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ function ModuleBar({
 					type="button"
 					aria-pressed={m.code === selected}
 					onClick={() => onSelect(m.code)}
-					className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+					className={`mt-iri rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
 						m.code === selected ? "bg-primary text-primary-foreground" : "hover:bg-accent"
 					}`}
 				>
@@ -257,7 +257,7 @@ function ModuleBar({
 					aria-label="New module code"
 					className="h-7 w-32 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 				/>
-				<button type="submit" aria-label="Add module" className="flex size-7 items-center justify-center rounded-full hover:bg-accent">
+				<button type="submit" aria-label="Add module" className="mt-iri flex size-7 items-center justify-center rounded-full hover:bg-accent">
 					<PlusIcon className="size-4" />
 				</button>
 			</form>
@@ -583,7 +583,7 @@ function HandIn({ code, pair, base, onChange, onError }: { code: string; pair: P
 								type="button"
 								aria-label={`Remove ${name}`}
 								onClick={() => remove(name)}
-								className="absolute right-1 top-1 hidden rounded-full bg-background/80 p-1 group-hover:block"
+								className="mt-iri absolute right-1 top-1 hidden rounded-full bg-background/80 p-1 group-hover:block"
 							>
 								<Trash2Icon className="size-3" />
 							</button>
@@ -705,7 +705,7 @@ function MarkingReview({ base, onChange, onError }: { base: string; onChange: ()
 												aria-label={`Drop lost mark ${l.code}`}
 												title="This mark wasn't actually lost"
 												onClick={() => edit(i, { lost: part.lost.filter((_, m) => m !== k) })}
-												className="mt-0.5 rounded-full p-0.5 hover:bg-accent"
+												className="mt-iri mt-0.5 rounded-full p-0.5 hover:bg-accent"
 											>
 												<XIcon className="size-3" />
 											</button>

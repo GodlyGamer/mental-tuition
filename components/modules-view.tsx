@@ -23,7 +23,7 @@ interface ModuleInfo {
 
 const card = "rounded-2xl border bg-card p-4";
 const pill =
-	"inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40";
+	"mt-btn inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40";
 const label = "text-[11px] uppercase tracking-widest text-muted-foreground";
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
@@ -110,7 +110,7 @@ export function ModulesView() {
 						<button
 							type="submit"
 							disabled={!draft.trim()}
-							className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+							className="mt-btn-primary inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40"
 						>
 							<PlusIcon className="size-3.5" />
 							Add module

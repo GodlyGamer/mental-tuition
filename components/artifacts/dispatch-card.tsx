@@ -98,7 +98,7 @@ function DispatchRefusedCard({ label, line, button }: { label: string; line: str
 					type="button"
 					data-testid="dispatch-setup-link"
 					onClick={ctx.openSetup}
-					className="ml-1 rounded-sm border border-border bg-card px-2 py-0.5 font-ui normal-case tracking-normal text-foreground transition-colors hover:border-muted-foreground/50"
+					className="mt-btn ml-1 rounded-full border px-2 py-0.5 font-ui normal-case tracking-normal"
 				>
 					{button}
 				</button>

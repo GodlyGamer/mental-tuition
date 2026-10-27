@@ -88,7 +88,7 @@ export function AbortTurnBody({
 						type="button"
 						data-testid="abort-turn-cancel"
 						onClick={onClose}
-						className="rounded-sm px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+						className="mt-iri rounded-sm px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
 					>
 						Cancel
 					</button>
@@ -97,7 +97,7 @@ export function AbortTurnBody({
 						data-testid="abort-turn-confirm"
 						onClick={onConfirm}
 						// Destructive red — the app's established destructive pair.
-						className="rounded-sm border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/20"
+						className="mt-iri rounded-sm border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/20"
 					>
 						{copy.action}
 					</button>
