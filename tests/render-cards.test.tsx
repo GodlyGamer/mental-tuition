@@ -27,7 +27,6 @@ import {
 	buildAnswer,
 	normalizeOptions,
 	resolveCorrect,
-	questionNeedsReveal,
 	type QuestionData,
 } from "../src/core/question-core.ts";
 
@@ -399,28 +398,10 @@ describe("math rendering (streamdown + KaTeX)", () => {
 	});
 });
 
-describe("teach-check reveal (W5 phase separation)", () => {
+describe("the question dock's collapsed bar (every question opens on arrival since 2026-10-27)", () => {
 	// The collapsed dock renders the bar AND the hidden form (it stays mounted
-	// so a half-made selection survives) — assertions target the bar species.
-	it("teach-phase check collapses into the invitation bar, not the scroll bar", () => {
-		const html = renderToStaticMarkup(
-				<QuestionDock
-					toolName="quiz"
-					toolCallId="t1"
-					input={quizInput as never}
-					expanded={false}
-					reveal
-					onExpand={() => {}}
-					onSubmit={() => {}}
-				/>,
-		);
-		assert.ok(html.includes('data-testid="teach-check-reveal"'), "invitation affordance present");
-		assert.match(html, /Check your understanding/);
-		assert.match(html, /Which planet is closest/, "question teaser invites, not minimizes");
-		assert.match(html, /Open/, "a clear reveal action");
-	});
-
-	it("probe questions keep the plain collapsed bar (no invitation copy)", () => {
+	// so a half-made selection survives) — assertions target the bar.
+	it("a scroll-collapsed question shows the plain bar (no reveal invitation)", () => {
 		const html = renderToStaticMarkup(
 				<QuestionDock
 					toolName="quiz"
@@ -432,13 +413,11 @@ describe("teach-check reveal (W5 phase separation)", () => {
 				/>,
 		);
 		assert.ok(html.includes('data-testid="question-dock-bar"'), "the scroll-collapse strip");
-		assert.ok(!html.includes("Check your understanding"), "no invitation copy outside teach phase");
+		assert.ok(!html.includes("Check your understanding"), "the reveal invitation is gone");
 		assert.match(html, /Answer/, "the strip keeps its Answer affordance");
 	});
 
-	it("after the reveal, the teach check renders the full form (probe default, unchanged)", () => {
-		// Post-click: expanded=true — exactly today's dock. The probe auto-open
-		// path renders the identical form; this is also the regression pin for it.
+	it("an open question renders the full form", () => {
 		const html = renderDock({ toolName: "quiz", toolCallId: "t1", input: quizInput as never });
 		assert.ok(html.includes('data-testid="question-dock"'), "the form is the dock's content once expanded");
 		assert.match(html, /Submit answer/);

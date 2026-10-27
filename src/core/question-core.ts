@@ -220,31 +220,15 @@ export function normalizeQuizType(raw: unknown): QuizQuestionType | undefined {
 	return v === "predict" ? "predict" : v === "check" ? "check" : undefined;
 }
 
-/** The reveal law as a pure predicate (owner 2026-10-03; explain joined
- *  2026-10-09): a teach-phase CHECK collapses behind the "Check your
- *  understanding" reveal — a prediction NEVER does (it precedes the
- *  teaching and gates it; collapsing it would invert the cycle), and
- *  neither do probe/plan questions or ask. Both teach quizzing tools
- *  (quiz and explain) obey the same law. chat.tsx calls this for its
- *  pending question; the reading-thinking field mounts on the same
- *  truth. Records that predate the `type` field carry none — they render
- *  as checks, the standing default. */
-export function questionNeedsReveal(tool: string, rawInput: unknown, phase: string): boolean {
-	if ((tool !== "quiz" && tool !== "explain") || phase !== "teach") return false;
-	return normalizeQuizType((rawInput as { type?: unknown } | null)?.type) !== "predict";
-}
-
 /** The teaching-cycle role field, shared VERBATIM by both teach quizzing
- *  tools (owner, 2026-10-09: explain gains the cycle's types — a
- *  free-recall check collapses behind the reveal exactly like a quiz
- *  check; a prediction never does). Bare words, never quoted (the
+ *  tools (owner, 2026-10-09: explain gains the cycle's types). Both
+ *  roles arrive open since 2026-10-27. Bare words, never quoted (the
  *  quote-copy wobble — see the whitehead pins, tests/tool-heal.test.ts). */
 const predictCheckType = Type.Union([Type.Literal("predict"), Type.Literal("check")], {
 	description:
 		"REQUIRED — the question's role in the teaching cycle, as a bare word (no quotes): predict = posed BEFORE " +
-		"you teach the step (its own turn; the learner answers, then your teaching resolves it — arrives open, never " +
-		"collapsed); check = posed AFTER the step's teaching is complete (arrives collapsed behind the Check your " +
-		"understanding reveal). ONE question per turn either way.",
+		"you teach the step (its own turn; the learner answers, then your teaching resolves it); check = posed AFTER " +
+		"the step's teaching is complete. Both arrive open. ONE question per turn either way.",
 });
 
 
@@ -339,8 +323,7 @@ export const explainInputObject = Type.Object({
 
 /** The DISPLAY parse for persisted explain calls (tool-parts.ts): the
  *  base + `type` as an OPTIONAL plain string — exactly the quiz display
- *  pattern. Old records carry none; questionNeedsReveal treats them as
- *  checks (the standing default). nodeId stays stripped (unknown key).
+ *  pattern. Old records carry none (they read as checks). nodeId stays stripped (unknown key).
  *  The PROBE recall parses against the bare base. */
 export const explainDisplayInputSchema = Type.Object({
 	...explainInputBase.properties,
@@ -413,8 +396,7 @@ export interface QuestionData {
 	id: string;
 	kind: QuestionKind;
 	/** quiz only (teach phase, owner 2026-10-03): the question's role in
-	 *  the cycle — predict (before the teaching, never collapsed) or check
-	 *  (after it, behind the reveal). Absent on probe quizzes and old
+	 *  the cycle — predict (before the teaching) or check (after it). Absent on probe quizzes and old
 	 *  records — everything check-shaped. */
 	questionType?: QuizQuestionType;
 	question: string;

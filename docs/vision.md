@@ -142,7 +142,7 @@ Goal: a learning session must look and feel structurally different from a ChatGP
 - **Probe** and **teach** are the two real phases; planning is not a phase, just a moment (maybe a small indicator).
 - The agent signals the probe→teach transition with a structured marker → **visible divider in the transcript**.
 - **Probe-phase questions auto-open** (as now — they are the substance of probing).
-- **Teaching-phase check questions start collapsed** behind a "Check your understanding" reveal button. Rationale: a question popping up mid-lesson pressures the learner to answer immediately; the learner should read the teaching first and open the check when ready.
+- ~~**Teaching-phase check questions start collapsed** behind a "Check your understanding" reveal button.~~ Superseded (owner, 2026-10-27): every question opens on arrival when the learner is at the bottom, and the reveal button and its reading-thinking field are gone.
 
 ### Interactive demos — teacher-authored artifacts (DECIDED direction)
 
