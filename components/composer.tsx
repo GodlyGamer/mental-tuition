@@ -10,22 +10,23 @@ import type { ChatPhoto } from "@/components/photo-utils";
 
 /**
  * The composer slab's shell (Hot Glass, SPEC §7): the darker glass panel,
- * 820px max, radius 30 (the 820px placement on Sidebar.html). Home and the
+ * 720px max, radius 24 (owner, 2026-10-28: smaller than the boards' 820px
+ * slab, radius 30). Home and the
  * draft wrap the Composer in it; the session's dock shell wears it too, so
  * the question and practice docks morph inside the same slab.
  */
-export const SLAB = "mt-panel-deep rounded-[30px]";
-/** The slab's column: an 820px slab inside 16px side padding, centered
+export const SLAB = "mt-panel-deep rounded-[24px]";
+/** The slab's column: a 720px slab inside 16px side padding, centered
  *  (home, draft and session alike — owner, 2026-10-27: nothing shifts when
- *  a session starts). chat.tsx's DOCK_W mirrors the 852. */
-export const SLAB_COLUMN = "mx-auto w-full max-w-[852px] px-4";
+ *  a session starts). chat.tsx's DOCK_W mirrors the 752. */
+export const SLAB_COLUMN = "mx-auto w-full max-w-[752px] px-4";
 
 /**
  * The composer — the slab's CONTENT (the shell lives with the caller, so
  * the session's shell can morph chat → question without remounting):
  *
  *   top   the caret bar (blinks in the empty slab until focus) and the big
- *         thin input — Geist 300 at 22px.
+ *         thin input — Geist 300 at 17px.
  *   tray  Attach (round glass, paperclip) · Dictate (the glass pill with
  *         the level meter) · spacer · the caller's quiet buttons (module,
  *         model, thinking — and Teach/Practice on home) · Send (round
@@ -128,7 +129,7 @@ export function Composer({
 	return (
 		<form
 			data-testid="composer"
-			className={cn("flex flex-col", dragging && "rounded-[30px] ring-2 ring-ring/60")}
+			className={cn("flex flex-col", dragging && "rounded-[24px] ring-2 ring-ring/60")}
 			onSubmit={(e) => {
 				e.preventDefault();
 				act();
@@ -159,7 +160,7 @@ export function Composer({
 			)}
 			{/* The top: the caret bar blinks while the slab is empty and
 			    unfocused (focus-within hides it — the real caret takes over). */}
-			<div className="group/top flex items-center gap-3.5 px-7 pb-5 pt-[22px]">
+			<div className="group/top flex items-center gap-3 px-6 pb-3.5 pt-[14px]">
 			{!value && <span className="mt-caret group-focus-within/top:hidden" aria-hidden />}
 			<textarea
 				ref={inputRef}
@@ -194,10 +195,10 @@ export function Composer({
 				placeholder={placeholder}
 				autoFocus={autoFocus}
 				rows={1}
-				className="field-sizing-content mt-slab-input max-h-48 min-h-[29px] min-w-0 flex-1 resize-none bg-transparent p-0 outline-none"
+				className="field-sizing-content mt-slab-input max-h-48 min-h-[22px] min-w-0 flex-1 resize-none bg-transparent p-0 outline-none"
 			/>
 			</div>
-			<div className="mt-tray mx-2 mb-2 flex items-center gap-2 rounded-[24px] p-[9px]">
+			<div className="mt-tray mx-2 mb-2 flex items-center gap-2 rounded-[18px] p-[7px]">
 			{onAddPhotos && <PlusMenu onAddPhotos={onAddPhotos} variant="attach" />}
 			{dictation && <DictatePill dictation={dictation} />}
 			<span className="grow" />
@@ -221,7 +222,7 @@ export function Composer({
 						type="submit"
 						data-testid="next-problem-button"
 						aria-label="Next problem"
-						className="mt-iri flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-green-600 px-4 font-ui text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-green-500"
+						className="mt-iri flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-green-600 px-4 font-ui text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-green-500"
 					>
 						Next problem
 						<ArrowRightIcon className="size-4" />
@@ -236,7 +237,7 @@ export function Composer({
 						aria-label={stop ? "Stop" : (sendLabel ?? "Send")}
 						disabled={!busy && !canSend}
 						className={cn(
-							"flex size-10 shrink-0 items-center justify-center rounded-full disabled:opacity-40",
+							"flex size-[34px] shrink-0 items-center justify-center rounded-full disabled:opacity-40",
 							stop ? "mt-btn" : "mt-btn-primary",
 						)}
 					>
@@ -355,7 +356,7 @@ export function PlusMenu({
 						aria-expanded={open}
 						data-testid="composer-plus"
 						onClick={() => setOpen((o) => !o)}
-						className={cn("mt-btn flex size-10 items-center justify-center rounded-full", open && "mt-held")}
+						className={cn("mt-btn flex size-[34px] items-center justify-center rounded-full", open && "mt-held")}
 					>
 						<PaperclipIcon className="size-[18px]" strokeWidth={1.5} />
 					</button>

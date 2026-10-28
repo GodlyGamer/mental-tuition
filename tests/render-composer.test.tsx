@@ -51,9 +51,9 @@ describe("Composer", () => {
 		assert.ok(idleStop.includes('aria-label="Stop"'), "empty composer: stop replaces send while streaming");
 	});
 
-	it("send is the round white primary, 40px, in the slab's tray (Hot Glass)", () => {
+	it("send is the round white primary, 34px, in the slab's tray (Hot Glass)", () => {
 		const html = render();
-		assert.match(html, /class="[^"]*size-10[^"]*rounded-full[^"]*mt-btn-primary[^"]*"/, "round 40px primary");
+		assert.match(html, /class="[^"]*size-\[34px\][^"]*rounded-full[^"]*mt-btn-primary[^"]*"/, "round 34px primary");
 		assert.ok(html.includes("mt-tray"), "the tray holds the controls");
 	});
 

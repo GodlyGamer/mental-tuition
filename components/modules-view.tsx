@@ -93,13 +93,13 @@ export function ModulesView() {
 	return (
 		<div className="relative flex h-dvh flex-col overflow-hidden">
 			<div className="mt-drag absolute inset-x-0 top-0 h-13" aria-hidden="true" />
-			<header className="mt-wco-gutter flex h-15 shrink-0 items-center gap-3 border-b border-border px-3">
+			<header className="mt-wco-gutter flex h-11 shrink-0 items-center gap-3 border-b border-border px-3">
 				{!sidebarOpen && (
 					<div className="mt-closed-toggle">
 						<SidebarToggle />
 					</div>
 				)}
-				<h1 className="font-title truncate text-2xl">Modules</h1>
+				<h1 className="font-title truncate text-xl">Modules</h1>
 			</header>
 			<main className="min-h-0 flex-1 overflow-y-auto">
 				<div className="mx-auto flex max-w-4xl flex-col gap-5 px-5 py-6">

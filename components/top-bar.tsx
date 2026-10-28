@@ -10,7 +10,7 @@
  * never a bespoke header.
  *
  * Mechanics baked in (the chat-session bar's proven pattern):
- * - h-15 (60px) — matches the sidebar's wordmark band, one border line.
+ * - h-11 (44px) — the thin bar (owner, 2026-10-28; was 60px).
  * - mt-drag — the window-drag band. NATIVE interactive children
  *   (button/input/a/…) carve out AUTOMATICALLY via the globals.css auto
  *   carve-out rule (owner standardization ruling, 2026-09-29 night) —
@@ -53,7 +53,7 @@ export function TopBar({
 	return (
 		<header
 			onMouseDown={onMouseDown}
-			className={`${drag ? "mt-drag " : ""}mt-wco-gutter flex h-15 select-none items-center gap-3 border-b border-border px-3`}
+			className={`${drag ? "mt-drag " : ""}mt-wco-gutter flex h-11 select-none items-center gap-3 border-b border-border px-3`}
 		>
 			<SidebarToggle />
 			{children}

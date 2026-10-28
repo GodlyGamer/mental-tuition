@@ -102,7 +102,7 @@ const DOCK = SLAB_COLUMN;
 // the fade floor (owner, resize round) — below it the marginalia fades
 // out over the normal transition instead of popping away, and it stays
 // mounted while the question owns the band so widening fades it back.
-const DOCK_W = 852;
+const DOCK_W = 752;
 const MARGIN_GAP = 16;
 const MARGIN_MIN_W = 220;
 // The dock overlay's gradient band (h-24) — part of the reserved tail.
@@ -1203,12 +1203,11 @@ export function Chat({
 				    above the scroller on the plain page background — no gradient. Its
 				    bottom outline (border-b border-border) matches the one that
 				    separates the left sidebar — same width, same color (owner, r5).
-				    h-15 (60px), not py-2: the toggle (a size-9 icon button) renders
+				    h-11 (44px), not py-2: the toggle (a size-9 icon button) renders
 				    only while the sidebar is CLOSED — an auto-height row would
 				    collapse when it disappears and slide the title + chip up.
-				    60px is an ALIGNMENT, not just a size: it equals the sidebar's
-				    wordmark band, so the header's border-b continues that
-				    band's bottom edge as one line across the app (owner, round 6). */}
+				    44px since 2026-10-28 (owner: a thinner bar; it was 60px to
+				    line up with the old sidebar's wordmark band). */}
 				<TopBar
 					// While renaming the bar is NOT a drag surface: app-region:drag
 					// would eat the mousedown, so click-to-escape (below) could
@@ -1242,7 +1241,7 @@ export function Chat({
 								spellCheck={false}
 								aria-label="Session title"
 								title="Rename this session"
-								className="mt-no-drag min-w-[8ch] max-w-[70%] shrink-0 bg-transparent font-title text-3xl tracking-tight caret-current outline-none [field-sizing:content]"
+								className="mt-no-drag min-w-[8ch] max-w-[70%] shrink-0 bg-transparent font-title text-xl tracking-tight caret-current outline-none [field-sizing:content]"
 							/>
 							{/* flex-1 spacer during rename too, so the chips stay at
 							    the right edge; clicks here commit via the header
@@ -1263,7 +1262,7 @@ export function Chat({
 								setTitleDraft(titleText);
 								setRenaming(true);
 							}}
-							className="mt-no-drag -mx-1.5 min-w-4 shrink cursor-text truncate rounded-md px-1.5 text-left font-title text-3xl tracking-tight transition-colors hover:bg-accent"
+							className="mt-no-drag -mx-1.5 min-w-4 shrink cursor-text truncate rounded-md px-1.5 text-left font-title text-xl tracking-tight transition-colors hover:bg-accent"
 						>
 							{titleText}
 							</button>

@@ -490,7 +490,7 @@ export function DictatePill({ dictation }: { dictation: Dictation }) {
 				aria-pressed={active}
 				aria-label={active ? "Stop dictation" : error ? `Dictation failed: ${error}` : "Start dictation"}
 				data-testid="dictation-toggle"
-				className={`mt-btn flex h-10 min-w-[200px] max-w-[260px] shrink items-center justify-start gap-2 rounded-full px-4 text-[13.5px] ${active ? "mt-held" : ""}`}
+				className={`mt-btn flex h-[34px] min-w-[200px] max-w-[260px] shrink items-center justify-start gap-2 rounded-full px-4 text-[13.5px] ${active ? "mt-held" : ""}`}
 				style={{ color: active ? "var(--mt-dictate-on-ink)" : "var(--mt-dictate-ink)" }}
 			>
 				{phase === "stopping" ? (
