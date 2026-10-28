@@ -148,7 +148,7 @@
 	/* Frosted white glass, dark primary, deeper spectrum (Themes.html). */
 	--mt-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66) 26%, rgba(255, 255, 255, 0.55) 60%, rgba(255, 255, 255, 0.75)), rgba(245, 245, 247, 0.5);
 	--mt-panel-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 2px 1px -1px #ffffff, inset 0 -1.5px 1px -0.5px #ffffff, 0 20px 40px rgba(0, 0, 0, 0.1);
-	/* The composer (first values; Light/Nocturne tuning is wave 6). */
+	/* The composer: Light and Nocturne reuse the panel recipe (Composer.html is dark-only, Themes.html tunes the rest). */
 	--mt-panel-deep-bg: var(--mt-panel-bg);
 	--mt-panel-deep-shadow: var(--mt-panel-shadow);
 	--mt-btn-deep-ink: var(--mt-btn-ink);
@@ -205,7 +205,7 @@
 	/* Cobalt glass, pink caustic, pastel spectrum (Themes.html). */
 	--mt-panel-bg: linear-gradient(180deg, rgba(200, 215, 255, 0.14), rgba(170, 190, 255, 0.07) 22%, rgba(140, 160, 255, 0.04) 55%, rgba(255, 190, 225, 0.08)), rgba(14, 24, 84, 0.6);
 	--mt-panel-shadow: 0 0 0 1px rgba(2, 6, 30, 0.6), inset 0 2px 1px -1px rgba(230, 236, 255, 0.6), inset 0 -1.5px 1px -0.5px rgba(255, 190, 225, 0.3), 0 24px 48px rgba(2, 6, 30, 0.55);
-	/* The composer (first values; Light/Nocturne tuning is wave 6). */
+	/* The composer: Light and Nocturne reuse the panel recipe (Composer.html is dark-only, Themes.html tunes the rest). */
 	--mt-panel-deep-bg: var(--mt-panel-bg);
 	--mt-panel-deep-shadow: var(--mt-panel-shadow);
 	--mt-btn-deep-ink: var(--mt-btn-ink);
