@@ -365,7 +365,7 @@ export function parseModelsSettingsBody(body: unknown): SettingsBodyResult<Model
  *  thresholdTokens must be a number at or above the floor (the floor is
  *  anti-churn: each compaction keeps a ~20k-token recent tail, so a
  *  smaller threshold would re-summarize the tail it just wrote). Absent =
- *  factory default 150k at resolution. Replace-whole, like every
+ *  factory default (80k) at resolution. Replace-whole, like every
  *  section. */
 export function parseCompactionSettingsBody(body: unknown): SettingsBodyResult<CompactionSettings> {
 	const raw = asRecord(body);

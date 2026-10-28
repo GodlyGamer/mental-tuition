@@ -14,7 +14,11 @@
  *     whole instruction set;
  *   - the transcript so far is replayed as one user message (the SDK takes
  *     no prior assistant turns), with each earlier message in its own
- *     content block so the prefix stays cache-friendly.
+ *     content block. Nothing follows the newest message, so every request
+ *     extends the previous one and Claude Code's cache breakpoint on the
+ *     last block is read back on the next call (2026-10-28: a closing
+ *     trailer block used to end each request, so only the system prompt
+ *     and tools ever hit the cache).
  * Stream events (text, thinking, tool calls) are mapped onto pi's
  * AssistantMessageEvent protocol, so every agent and the UI bridge work
  * unchanged.
@@ -60,7 +64,7 @@ const MCP_PREFIX = `mcp__${MCP_SERVER}__`;
 export const TRANSCRIPT_NOTE = `
 
 # How this conversation reaches you
-The conversation so far arrives as one message holding a transcript. <learner> blocks are the learner's messages, <you> blocks are your own earlier replies, <tool_call> blocks are tools you called, and <tool_result> blocks are what those calls returned. Continue from the end of the transcript with your next reply. To use a tool, call it through the tool interface; never write <tool_call> or <tool_result> tags yourself.`;
+The conversation so far arrives as one message of tagged blocks, oldest first. <learner> blocks are the learner's messages, <you> blocks are your own earlier replies, <tool_call> blocks are tools you called, and <tool_result> blocks are what those calls returned. The last block is the newest; write your next reply from there. To use a tool, call it through the tool interface; never write <tool_call> or <tool_result> tags yourself.`;
 
 /** Gemini's note. Its history shows earlier tool calls as plain sentences,
  *  never as tags: a model that sees tag-shaped calls in its own history
@@ -68,7 +72,7 @@ The conversation so far arrives as one message holding a transcript. <learner> b
 export const TRANSCRIPT_NOTE_PROSE = `
 
 # How this conversation reaches you
-The conversation so far arrives as one message holding a transcript. <learner> blocks are the learner's messages, <you> blocks are your own earlier replies. Tool use and its results appear as plain sentences inside the transcript ("You used the quiz tool with …", "The quiz tool returned …"). Continue from the end of the transcript with your next reply. To use a tool, call it through the tool interface only; never write tool calls or results as text.`;
+The conversation so far arrives as one message of tagged blocks, oldest first. <learner> blocks are the learner's messages, <you> blocks are your own earlier replies. Tool use and its results appear as plain sentences between them ("You used the quiz tool with …", "The quiz tool returned …"). The last block is the newest; write your next reply from there. To use a tool, call it through the tool interface only; never write tool calls or results as text.`;
 
 export function claudeCodeProvider(anthropicModels: readonly Model<Api>[]): Provider {
 	const models = SUBSCRIPTION_MODEL_IDS.flatMap((id) => {
@@ -155,20 +159,18 @@ function imageBlock(img: ImageContent): PromptBlock {
 }
 
 /**
- * The transcript as prompt blocks. A lone user message (every fresh
- * sub-agent run) goes through verbatim; anything with history is wrapped
- * in the tag notation TRANSCRIPT_NOTE explains. Thinking from earlier
- * turns is not replayed (its signatures only bind to native history).
+ * The transcript as prompt blocks, one per message in the tag notation
+ * TRANSCRIPT_NOTE explains (a lone first message too), and nothing after
+ * the newest message: call N's blocks are then an exact prefix of call
+ * N+1's, which is what lets the prompt cache carry the history forward.
+ * One step adds a few blocks (a reply, its tool results, at most a few
+ * images), well inside the cache's 20-block lookback. Thinking from
+ * earlier turns is not replayed (its signatures only bind to native
+ * history).
  */
 export function transcriptBlocks(messages: readonly Message[], style: "tags" | "prose" = "tags"): PromptBlock[] {
-	const convo = messages.filter((m) => m.role !== "system");
-	const only = convo.length === 1 ? convo[0] : undefined;
-	if (only?.role === "user") {
-		if (typeof only.content === "string") return [{ type: "text", text: only.content }];
-		return only.content.map((c): PromptBlock => (c.type === "text" ? { type: "text", text: c.text } : imageBlock(c)));
-	}
-	const blocks: PromptBlock[] = [{ type: "text", text: "<transcript>" }];
-	for (const m of convo) {
+	const blocks: PromptBlock[] = [];
+	for (const m of messages) {
 		if (m.role === "user") {
 			blocks.push({ type: "text", text: `<learner>\n${textOf(m.content)}\n</learner>` });
 			if (typeof m.content !== "string") for (const c of m.content) if (c.type === "image") blocks.push(imageBlock(c));
@@ -196,7 +198,6 @@ export function transcriptBlocks(messages: readonly Message[], style: "tags" | "
 			for (const c of m.content) if (c.type === "image") blocks.push(imageBlock(c));
 		}
 	}
-	blocks.push({ type: "text", text: "</transcript>\n\nContinue with your next reply." });
 	return blocks;
 }
 

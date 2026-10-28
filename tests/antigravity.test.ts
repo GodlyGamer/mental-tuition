@@ -57,7 +57,7 @@ describe("the Gemini (Google sign-in, Antigravity) engine", () => {
 		const call = message.content.find((c) => c.type === "toolCall") as unknown as { name: string; arguments: { question: string; options: string[] } };
 		assert.equal(call.name, "quiz");
 		assert.deepEqual(call.arguments.options, ["a", "b"]);
-		assert.match(call.arguments.question, /Echo: Teach me limits\./, "the transcript reached Gemini as the prompt");
+		assert.match(call.arguments.question, /Echo: <learner>\nTeach me limits\./, "the transcript reached Gemini as the prompt");
 		assert.deepEqual(message.usage.input, 600, "input excludes cached reads");
 		assert.equal(message.usage.cacheRead, 400);
 		assert.equal(message.usage.output, 100, "output includes thinking");

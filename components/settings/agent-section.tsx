@@ -13,7 +13,10 @@
  * pick — ModelMenuList/ThinkingMenuList from ./model-menu.tsx) over the
  * FEDERATED catalog (/api/models serves only keyed providers, fresh per
  * call — saving a key in Keys immediately widens this picker). The
- * vision slot filters to image-capable models (Model.input). The slots
+ * vision slot filters to image-capable models (Model.input). The Cheap
+ * row picks only its model (owner, 2026-10-28): its four roles each get
+ * a thinking sub-row, starting from BACKGROUND_THINKING_DEFAULTS, that
+ * writes agent.models[role].thinkingLevel. The slots
  * live in the `models` settings section (PUT /api/settings/models — slot
  * pins are engine-level, not per-chat); the rest of the section writes
  * the `agent` section as before. Resolution per tier: slot override →
@@ -51,16 +54,20 @@
  * missing (the toggle painted its old state until a remount re-fetched).
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { MenuShell } from "@/components/menu-shell";
 import { useSettingsSaved } from "@/components/settings-signal";
 import { defaultOrderLevel, populateLevel } from "@/components/thinking-default";
 import type React from "react";
 import {
+	BACKGROUND_MODEL_ROLES,
+	BACKGROUND_THINKING_DEFAULTS,
 	COMPACTION_THRESHOLD_FLOOR,
 	MODEL_SLOTS,
+	ROLE_SLOT,
 	resolveSettings,
 	type AgentSettings,
+	type BackgroundModelRole,
 	type CompactionSettings,
 	type GraphSettings,
 	type ModelCatalogEntry,
@@ -79,6 +86,18 @@ const SLOT_META: Record<ModelSlotName, { label: string; roster: string }> = {
 	strong: { label: "Strong", roster: "The main model for your sessions" },
 	cheap: { label: "Cheap", roster: "The assistants that research, build demos, and grade your work" },
 	vision: { label: "Vision", roster: "The assistants that draw and read PDFs" },
+};
+
+/** The Cheap tier's roles, each with its own thinking level (owner,
+ *  2026-10-28): the Cheap row picks only the model; these sub-rows pick
+ *  the levels, starting from BACKGROUND_THINKING_DEFAULTS. */
+const CHEAP_ROLES = BACKGROUND_MODEL_ROLES.filter((r) => ROLE_SLOT[r] === "cheap");
+const ROLE_LABEL: Record<BackgroundModelRole, string> = {
+	researcher: "Researcher",
+	demoBuilder: "Demo builder",
+	visualMaker: "Visual maker",
+	extractor: "Extractor",
+	auditor: "Auditor",
 };
 
 /** The search engines this wave ships (src/core/search.ts) + their labels. */
@@ -166,6 +185,15 @@ export function composeSlotModel(
 		...(thinking ? { thinkingLevel: thinking as ThinkingLevel } : {}),
 	};
 	return next;
+}
+
+/** Compose: one background role's thinking override, its model override
+ *  (if any) carried verbatim. Pure — exported for tests. */
+export function composeRoleThinking(agent: AgentSettings | undefined, role: BackgroundModelRole, level: string): AgentSettings {
+	return {
+		...agent,
+		models: { ...agent?.models, [role]: { ...agent?.models?.[role], thinkingLevel: level as ThinkingLevel } },
+	};
 }
 
 /** Compose: the search-engine preference. null = the explicit pin is
@@ -329,7 +357,10 @@ export function AgentSection({
 	const [segmentStatus, setSegmentStatus] = useState<string | null>(null);
 	/** One open dropdown for the whole section: which slot (or the search
 	 *  row), which kind. */
-	const [openMenu, setOpenMenu] = useState<{ target: ModelSlotName | "search"; kind: "model" | "thinking" | "engine" } | null>(null);
+	const [openMenu, setOpenMenu] = useState<{
+		target: ModelSlotName | BackgroundModelRole | "search";
+		kind: "model" | "thinking" | "engine";
+	} | null>(null);
 	const menuAnchorRef = useRef<HTMLSpanElement>(null);
 
 	const refreshSearch = () =>
@@ -641,8 +672,8 @@ export function AgentSection({
 					const slotCatalog =
 						slot === "vision" ? catalog?.filter((m) => m.input.includes("image")) : catalog;
 					return (
+						<Fragment key={slot}>
 						<SettingsRow
-							key={slot}
 							label={SLOT_META[slot].label}
 							hint={SLOT_META[slot].roster}
 							testid={`slot-row-${slot}`}
@@ -662,18 +693,21 @@ export function AgentSection({
 									onClick={() => setOpenMenu(thisMenuOpen === "model" ? null : { target: slot, kind: "model" })}
 									widthClass="min-w-20"
 								/>
-								<MenuTrigger
-									// Legacy display (chunk 2 item 4): no stored level + a known
-									// model → the RESOLVED level (the ordering's first supported —
-									// what the engine build runs). Display-only until a pick writes.
-									value={thinking || (chosen ? defaultOrderLevel(levels) : "")}
-									emptyLabel="—"
-									ariaLabel={`${SLOT_META[slot].label} thinking`}
-									testid={`slot-thinking-${slot}`}
-									open={thisMenuOpen === "thinking"}
-									onClick={() => setOpenMenu(thisMenuOpen === "thinking" ? null : { target: slot, kind: "thinking" })}
-									widthClass="w-20"
-								/>
+								{/* The Cheap tier's levels live on its role sub-rows. */}
+								{slot !== "cheap" && (
+									<MenuTrigger
+										// Legacy display (chunk 2 item 4): no stored level + a known
+										// model → the RESOLVED level (the ordering's first supported —
+										// what the engine build runs). Display-only until a pick writes.
+										value={thinking || (chosen ? defaultOrderLevel(levels) : "")}
+										emptyLabel="—"
+										ariaLabel={`${SLOT_META[slot].label} thinking`}
+										testid={`slot-thinking-${slot}`}
+										open={thisMenuOpen === "thinking"}
+										onClick={() => setOpenMenu(thisMenuOpen === "thinking" ? null : { target: slot, kind: "thinking" })}
+										widthClass="w-20"
+									/>
+								)}
 								{thisMenuOpen === "model" && (
 									<MenuShell
 										preferredSide="down"
@@ -722,6 +756,54 @@ export function AgentSection({
 								)}
 							</span>
 						</SettingsRow>
+						{slot === "cheap" &&
+							CHEAP_ROLES.map((role) => {
+								const roleOverride = agent?.models?.[role];
+								const roleLevel = roleOverride?.thinkingLevel ?? BACKGROUND_THINKING_DEFAULTS[role] ?? "";
+								// A role's own model override (settings file only) governs
+								// its level list, else the Cheap tier's model.
+								const roleCoord = roleOverride?.model ?? coord;
+								const roleModel = roleCoord
+									? catalog?.find((m) => m.id === roleCoord.id && m.provider === roleCoord.provider)
+									: undefined;
+								const roleLevels = roleModel ? roleModel.supportedLevels : THINKING_LEVELS;
+								const roleMenuOpen = openMenu?.target === role && openMenu.kind === "thinking";
+								return (
+									<div key={role} className="pl-4">
+										<SettingsRow label={ROLE_LABEL[role]} testid={`role-row-${role}`}>
+											<span ref={roleMenuOpen ? menuAnchorRef : undefined} className="relative flex items-center">
+												<MenuTrigger
+													value={roleLevel}
+													emptyLabel="—"
+													ariaLabel={`${ROLE_LABEL[role]} thinking`}
+													testid={`role-thinking-${role}`}
+													open={roleMenuOpen}
+													onClick={() => setOpenMenu(roleMenuOpen ? null : { target: role, kind: "thinking" })}
+													widthClass="w-20"
+												/>
+												{roleMenuOpen && (
+													<MenuShell
+														preferredSide="down"
+														anchorTestid={`role-thinking-${role}`}
+														testid={`role-thinking-menu-${role}`}
+														menuClass="flex w-44 flex-col gap-0.5 rounded-xl border border-border bg-card p-2 text-xs shadow-xl"
+													>
+														<ThinkingMenuList
+															levels={roleLevels.map(String)}
+															effectiveLevel={roleLevel || undefined}
+															onPick={(level) => {
+																onSectionChange(composeRoleThinking(agent, role, level));
+																setOpenMenu(null);
+															}}
+														/>
+													</MenuShell>
+												)}
+											</span>
+										</SettingsRow>
+									</div>
+								);
+							})}
+						</Fragment>
 					);
 				})}
 			</SettingsGroup>

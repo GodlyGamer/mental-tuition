@@ -50,6 +50,17 @@ export const BACKGROUND_MODEL_ROLES = [
 
 export type BackgroundModelRole = (typeof BACKGROUND_MODEL_ROLES)[number];
 
+/** The cheap tier's roles each start from their own thinking level
+ *  (owner, 2026-10-28: graph writes need less than research does), so
+ *  the Cheap slot carries no level of its own. Resolution per role:
+ *  override → this default → slot. visualMaker keeps the vision slot's. */
+export const BACKGROUND_THINKING_DEFAULTS: Readonly<Partial<Record<BackgroundModelRole, ThinkingLevel>>> = {
+	researcher: "medium",
+	demoBuilder: "medium",
+	extractor: "low",
+	auditor: "medium",
+};
+
 /** A per-role model/thinking override — every field independent (absent
  *  field = that aspect falls back to config.ts's pin for the role). */
 export interface RoleModelOverride {
@@ -349,11 +360,13 @@ export interface GraphSettings {
 	 *  carries the whole graph + instructions, so a smaller budget means
 	 *  more, smaller runs — each paying that fixed overhead).
 	 *
-	 *  FACTORY DEFAULT 4096 (owner, 2026-10-13: halved back from the
-	 *  digest-era 8192 — the labeled passages + message anchors made
-	 *  smaller batches worth their overhead again; the pre-setting
-	 *  constant was 4096, vision-extraction-coverage.md, 2026-09-15).
-	 *  Only the FACTORY moves: an explicit user value always wins.
+	 *  SESSION-END EXTRACTION (owner, 2026-10-28): a chat now extracts
+	 *  30 minutes after its last turn (server/extraction-schedule.ts), so
+	 *  this budget is the mid-session CAP — a long session still runs
+	 *  once its uncovered tokens reach it — and the largest batch a run
+	 *  takes. FACTORY DEFAULT 32768 (owner, 2026-10-28; was 4096): most
+	 *  sessions extract once. Only the FACTORY moves: an explicit user
+	 *  value always wins.
 	 *
 	 *  FLOOR 500 (EXTRACTION_CHUNK_TOKENS_FLOOR, the implementer's call
 	 *  per the owner's dispatch): every run pays the graph-carrying
@@ -373,7 +386,8 @@ export interface GraphSettings {
  * (owner ruling: on big models the setting rules; on small ones the
  * window rules before the provider overflows).
  *
- * FACTORY DEFAULT 150_000 (owner ruling).
+ * FACTORY DEFAULT 80_000 (owner, 2026-10-28; was 150_000): every call
+ * re-reads the whole context, cached or not.
  *
  * FLOOR 32_000 (implementer's call, the chunk-budget discipline): below
  * the kept tail (20k) + a summary the chat would re-compact every turn —
@@ -449,8 +463,8 @@ export const FACTORY_SETTINGS: FactorySettings = {
 		sessionNameSerif: false,
 		mdRendering: { headingWeight: 700, boldColor: null, italicColor: null },
 	},
-	graph: { enabled: true, rendering: true, extractionChunkTokens: 4096 },
-	compaction: { thresholdTokens: 150_000 },
+	graph: { enabled: true, rendering: true, extractionChunkTokens: 32_768 },
+	compaction: { thresholdTokens: 80_000 },
 };
 
 /** The chunk budget's validated floor (GraphSettings.extractionChunkTokens

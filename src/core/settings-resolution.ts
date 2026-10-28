@@ -28,6 +28,7 @@ import type { ChatSettings } from "./contracts/chat.ts";
 import type { SearchEngineId } from "./search.ts";
 import {
 	BACKGROUND_MODEL_ROLES,
+	BACKGROUND_THINKING_DEFAULTS,
 	FACTORY_SETTINGS,
 	MODEL_SLOTS,
 	ROLE_SLOT,
@@ -92,7 +93,7 @@ export interface EffectiveSettings {
 	appearance: EffectiveAppearance;
 	graph: Required<GraphSettings>;
 	/** Compaction (owner round 14): resolved concrete — absent record
-	 *  section resolves to the factory 150k. */
+	 *  section resolves to the factory threshold. */
 	compaction: Required<CompactionSettings>;
 }
 
@@ -140,7 +141,9 @@ export function resolveSlot(slot: ModelSlot | undefined): EffectiveSlot | null {
  *  borrow only the slot's model, or only its thinking budget — a level
  *  with no model anywhere stays unset and the engine build resolves it
  *  from DEFAULT_THINKING_ORDER). undefined = no model resolved; the
- *  per-need refusal gates fire on exactly that. */
+ *  per-need refusal gates fire on exactly that. The cheap tier's roles
+ *  put their own factory level (BACKGROUND_THINKING_DEFAULTS) between
+ *  the override and the slot (owner, 2026-10-28). */
 export function resolveModelSpec(
 	role: ModelRole,
 	override: RoleModelOverride | undefined,
@@ -153,7 +156,8 @@ export function resolveModelSpec(
 	return {
 		provider: model.provider,
 		id: model.id,
-		thinkingLevel: override?.thinkingLevel ?? slot?.thinkingLevel,
+		thinkingLevel:
+			override?.thinkingLevel ?? BACKGROUND_THINKING_DEFAULTS[role as BackgroundModelRole] ?? slot?.thinkingLevel,
 	};
 }
 
@@ -212,7 +216,7 @@ export function resolveSettings(record: UserSettings | null): EffectiveSettings 
 			rendering: graph.rendering ?? FACTORY_SETTINGS.graph.rendering,
 			// The chunk budget (extraction-UX redesign, 2026-09-24): absent
 			// (pre-redesign record, fresh install) resolves to the factory
-			// 4096; the sanitizer has already clamped/floored any stored value.
+			// value; the sanitizer has already clamped/floored any stored value.
 			extractionChunkTokens: graph.extractionChunkTokens ?? FACTORY_SETTINGS.graph.extractionChunkTokens,
 		},
 		compaction: {

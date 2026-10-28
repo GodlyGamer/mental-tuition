@@ -12,7 +12,7 @@ import React from "react";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TOGGLE_TOOLS, AgentSection } from "../components/settings/agent-section.tsx";
+import { TOGGLE_TOOLS, AgentSection, composeRoleThinking } from "../components/settings/agent-section.tsx";
 import { AppearanceSection, GraphSection } from "../components/settings/appearance-section.tsx";
 import { KeysSection } from "../components/settings/keys-section.tsx";
 import { KeyboardSection } from "../components/settings/keyboard-section.tsx";
@@ -67,7 +67,8 @@ describe("AgentSection (thin SSR)", () => {
 			// The shared model-picker dropdown as the opened menu (owner,
 			// 2026-09-20), the thin trigger as the collapsed look.
 			assert.ok(html.includes(`data-testid="slot-model-${slot}"`), `${slot} model trigger`);
-			assert.ok(html.includes(`data-testid="slot-thinking-${slot}"`), `${slot} thinking trigger`);
+			// The Cheap tier's levels live on its role sub-rows (2026-10-28).
+			assert.equal(html.includes(`data-testid="slot-thinking-${slot}"`), slot !== "cheap", `${slot} thinking trigger`);
 			// the roster hint rides every row
 			assert.ok(html.includes("The main model for your sessions") || slot !== "strong", "strong roster");
 		}
@@ -76,14 +77,39 @@ describe("AgentSection (thin SSR)", () => {
 		// carries a Default row (menu-default testid is retired).
 		assert.equal((html.match(/>Default<\/span>/g) ?? []).length, 0, "no Default trigger");
 		assert.ok(!html.includes('data-testid="menu-default"'), "no Default row");
-		assert.equal((html.match(/>—<\/span>/g) ?? []).length, 6, "three slots × two — triggers");
-		// the per-role rows are GONE (slots-only)
-		for (const role of ["researcher", "demoBuilder", "visualMaker"]) {
-			assert.ok(!html.includes(`data-testid="role-row-${role}"`), `${role} retired`);
-		}
+		assert.equal((html.match(/>—<\/span>/g) ?? []).length, 5, "three model + two thinking — triggers");
+		// per-role rows: only the Cheap tier's thinking sub-rows
+		assert.ok(!html.includes('data-testid="role-row-visualMaker"'), "visualMaker has no row");
 		assert.ok(html.includes('data-testid="group-models"'), "Models sub-group");
 		assert.ok(html.includes('data-testid="group-tools"'), "Tools sub-group");
 		assert.ok(html.includes('data-testid="group-prompts"'), "System prompts sub-group");
+	});
+
+	it("the Cheap tier's roles each get a thinking picker, showing the override else the factory level (2026-10-28)", () => {
+		const html = renderToStaticMarkup(
+			<AgentSection
+				agent={{ models: { auditor: { thinkingLevel: "high" } } }}
+				models={undefined}
+				graph={undefined}
+				onSectionChange={() => {}}
+				onModelsChange={() => {}}
+			/>,
+		);
+		const shown = { researcher: "medium", demoBuilder: "medium", extractor: "low", auditor: "high" };
+		for (const [role, level] of Object.entries(shown)) {
+			assert.ok(html.includes(`data-testid="role-row-${role}"`), `${role} row`);
+			const trigger = html.slice(html.indexOf(`data-testid="role-thinking-${role}"`));
+			assert.match(trigger.slice(0, trigger.indexOf("</button>")), new RegExp(`>${level}</span>`), `${role} shows ${level}`);
+		}
+	});
+
+	it("composeRoleThinking writes one role's level and keeps its model override", () => {
+		const agent = { tools: { research: false }, models: { extractor: { model: { provider: "zai", id: "m" } } } };
+		assert.deepEqual(composeRoleThinking(agent, "extractor", "medium"), {
+			tools: { research: false },
+			models: { extractor: { model: { provider: "zai", id: "m" }, thinkingLevel: "medium" } },
+		});
+		assert.deepEqual(composeRoleThinking(undefined, "auditor", "low"), { models: { auditor: { thinkingLevel: "low" } } });
 	});
 
 	it("the search-engine row renders with its live reason (search wave 2026-09-20)", () => {
@@ -203,9 +229,9 @@ describe("GraphSection — master switch + chunk budget (wave 7 + 2026-10-02)", 
 	it("the chunk-budget row: unset shows EMPTY with the factory placeholder + hint — one truth with the trigger", () => {
 		const html = renderToStaticMarkup(<GraphSection graph={undefined} onSectionChange={() => {}} />);
 		const input = tagOf(html, "input-chunk-tokens");
-		assert.ok(input.includes('placeholder="4096"'), "the placeholder IS the resolved factory default");
-		assert.ok(!/value="\d/.test(input), "unset renders EMPTY, not a materialized 4096");
-		assert.ok(html.includes(">4096 tok</"), "the hint reports the resolved truth");
+		assert.ok(input.includes('placeholder="32768"'), "the placeholder IS the resolved factory default");
+		assert.ok(!/value="\d/.test(input), "unset renders EMPTY, not a materialized default");
+		assert.ok(html.includes(">32768 tok</"), "the hint reports the resolved truth");
 	});
 
 	it("a stored budget shows its value and denominates the hint", () => {

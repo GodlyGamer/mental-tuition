@@ -15,7 +15,7 @@
  * turn start awaits the gate. No mid-run surgery exists.
  *
  * Trigger threshold (owner ruling): effective = min(settings threshold,
- * model contextWindow − 16k reserve). Defaults: threshold 150k, kept
+ * model contextWindow − 16k reserve). Defaults: threshold 80k, kept
  * tail ~20k recent tokens (pi's defaults, owner-approved). Token
  * estimation follows pi's law (2026-10-05 incident fix): anchor on the
  * provider-reported usage of the last assistant message, chars/4 only
@@ -51,8 +51,9 @@ export const KEEP_RECENT_TOKENS = 20_000;
  * (not the user's threshold) is the binding constraint (pi's default). */
 export const COMPACTION_RESERVE_TOKENS = 16_384;
 
-/** Factory default for the settings threshold (owner ruling: 150k). */
-export const DEFAULT_COMPACTION_THRESHOLD_TOKENS = 150_000;
+/** Factory default for the settings threshold (owner, 2026-10-28: 80k;
+ * was 150k). */
+export const DEFAULT_COMPACTION_THRESHOLD_TOKENS = 80_000;
 
 /** Tool-result truncation when serializing the span for the summarizer
  * (pi's mirror: long job/research results don't need verbatim inclusion

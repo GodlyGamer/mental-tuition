@@ -19,10 +19,17 @@ import {
 	resolveSettings,
 	resolveSlot,
 } from "../src/core/settings-resolution.ts";
-import { BACKGROUND_MODEL_ROLES, ROLE_SLOT, SUBSCRIPTION_SLOTS, type UserSettings } from "../src/core/settings.ts";
+import {
+	BACKGROUND_MODEL_ROLES,
+	BACKGROUND_THINKING_DEFAULTS,
+	ROLE_SLOT,
+	SUBSCRIPTION_SLOTS,
+	type UserSettings,
+} from "../src/core/settings.ts";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 
 /** The subscription factory pin of one tier, in resolved form. */
-const sub = (tier: "strong" | "cheap" | "vision", thinkingLevel?: "low" | "medium" | "high" | "max") => ({
+const sub = (tier: "strong" | "cheap" | "vision", thinkingLevel?: ThinkingLevel) => ({
 	provider: "claude-code",
 	id: SUBSCRIPTION_SLOTS[tier].model!.id,
 	thinkingLevel,
@@ -38,7 +45,7 @@ describe("resolveSettings", () => {
 		// Personal fork: the factory floor is the Claude subscription — every
 		// role and slot resolves to its tier's subscription pin.
 		for (const role of BACKGROUND_MODEL_ROLES) {
-			assert.deepEqual(eff.agent.models[role], sub(ROLE_SLOT[role]), role);
+			assert.deepEqual(eff.agent.models[role], sub(ROLE_SLOT[role], BACKGROUND_THINKING_DEFAULTS[role]), role);
 		}
 		assert.deepEqual(eff.models.strong, sub("strong"));
 		assert.deepEqual(eff.models.cheap, sub("cheap"));
@@ -50,9 +57,10 @@ describe("resolveSettings", () => {
 		assert.equal(eff.appearance.sessionNameSerif, false);
 		assert.equal(eff.appearance.mdRendering.headingWeight, 700);
 		// wave 7 collapse: the master switch ONLY + the redesign's chunk
-		// budget — absent record resolves the factory 4096 (halved back
-		// from the digest-era 8192, owner, 2026-10-13)
-		assert.deepEqual(eff.graph, { enabled: true, rendering: true, extractionChunkTokens: 4096 });
+		// budget — absent record resolves the factory 32768 (session-end
+		// extraction's mid-session cap, owner, 2026-10-28)
+		assert.deepEqual(eff.graph, { enabled: true, rendering: true, extractionChunkTokens: 32_768 });
+		assert.deepEqual(eff.compaction, { thresholdTokens: 80_000 });
 	});
 
 	it("explicit record values win over every factory default", () => {
@@ -73,9 +81,8 @@ describe("resolveSettings", () => {
 		assert.deepEqual(eff.agent.models.researcher, {
 			provider: "openrouter",
 			id: "qwen/qwen3.8-flash",
-			// thinking NOT overridden and no cheap slot → UNSET (the engine
-			// build resolves it from DEFAULT_THINKING_ORDER, not a pin).
-			thinkingLevel: undefined,
+			// thinking NOT overridden → the role's own factory level.
+			thinkingLevel: "medium",
 		});
 		assert.deepEqual(eff.agent.search, { engine: "tavily" });
 		assert.deepEqual(eff.agent.tools, { research: false });
@@ -84,8 +91,8 @@ describe("resolveSettings", () => {
 		assert.equal(eff.appearance.proseFontSize, 20);
 		assert.equal(eff.appearance.mdRendering.headingWeight, 600);
 		// wave 7 collapse: the section IS the master switch (absent budget
-		// field = factory 4096 — a pre-redesign record resolves cleanly).
-		assert.deepEqual(eff.graph, { enabled: false, rendering: true, extractionChunkTokens: 4096 });
+		// field = the factory budget — a pre-redesign record resolves cleanly).
+		assert.deepEqual(eff.graph, { enabled: false, rendering: true, extractionChunkTokens: 32_768 });
 		// The DISPLAY split (owner, 2026-10-06): extraction off leaves the
 		// rendering switch ON — the data channel and the view are separate.
 		assert.equal(renderingEnabled(eff.graph), true);
@@ -120,9 +127,12 @@ describe("resolveSettings", () => {
 	});
 
 	it("resolveModelSpec is field-independent per override aspect", () => {
-		const slots = { cheap: { model: { provider: "zai", id: "slot-model" }, thinkingLevel: "high" as const } };
+		const slots = {
+			cheap: { model: { provider: "zai", id: "slot-model" }, thinkingLevel: "high" as const },
+			vision: { model: { provider: "zai", id: "v-model" }, thinkingLevel: "high" as const },
+		};
 		assert.deepEqual(
-			resolveModelSpec("auditor", { model: { provider: "other", id: "x" } }, slots),
+			resolveModelSpec("visualMaker", { model: { provider: "other", id: "x" } }, slots),
 			{ provider: "other", id: "x", thinkingLevel: "high" }, // override model + slot level
 		);
 		assert.deepEqual(resolveModelSpec("auditor", { thinkingLevel: "max" }, slots), {
@@ -140,7 +150,7 @@ describe("the slot tier (BYOK, owner 2026-09-22)", () => {
 		for (const role of ["researcher", "demoBuilder", "extractor", "auditor"] as const) {
 			assert.deepEqual(
 				eff.agent.models[role],
-				{ provider: "zai", id: "glm-5.3-flash", thinkingLevel: undefined }, // level unset → default order
+				{ provider: "zai", id: "glm-5.3-flash", thinkingLevel: BACKGROUND_THINKING_DEFAULTS[role] }, // the role's own level
 				role,
 			);
 		}
@@ -157,9 +167,27 @@ describe("the slot tier (BYOK, owner 2026-09-22)", () => {
 		assert.deepEqual(eff.agent.models.researcher, {
 			provider: "groq",
 			id: "r-override",
-			thinkingLevel: "high", // slot level rides the override's model
+			thinkingLevel: "medium", // the role's own level beats the slot's
 		});
-		assert.deepEqual(eff.agent.models.auditor, { provider: "zai", id: "r-slot", thinkingLevel: "high" });
+		assert.deepEqual(eff.agent.models.auditor, { provider: "zai", id: "r-slot", thinkingLevel: "medium" });
+	});
+
+	it("the cheap roles start from their own factory levels (owner, 2026-10-28)", () => {
+		assert.deepEqual(BACKGROUND_THINKING_DEFAULTS, {
+			researcher: "medium",
+			demoBuilder: "medium",
+			extractor: "low",
+			auditor: "medium",
+		});
+		const eff = resolveSettings({
+			version: 1,
+			models: { cheap: { model: { provider: "zai", id: "c" }, thinkingLevel: "high" } },
+			agent: { models: { auditor: { thinkingLevel: "xhigh" } } },
+		});
+		assert.equal(eff.agent.models.extractor?.thinkingLevel, "low", "the cheap slot's level never reaches a defaulted role");
+		assert.equal(eff.agent.models.auditor?.thinkingLevel, "xhigh", "an explicit override still wins");
+		assert.equal(eff.models.cheap?.thinkingLevel, "high", "the stored slot level stays on disk");
+		assert.equal(eff.agent.models.visualMaker?.thinkingLevel, undefined, "visualMaker has no role default");
 	});
 
 	it("vision slot covers visualMaker AND pdfReader; level-only slots resolve as NULL", () => {
@@ -169,7 +197,7 @@ describe("the slot tier (BYOK, owner 2026-09-22)", () => {
 		// a stored level WITHOUT a model rides the subscription floor's model
 		const levelOnly = resolveSettings({ version: 1, models: { strong: { thinkingLevel: "medium" } } });
 		assert.deepEqual(levelOnly.models.strong, sub("strong", "medium"));
-		assert.deepEqual(levelOnly.agent.models.researcher, sub("cheap")); // strong's level must not leak into other tiers
+		assert.deepEqual(levelOnly.agent.models.researcher, sub("cheap", "medium")); // strong's level must not leak into other tiers
 	});
 
 	it("resolveSlot: configured iff the model is present", () => {
@@ -203,7 +231,7 @@ describe("the slot tier (BYOK, owner 2026-09-22)", () => {
 			...record,
 			agent: { models: { researcher: { model: { provider: "groq", id: "r" } } } },
 		};
-		assert.deepEqual(resolveRoleSpec("researcher", withOverride), { provider: "groq", id: "r", thinkingLevel: undefined });
+		assert.deepEqual(resolveRoleSpec("researcher", withOverride), { provider: "groq", id: "r", thinkingLevel: "medium" });
 		// pdfReader rides the vision slot (never a background override)
 		const visionRecord: UserSettings = {
 			version: 1,

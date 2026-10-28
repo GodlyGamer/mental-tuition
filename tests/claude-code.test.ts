@@ -24,9 +24,9 @@ describe("the Claude subscription engine", () => {
 		}
 	});
 
-	it("a lone user message goes through verbatim", () => {
+	it("a lone user message uses the same notation as any later call", () => {
 		const blocks = transcriptBlocks([{ role: "user", content: "Research photosynthesis.", timestamp: 0 }]);
-		assert.deepEqual(blocks, [{ type: "text", text: "Research photosynthesis." }]);
+		assert.deepEqual(blocks, [{ type: "text", text: "<learner>\nResearch photosynthesis.\n</learner>" }]);
 	});
 
 	it("history replays as one tagged block per message, tool calls and results included", () => {
@@ -57,14 +57,55 @@ describe("the Claude subscription engine", () => {
 			},
 		];
 		const texts = transcriptBlocks(messages).map((b) => (b.type === "text" ? b.text : "[image]"));
-		assert.equal(texts[0], "<transcript>");
-		assert.match(texts[1]!, /^<learner>\nTeach me limits\.\n<\/learner>$/);
-		assert.match(texts[2]!, /Quick check first\./);
-		assert.match(texts[2]!, /<tool_call id="t1" name="quiz">\{"question":"1\/x at 0\?"\}<\/tool_call>/);
-		assert.ok(!texts[2]!.includes("not replayed"));
-		assert.match(texts[3]!, /^<tool_result id="t1" name="quiz">\nLearner chose: undefined\n<\/tool_result>$/);
-		assert.match(texts[4]!, /^<\/transcript>/);
-		assert.equal(texts.length, 5);
+		assert.match(texts[0]!, /^<learner>\nTeach me limits\.\n<\/learner>$/);
+		assert.match(texts[1]!, /Quick check first\./);
+		assert.match(texts[1]!, /<tool_call id="t1" name="quiz">\{"question":"1\/x at 0\?"\}<\/tool_call>/);
+		assert.ok(!texts[1]!.includes("not replayed"));
+		assert.match(texts[2]!, /^<tool_result id="t1" name="quiz">\nLearner chose: undefined\n<\/tool_result>$/);
+		assert.equal(texts.length, 3);
+	});
+
+	// Prompt caching (2026-10-28): Claude Code's breakpoint sits on the
+	// last block, so a request is only read back from the cache when the
+	// next request starts with exactly its blocks — nothing may trail the
+	// newest message, and a step must add fewer than the 20 blocks the
+	// cache looks back over.
+	it("every call's blocks are an exact prefix of the next call's", () => {
+		const img = { type: "image" as const, data: "AAAA", mimeType: "image/png" };
+		const step = (n: number): Message[] => [
+			{
+				role: "assistant",
+				content: [
+					{ type: "text", text: `Step ${n}.` },
+					{ type: "toolCall", id: `a${n}`, name: "quiz", arguments: { n } },
+					{ type: "toolCall", id: `b${n}`, name: "research", arguments: { n } },
+				],
+				api: "claude-agent-sdk",
+				provider: CLAUDE_CODE_PROVIDER_ID,
+				model: "claude-opus-5-5",
+				usage,
+				stopReason: "toolUse",
+				timestamp: n,
+			},
+			{ role: "toolResult", toolCallId: `a${n}`, toolName: "quiz", content: [{ type: "text", text: "a" }], isError: false, timestamp: n },
+			{ role: "toolResult", toolCallId: `b${n}`, toolName: "research", content: [{ type: "text", text: "b" }, img], isError: false, timestamp: n },
+		];
+		const calls: Message[][] = [];
+		let history: Message[] = [{ role: "user", content: [{ type: "text", text: "Look at this." }, img], timestamp: 0 }];
+		for (let n = 1; n <= 4; n++) {
+			calls.push(history);
+			history = [...history, ...step(n)];
+			if (n === 2) history = [...history, { role: "user", content: "Next please.", timestamp: n }];
+		}
+		calls.push(history);
+		for (const style of ["tags", "prose"] as const) {
+			for (let i = 1; i < calls.length; i++) {
+				const before = transcriptBlocks(calls[i - 1]!, style);
+				const after = transcriptBlocks(calls[i]!, style);
+				assert.deepEqual(after.slice(0, before.length), before, `${style} call ${i} extends call ${i - 1}`);
+				assert.ok(after.length - before.length < 20, `${style} call ${i} adds ${after.length - before.length} blocks`);
+			}
+		}
 	});
 });
 

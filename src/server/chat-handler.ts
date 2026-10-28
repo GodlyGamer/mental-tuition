@@ -33,10 +33,11 @@ import {
 	resolveRoleSpec,
 } from "../core/settings-resolution.ts";
 import { modelsNotConfigured, providerKeyMissing as providerKeyMissingEnvelope, type ProviderKeyMissing } from "../core/settings.ts";
-import { beginTurn, endTurn } from "./turn-liveness.ts";
+import { beginTurn, endTurn, isTurnRunning } from "./turn-liveness.ts";
 import { applyParkedDismissal } from "./dismissal-park.ts";
 import { registerTurn, unregisterTurn } from "./turn-runs.ts";
-import { persistTurn, triggerExtraction } from "./turn-service.ts";
+import { persistTurn } from "./turn-service.ts";
+import { createExtractionSchedule, type ExtractionSchedule } from "./extraction-schedule.ts";
 import { hasProbeDone, danglingQuestionOf } from "../core/native-messages.ts";
 import { composeInstructions } from "../agent/teacher-agent.ts";
 import { ensureCompacted, kickCompaction, effectiveThresholdTokens } from "./compaction.ts";
@@ -115,6 +116,29 @@ export const extraction = createExtractionPipeline({
 		providerKeyPresent(provider) ? null : providerKeyMissingEnvelope(provider, [tier]),
 });
 
+/** Session-end extraction (owner, 2026-10-28): the idle timers are
+ *  process-wide (one map on globalThis — Next evaluates this module per
+ *  route bundle). Off under tests: scripted chats are fixtures, not
+ *  knowledge. */
+const scheduleState = ((globalThis as { __mtExtractionSchedule?: { timers: Map<string, unknown>; caughtUp: boolean } })
+	.__mtExtractionSchedule ??= { timers: new Map(), caughtUp: false });
+const extractionSchedule: ExtractionSchedule = createExtractionSchedule({
+	...stores,
+	extraction,
+	graph: () => effectiveSettings().graph,
+	isTurnRunning,
+	timers: scheduleState.timers,
+});
+
+/** The launch catch-up, once per process, from the first chat-list read
+ *  (the sidebar loads it at launch). Never at module load: Next dev also
+ *  evaluates route modules in short-lived compile workers, and each one
+ *  started its own extraction (seen 2026-10-28). */
+export function catchUpExtractionOnce(): void {
+	if (process.env.NODE_ENV === "test" || scheduleState.caughtUp) return;
+	scheduleState.caughtUp = true;
+	extractionSchedule.catchUp();
+}
 
 // Wake-pipeline wiring (contracts.ts "THE ASYNC PROTOCOL" §4): the pipeline
 // delivers its steers through THIS composition root (one event: the steer
@@ -500,10 +524,9 @@ export async function handleChatInput(
 				// no extraction, no graph, no coverage (v1: the session itself
 				// is the deliverable).
 				if (record.kind !== "practice" && extractionEnabled(effective.graph)) {
-					// Fresh per-turn read of the graph section's chunk budget
-					// (extraction-UX redesign, 2026-09-24): the trigger compares
-					// against it and the pipeline's batches share it.
-					triggerExtraction(stores, extraction, chatId, effective.graph.extractionChunkTokens);
+					// Session-end extraction (owner, 2026-10-28): past the chunk
+					// budget it runs now, else a 30-minute idle timer re-arms.
+					if (process.env.NODE_ENV !== "test") extractionSchedule.afterTurn(chatId);
 				}
 				// PARKED DISMISSAL (owner, 2026-10-04): a dismissal that arrived
 				// mid-turn was parked by the dismiss route (202); now that

@@ -1,6 +1,6 @@
 import { chainsForSelection, formatChainLine } from "@/src/core";
 import { newGraphContextMessage, type GraphContextPick } from "@/src/core";
-import { compactionInFlight, createChat, isTurnRunning, listChats, readSettingsRecord, stores, titleFromPrompt } from "@/src/server";
+import { catchUpExtractionOnce, compactionInFlight, createChat, isTurnRunning, listChats, readSettingsRecord, stores, titleFromPrompt } from "@/src/server";
 import type { ChatListItem } from "@/src/core";
 import { isModuleCode } from "@/src/core";
 import { ensureModule } from "@/src/server";
@@ -13,6 +13,8 @@ import { ensureModule } from "@/src/server";
  *  (a running spinner per row would double-signal them), so busy means
  *  exactly "a teach turn is in flight". */
 export async function GET() {
+	// Session-end extraction's launch catch-up (once per process).
+	catchUpExtractionOnce();
 	const chats: ChatListItem[] = listChats().map((c) => ({
 		...c,
 		busy: isTurnRunning(c.id),

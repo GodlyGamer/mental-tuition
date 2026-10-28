@@ -18,7 +18,7 @@ import type { SettingsValidation } from "../src/server/model-catalog.ts";
 import { clampThinkingLevel, getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import { DEFAULT_THINKING_ORDER, ROLE_SLOT, SUBSCRIPTION_SLOTS } from "../src/core/settings.ts";
 import { piEngineForSpec, piModels } from "../src/agent/models.ts";
-import { BACKGROUND_MODEL_ROLES } from "../src/core/settings.ts";
+import { BACKGROUND_MODEL_ROLES, BACKGROUND_THINKING_DEFAULTS } from "../src/core/settings.ts";
 import { resolveSettings } from "../src/core/settings-resolution.ts";
 import { readSettings } from "../src/store/settings.ts";
 import { effectiveSettings } from "../src/server/stores.ts";
@@ -131,7 +131,8 @@ describe("the background roles' resolved pins (rolePins)", () => {
 		const pins = rolePinsFor(resolveSettings(null).agent.models);
 		assert.deepEqual(Object.keys(pins), [...BACKGROUND_MODEL_ROLES]);
 		for (const role of BACKGROUND_MODEL_ROLES) {
-			assert.deepEqual(pins[role], { model: SUBSCRIPTION_SLOTS[ROLE_SLOT[role]].model }, role);
+			const level = BACKGROUND_THINKING_DEFAULTS[role];
+			assert.deepEqual(pins[role], { model: SUBSCRIPTION_SLOTS[ROLE_SLOT[role]].model, ...(level ? { thinkingLevel: level } : {}) }, role);
 		}
 	});
 
@@ -143,7 +144,7 @@ describe("the background roles' resolved pins (rolePins)", () => {
 		};
 		const pins = rolePinsFor(resolveSettings(record).agent.models);
 		assert.deepEqual(pins.researcher, { model: { provider: "openrouter", id: "z-ai/glm-5.3-flash" }, thinkingLevel: "high" });
-		assert.deepEqual(pins.auditor, { model: { provider: "openrouter", id: "qwen/qwen3.8-flash" } }); // level unset
+		assert.deepEqual(pins.auditor, { model: { provider: "openrouter", id: "qwen/qwen3.8-flash" }, thinkingLevel: "medium" }); // the role's own level
 		assert.deepEqual(pins.visualMaker, { model: SUBSCRIPTION_SLOTS.vision.model }, "vision tier on the floor");
 	});
 

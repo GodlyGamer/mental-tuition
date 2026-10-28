@@ -24,8 +24,10 @@ describe("FACTORY_SETTINGS (the compiled factory layer)", () => {
 		// wave 7 collapse: the master switch ONLY + the extraction-UX
 		// redesign's chunk budget (2026-09-24); doubled to 8192 with the
 		// digest-aware redesign (2026-09-30), then HALVED BACK to 4096
-		// with the message anchors (owner, 2026-10-13)
-		assert.deepEqual(FACTORY_SETTINGS.graph, { enabled: true, rendering: true, extractionChunkTokens: 4096 });
+		// with the message anchors (owner, 2026-10-13), then 32768 as the
+		// mid-session cap of session-end extraction (owner, 2026-10-28)
+		assert.deepEqual(FACTORY_SETTINGS.graph, { enabled: true, rendering: true, extractionChunkTokens: 32_768 });
+		assert.deepEqual(FACTORY_SETTINGS.compaction, { thresholdTokens: 80_000 });
 		const a = FACTORY_SETTINGS.appearance;
 		assert.equal(a.mode, "dark");
 		assert.equal(a.background, null); // the mode's own default, not a factory hex
