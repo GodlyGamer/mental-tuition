@@ -110,7 +110,7 @@ describe("desktop packaging policy", () => {
 		assert.equal(pkg.author.name, "Youssouf Diallo");
 		assert.equal(pkg.author.email, "GodlyGamer@users.noreply.github.com");
 		assert.equal(pkg.contributors[0].name, "Amos Blomqvist");
-		assert.equal(pkg.homepage, "https://github.com/GodlyGamer/MentalTuition");
+		assert.equal(pkg.homepage, "https://github.com/GodlyGamer/mental-tuition");
 		assert.equal(pkg.desktopName, "mentaltuition.desktop");
 	});
 });

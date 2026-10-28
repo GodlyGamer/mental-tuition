@@ -194,5 +194,5 @@ publish:
   # which is then published — the updater can't see drafts.
   - provider: github
     owner: GodlyGamer
-    repo: MentalTuition
+    repo: mental-tuition
     releaseType: draft

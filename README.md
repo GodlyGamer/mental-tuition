@@ -11,10 +11,10 @@
 <p align="center"><strong>An agent harness for learning.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/GodlyGamer/MentalTuition/releases">Download</a> ·
+  <a href="https://github.com/GodlyGamer/mental-tuition/releases">Download</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="docs/development.md">Documentation</a> ·
-  <a href="https://github.com/GodlyGamer/MentalTuition/issues">Issues</a>
+  <a href="https://github.com/GodlyGamer/mental-tuition/issues">Issues</a>
 </p>
 
 <p align="center">Built on <a href="https://github.com/amosblomqvist/learnharness">LearnHarness</a> by Amos Blomqvist.</p>
@@ -46,7 +46,7 @@ Future teaching sessions can read the graph instead of starting from scratch. Pr
 
 ## Download and get started
 
-**[Download from GitHub Releases](https://github.com/GodlyGamer/MentalTuition/releases)**
+**[Download from GitHub Releases](https://github.com/GodlyGamer/mental-tuition/releases)**
 
 - **macOS (Apple Silicon):** signed and notarized DMG. Drag the app to Applications.
 - **Windows (x64):** run the installer. It is currently unsigned; Windows may show an “unknown publisher” or SmartScreen warning.
@@ -86,7 +86,7 @@ Check the login at any time with `npm run login -- status`.
 
 ### The Windows app
 
-`npm.cmd run desktop:dist:win` builds `dist/MentalTuition-<version>-x64-setup.exe` (the personal build is called Mental Tuition; its settings live in `%APPDATA%\Mental Tuition`, copied once from the older `MentalTuition` or `LearnHarness` folder). The installer isn't signed, so the first time Windows says "Windows protected your PC": choose **More info → Run anyway**. Releases are on [this fork's Releases page](https://github.com/GodlyGamer/MentalTuition/releases), and the app updates itself from there.
+`npm.cmd run desktop:dist:win` builds `dist/MentalTuition-<version>-x64-setup.exe` (the personal build is called Mental Tuition; its settings live in `%APPDATA%\Mental Tuition`, copied once from the older `MentalTuition` or `LearnHarness` folder). The installer isn't signed, so the first time Windows says "Windows protected your PC": choose **More info → Run anyway**. Releases are on [this fork's Releases page](https://github.com/GodlyGamer/mental-tuition/releases), and the app updates itself from there.
 
 - **Your folder:** on first launch the app asks where to keep your work. Pick a folder in Google Drive (for example `My Drive\Mental Tuition`) and your PC and laptop share chats, the knowledge graph, settings and study modules. The app warns you if the folder is already open on your other computer, because Drive can't merge two computers writing at once.
 - **Set up this computer:** the next screen signs you in to Claude, can install Gemini and sign you in with Google, and can install the paper tools (Python with sympy, numpy and PyMuPDF; MiKTeX; Strawberry Perl) through winget and pip. These stay per machine; they're in Settings → This computer afterwards.
@@ -101,7 +101,7 @@ npm test           # deterministic, no LLM, no network
 
 See the [development guide](docs/development.md), [architecture](docs/architecture.md), and [desktop release guide](docs/desktop-release.md).
 
-Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/GodlyGamer/MentalTuition/issues).
+Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/GodlyGamer/mental-tuition/issues).
 
 ## License and credit
 
