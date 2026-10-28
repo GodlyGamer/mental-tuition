@@ -99,8 +99,12 @@ export function parseQuizInput(input: unknown): QuizToolInput | undefined {
 	// record keeps RAW arguments, so the recorded `type: "\"predict\""`
 	// wobble must heal HERE too or a posed quiz renders invisible (the
 	// tool-parts law). healEncodedArguments is the same pure pass the
-	// boundary's withArgumentHeal runs.
-	const healedInput = healEncodedArguments(restoreMathEscapesDeep(input), quizDisplayInputSchema);
+	// boundary's withArgumentHeal runs. Heal FIRST, as the boundary does on
+	// the raw args (2026-10-28): the math repair collapses a doubled command
+	// backslash inside a JSON-encoded options string to one, which is then
+	// an invalid JSON escape, so the string no longer parses —
+	// the tool posed the quiz, the dock called it malformed, the turn hung.
+	const healedInput = restoreMathEscapesDeep(healEncodedArguments(input, quizDisplayInputSchema));
 	const cleaned = boundaryParse<QuizToolInput>(quizDisplayInputSchema, healedInput);
 	if (!cleaned) return undefined;
 	if (quizInputProblems(cleaned).length > 0) return undefined;
@@ -114,7 +118,10 @@ export function parseQuizInput(input: unknown): QuizToolInput | undefined {
  * keying, so they parse to undefined exactly like the zod seam did).
  */
 export function parseAskInput(input: unknown): AskToolInput | undefined {
-	const cleaned = boundaryParse<AskToolInput>(askInputSchema, restoreMathEscapesDeep(input));
+	// The ask tool's prepareQuestionArguments unpacks a JSON-encoded
+	// options string before validation; the display mirrors it (heal, then
+	// the math repair — the quiz order above).
+	const cleaned = boundaryParse<AskToolInput>(askInputSchema, restoreMathEscapesDeep(healEncodedArguments(input, askInputSchema)));
 	if (!cleaned) return undefined;
 	if (askOptionProblems(cleaned.options ?? []).length > 0) return undefined;
 	return cleaned;

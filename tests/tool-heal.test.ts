@@ -31,7 +31,7 @@ import {
 	quizInputObject,
 	quizInputProblems,
 } from "../src/core/question-core.ts";
-import { parseQuizInput } from "../src/core/tool-parts.ts";
+import { parseAskInput, parseQuizInput } from "../src/core/tool-parts.ts";
 import { resolveTargetId } from "../src/core/chains.ts";
 import { bareQuestionTools } from "../src/agent/teacher-agent.ts";
 import { probeQuizTool } from "../src/agent/tools.ts";
@@ -186,5 +186,22 @@ describe("the display mirror — raw records heal on read", () => {
 		assert.equal(normalizeQuizType(parsed?.type), "predict");
 		// The graded answer resolves to the option despite the recorded colon.
 		assert.deepEqual(parsed ? coerceCorrectAnswer(parsed.correctAnswer, parsed.options.map((o) => o.value ?? o.label)) : [], ["parmenides"]);
+	});
+
+	it("string-encoded options with LaTeX parse: the heal runs before the math repair (2026-10-28)", () => {
+		// The Line Integrals incident: the record's options were a JSON string
+		// holding `$\\dfrac{26}{3}$`. Repairing the math first collapsed the
+		// doubled backslash INSIDE the JSON text — an invalid escape, so the
+		// dock rendered "malformed" while the turn waited on the answer.
+		const options = JSON.stringify([
+			{ label: "$6$", value: "a" },
+			{ label: "$\\dfrac{26}{3}$", value: "b" },
+			{ label: "$8$", value: "c" },
+		]);
+		const parsed = parseQuizInput({ question: "Find $\\int_C y^2\\,dx$", options, explanation: "e", correctAnswer: "a" });
+		assert.ok(parsed, "the posed quiz must render");
+		assert.deepEqual(parsed?.options.map((o) => o.label), ["$6$", "$\\dfrac{26}{3}$", "$8$"]);
+		const ask = parseAskInput({ question: "Which?", options: JSON.stringify([{ label: "$\\dfrac{1}{2}$" }, { label: "$1$" }]) });
+		assert.deepEqual(ask?.options?.map((o) => o.label), ["$\\dfrac{1}{2}$", "$1$"], "ask mirrors the tool's unpacking");
 	});
 });
