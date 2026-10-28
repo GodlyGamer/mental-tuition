@@ -120,10 +120,21 @@ describe("sanitizeRenderSettings", () => {
 			labelSize: 4,
 			clusterLabels: false,
 			clusterLabelSize: 20,
+			view: "cloud",
+			density: "standard",
 			regions: DEFAULT_REGION_TUNING,
 			physics: DEFAULT_PHYSICS_TUNING,
 		};
 		assert.deepEqual(sanitizeRenderSettings(valid), valid); // every value a ladder member
+	});
+
+	test("view and density snap to their enums (Hot Glass, 2026-10-27)", () => {
+		assert.equal(sanitizeRenderSettings({ view: "neural", density: "lighter" }).view, "neural");
+		assert.equal(sanitizeRenderSettings({ view: "neural", density: "lighter" }).density, "lighter");
+		const junk = sanitizeRenderSettings({ view: "3d", density: "heavy" } as never);
+		assert.equal(junk.view, DEFAULT_RENDER_SETTINGS.view);
+		assert.equal(junk.density, DEFAULT_RENDER_SETTINGS.density);
+		assert.equal(sanitizeRenderSettings({}).view, "cloud", "an old stored file opens in Cloud");
 	});
 
 	test("supports settings are GONE (chains-primary, 2026-09-30): stale keys silently drop", () => {

@@ -40,7 +40,20 @@ import {
 	type DepthAnchorMode,
 } from "./layout.ts";
 
+/** The graph's two views (Hot Glass, SPEC §9–10): the density CLOUD and the
+ *  3D NEURAL cube. */
+export const GRAPH_VIEWS = ["cloud", "neural"] as const;
+export type GraphView = (typeof GRAPH_VIEWS)[number];
+/** Point density (owner, 2026-10-27): "standard" is the scaled-and-capped
+ *  budget, "lighter" the gentler one for slower machines. */
+export const GRAPH_DENSITIES = ["standard", "lighter"] as const;
+export type GraphDensity = (typeof GRAPH_DENSITIES)[number];
+
 export interface GraphRenderSettings {
+	/** Cloud (default) or Neural — the glass switch at the graph's top right. */
+	view: GraphView;
+	/** Standard (default) or Lighter point budgets — a row in the gear panel. */
+	density: GraphDensity;
 	/** Semantic stamp for the size-unit pivot (2026-09-15): "world" =
 	 *  nodeSize/labelSize/arrowLength/regions.dilation are WORLD units;
 	 *  absent = the old "screen px at fit zoom" semantics — the
@@ -89,6 +102,8 @@ export function sanitizeRenderSettings(raw: unknown): GraphRenderSettings {
 	// reference default IS the old tuned look expressed in world units.
 	const legacySizes = r.sizeUnits !== "world";
 	return {
+		view: (GRAPH_VIEWS as readonly unknown[]).includes(r.view) ? (r.view as GraphView) : DEFAULT_RENDER_SETTINGS.view,
+		density: (GRAPH_DENSITIES as readonly unknown[]).includes(r.density) ? (r.density as GraphDensity) : DEFAULT_RENDER_SETTINGS.density,
 		sizeUnits: "world",
 		nodeSize: legacySizes ? DEFAULT_RENDER_SETTINGS.nodeSize : ladd(r.nodeSize, NODE_SIZE_LADDER, DEFAULT_RENDER_SETTINGS.nodeSize),
 		edgeWidth: ladd(r.edgeWidth, EDGE_WIDTH_LADDER, DEFAULT_RENDER_SETTINGS.edgeWidth),
@@ -257,6 +272,8 @@ export function sanitizePhysicsTuning(input: Partial<PhysicsTuning> | null | und
 // The 2026-09-17 bake: the user's live-tuned values (tuned against the
 // real graph after the world-unit pivot), each dead-center on its ladder.
 export const DEFAULT_RENDER_SETTINGS: GraphRenderSettings = {
+	view: "cloud",
+	density: "standard",
 	sizeUnits: "world",
 	nodeSize: 2,
 	edgeWidth: 1,

@@ -56,6 +56,28 @@ import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from "d3-zo
 import type { Simulation, SimulationLinkDatum } from "d3-force";
 import { clusterHue, type Pt } from "./cluster-geometry.ts";
 import {
+	AUTO_TURN_RAD_PER_MS,
+	CUBE_EDGE_PX,
+	DRAG_RAD_PER_PX,
+	KEY_TURN_RAD,
+	MAX_PITCH,
+	START_PITCH,
+	SWARM_CLOCK_MAX,
+	buildCloudPoints,
+	buildNeural,
+	buildViewGraph,
+	clusterAt,
+	clusterGeometry,
+	drawCloud,
+	drawNeural,
+	makeHaze,
+	neuralTopicAt,
+	type CloudPoint,
+	type NeuralModel,
+	type Projected,
+	type ViewGraph,
+} from "./graph-views.ts";
+import {
 	CHARGE_STRENGTH,
 	CLUSTER_PULL_STRENGTH,
 	createGraphSimulation,
@@ -654,6 +676,35 @@ export class GraphCanvasRenderer {
 	private worldLabelFont = "";
 	private world: WorldSizes = { nodeR: 0, glowOuter: 0, labelSize: 0, labelGap: 0 };
 
+	// ── Hot Glass views (graph-views.ts) ──────────────────────────────────
+	// The Cloud and Neural models are seeded and rebuilt only when the data,
+	// visibility, labels, density or view change (viewVersion); positions are
+	// read from the live nodes every frame.
+	private viewVersion = 0;
+	private viewModelKey = "";
+	private viewGraph: ViewGraph | null = null;
+	private topicIndex = new Map<string, number>();
+	private cloudPoints: CloudPoint[] = [];
+	private neural: NeuralModel | null = null;
+	private neuralProj: Projected[] = [];
+	private haze: HTMLCanvasElement | null = null;
+	/** Window focus: drift and the auto-turn run only while the app is focused and visible. */
+	private focused = typeof document === "undefined" ? true : document.hasFocus();
+	/** The cluster under the pointer, the one being SHOWN (it outlives the hover while the swarm disperses), and the swarm clock (0…SWARM_CLOCK_MAX). */
+	private hoverCluster: number | null = null;
+	private shownCluster: number | null = null;
+	private swarmClock = 0;
+	/** The topic under the pointer in the Neural view (Cloud reads hoverId). */
+	private hoverTopicIdx: number | null = null;
+	/** A node press is held (the §4 press language on the ring). */
+	private pressed = false;
+	private yaw = 0;
+	private pitch = START_PITCH;
+	private pointerOver = false;
+	private neuralDrag: { ox: number; oy: number; lx: number; ly: number; moved: boolean } | null = null;
+	/** The mono readout drawn at the stage's bottom-left. */
+	private readout = "";
+
 	constructor(
 		canvas: HTMLCanvasElement,
 		callbacks: RendererCallbacks,
@@ -673,6 +724,13 @@ export class GraphCanvasRenderer {
 		// transform change just marks dirty (draws happen in OUR loop).
 		this.zoomBehavior = zoom<HTMLCanvasElement, unknown>()
 			.scaleExtent([0.02, 40])
+			// d3's default filter, minus the pan: the Neural cube turns when
+			// dragged (the wheel is ours either way).
+			.filter((event: Event) => {
+				const e = event as MouseEvent;
+				if (this.settings?.view === "neural") return false;
+				return (!e.ctrlKey || e.type === "wheel") && !e.button;
+			})
 			.on("zoom", ({ transform }) => {
 				this.transform = transform;
 				this.markDirty();
@@ -696,6 +754,11 @@ export class GraphCanvasRenderer {
 		// preventDefault: the native menu on a full-bleed custom canvas is
 		// never useful; the caller decides what (if anything) opens.
 		canvas.addEventListener("contextmenu", this.onContextMenu);
+		canvas.addEventListener("dblclick", this.onDblClick);
+		window.addEventListener("keydown", this.onKeyDown);
+		window.addEventListener("focus", this.onWindowFocus);
+		window.addEventListener("blur", this.onWindowBlur);
+		document.addEventListener("visibilitychange", this.onVisibility);
 
 		// The persisted camera: replace the default with wherever the user
 		// left the graph. Applied through the zoom behavior so d3's internal
@@ -780,12 +843,18 @@ export class GraphCanvasRenderer {
 		this.simCenter = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
 		this.buildSim();
 		this.geoVersion++; // new data → rebuild world geometry
+		this.viewVersion++;
 		this.markDirty();
 	}
 
 	setSettings(settings: GraphRenderSettings): void {
+		const switched = this.settings && (this.settings.view !== settings.view || this.settings.density !== settings.density);
 		this.settings = settings;
 		this.geoVersion++; // sizes/wrap width changed → rebuild geometry
+		if (switched) {
+			this.haze = null;
+			this.canvas.style.cursor = "";
+		}
 		this.markDirty();
 	}
 
@@ -857,11 +926,15 @@ export class GraphCanvasRenderer {
 			(s) => ctx.measureText(s).width,
 		);
 		ctx.font = prevFont;
-		if (changed) this.markDirty();
+		if (changed) {
+			this.viewVersion++; // the views carry the label text
+			this.markDirty();
+		}
 	}
 
 	setVisible(visible: ReadonlySet<string> | null): void {
 		this.visible = visible;
+		this.viewVersion++;
 		this.geoVersion++; // member visibility changes hulls + paths
 		this.markDirty();
 	}
@@ -907,6 +980,11 @@ export class GraphCanvasRenderer {
 		this.canvas.removeEventListener("pointerup", this.onPointerUp);
 		this.canvas.removeEventListener("pointerleave", this.onPointerLeave);
 		this.canvas.removeEventListener("contextmenu", this.onContextMenu);
+		this.canvas.removeEventListener("dblclick", this.onDblClick);
+		window.removeEventListener("keydown", this.onKeyDown);
+		window.removeEventListener("focus", this.onWindowFocus);
+		window.removeEventListener("blur", this.onWindowBlur);
+		document.removeEventListener("visibilitychange", this.onVisibility);
 		this.canvas.style.cursor = "";
 	}
 
@@ -929,6 +1007,11 @@ export class GraphCanvasRenderer {
 
 	private onPointerMove = (e: PointerEvent) => {
 		const pos = this.eventPos(e);
+		this.pointerOver = true;
+		if (this.settings?.view === "neural") {
+			this.onNeuralMove(pos);
+			return;
+		}
 		if (this.dragId) {
 			const n = this.simById.get(this.dragId);
 			if (n) {
@@ -954,6 +1037,7 @@ export class GraphCanvasRenderer {
 		const node = this.pickAt(pos.x, pos.y);
 		if ((node?.id ?? null) !== this.hoverId) this.setHover(node?.id ?? null);
 		this.canvas.style.cursor = node ? "pointer" : "";
+		this.updateHoverCluster(pos);
 	};
 
 	private onPointerDown = (e: PointerEvent) => {
@@ -962,9 +1046,14 @@ export class GraphCanvasRenderer {
 		// the right-pointerup must never read as a click (the detail card
 		// used to open under the menu).
 		if (e.button !== 0) return;
+		if (this.settings?.view === "neural") {
+			this.onNeuralDown(e);
+			return;
+		}
 		const pos = this.eventPos(e);
 		const node = this.pickAt(pos.x, pos.y);
 		if (node && this.sim) {
+			this.pressed = true;
 			// Node press: pin the node (at ITS OWN position — the cursor
 			// may be inside the pick pad, off-center). preventDefault kills
 			// the compatibility mousedown, so d3-zoom never starts a pan.
@@ -993,6 +1082,11 @@ export class GraphCanvasRenderer {
 
 	private onPointerUp = (e: PointerEvent) => {
 		if (e.button !== 0) return; // right-click is context-menu territory
+		if (this.settings?.view === "neural") {
+			this.onNeuralUp(e);
+			return;
+		}
+		this.pressed = false;
 		// Node press ending: click (no slop) → select; drag → release-and-relax.
 		if (this.dragId) {
 			const id = this.dragId;
@@ -1035,14 +1129,19 @@ export class GraphCanvasRenderer {
 	private onContextMenu = (e: MouseEvent) => {
 		e.preventDefault();
 		const pos = this.eventPos(e);
-		const node = this.pickAt(pos.x, pos.y);
+		const node = this.pickView(pos.x, pos.y);
 		this.callbacks.onContext(node?.id ?? null, pos);
 	};
 
 	private onPointerLeave = () => {
-		if (this.dragId) return; // pointer capture keeps the drag alive
+		if (this.dragId || this.neuralDrag) return; // pointer capture keeps the drag alive
 		this.downPos = null;
+		this.pointerOver = false;
+		this.pressed = false;
 		this.setHover(null);
+		this.hoverCluster = null;
+		this.hoverTopicIdx = null;
+		this.markDirty();
 	};
 
 	// ── Internals ──
@@ -1108,11 +1207,12 @@ export class GraphCanvasRenderer {
 			const hoverAnim = this.advanceHover();
 			const zoomAnim = this.advanceZoom(dt);
 			const simAnim = this.advanceSim();
+			const viewAnim = this.advanceViews(dt);
 			this.draw();
 			// Keep frames coming ONLY while an animation is in motion (hover
 			// fade, zoom glide, or live physics); an idle graph schedules no
 			// rAF at all.
-			this.animating = hoverAnim || zoomAnim || simAnim;
+			this.animating = hoverAnim || zoomAnim || simAnim || viewAnim;
 		} finally {
 			this.inTick = false;
 		}
@@ -1614,124 +1714,222 @@ export class GraphCanvasRenderer {
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 		ctx.clearRect(0, 0, w, h);
 
-		this.frameCount++;
-		// Regions: rebuild on stale geometry at rest; during the live sim,
-		// every REGION_EVERY-th frame (others blit the last bitmap).
-		if (
-			this.regionBuiltVersion !== this.geoVersion &&
-			(!this.simActive || this.frameCount % REGION_EVERY === 0)
-		) {
-			this.buildRegions();
-			this.regionBuiltVersion = this.geoVersion;
-		}
-		if (this.builtVersion !== this.geoVersion) this.buildGeometry();
-		if (!this.nodesPath) return;
+		// Hot Glass (owner, 2026-10-27): the Cloud and Neural views REPLACE the
+		// old blurred regions, arrows and discs — the layout, picking, drag and
+		// camera are unchanged, only what is drawn changed.
+		this.drawView(ctx, w, h, dpr, settings, data);
+	}
 
+	// ── The Hot Glass views ───────────────────────────────────────────────
+
+	private ensureViewModels(): void {
+		const data = this.data;
+		const s = this.settings;
+		if (!data || !s) return;
+		const key = `${this.viewVersion}:${s.view}:${s.density}`;
+		if (key === this.viewModelKey) return;
+		this.viewModelKey = key;
+		this.viewGraph = buildViewGraph(data, this.visible, isImpNodeId);
+		this.topicIndex = new Map(this.viewGraph.topics.map((t, i) => [t.id, i]));
+		this.cloudPoints = s.view === "cloud" ? buildCloudPoints(this.viewGraph, s.density) : [];
+		this.neural = s.view === "neural" ? buildNeural(this.viewGraph, s.density) : null;
+		this.neuralProj = [];
+		this.hoverCluster = null;
+		this.shownCluster = null;
+		this.swarmClock = 0;
+		this.hoverTopicIdx = null;
+	}
+
+	private drawView(
+		ctx: CanvasRenderingContext2D,
+		w: number,
+		h: number,
+		dpr: number,
+		settings: GraphRenderSettings,
+		data: CanvasData,
+	): void {
+		this.ensureViewModels();
+		const graph = this.viewGraph;
+		if (!graph || graph.topics.length === 0) return;
+		const now = performance.now();
+		if (settings.view === "neural" && this.neural) {
+			// SCREEN space: the cube is centred, the wheel zooms it, drag turns it.
+			const ratio = Math.min(Math.max(this.transform.k / this.kFit, 0.4), 2.5);
+			this.haze ??= makeHaze(512);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			const out = drawNeural(
+				ctx,
+				this.neural,
+				graph,
+				{
+					yaw: this.yaw,
+					pitch: this.pitch,
+					cx: w / 2,
+					cy: h / 2 - 10,
+					half: (CUBE_EDGE_PX / 2) * ratio,
+					nowMs: now,
+					hoverTopic: this.hoverTopicIdx,
+					pressed: this.pressed,
+					haze: this.haze,
+					labels: settings.clusterLabels,
+				},
+				data.colors,
+				data.fontFamily,
+			);
+			this.neuralProj = out.proj;
+			this.readout = out.readout;
+		} else {
+			const { x: tx, y: ty, k } = this.transform;
+			ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty);
+			const hoverTopic = this.hoverId ? (this.topicIndex.get(this.hoverId) ?? null) : null;
+			const out = drawCloud(
+				ctx,
+				graph,
+				this.cloudPoints,
+				{ k, nowMs: now, clock: this.swarmClock, shown: this.shownCluster, hoverTopic, pressed: this.pressed, labels: settings.clusterLabels, labelAll: k / this.kFit > 2.5 },
+				data.colors,
+				data.fontFamily,
+			);
+			this.readout = out.readout;
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		}
+		// The mono readout and hint, bottom-left / bottom-right.
+		ctx.font = `400 10.5px ui-monospace, "Geist Mono", monospace`;
+		(ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = "1.5px";
+		ctx.textBaseline = "bottom";
+		ctx.fillStyle = rgbaFromHex(data.colors.label, 0.6);
+		ctx.textAlign = "left";
+		ctx.fillText(this.readout, 24, h - 22);
+		if (settings.view === "neural") {
+			ctx.fillStyle = rgbaFromHex(data.colors.label, 0.35);
+			ctx.textAlign = "right";
+			ctx.fillText("DRAG · ARROWS · DOUBLE-CLICK TO RESET", w - 24, h - 22);
+		}
+		(ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = "0px";
+	}
+
+	/** The views' own clocks: the swarm clock, the auto-turn. True while a
+	 *  frame is still wanted — drift and the turn run only while the app is
+	 *  focused and visible (owner, 2026-10-27), so an unfocused window
+	 *  repaints nothing. */
+	private advanceViews(dt: number): boolean {
+		const s = this.settings;
+		if (!s || !this.data) return false;
+		const live = this.focused && !document.hidden;
+		if (s.view === "neural") {
+			if (live && !this.pointerOver && !this.neuralDrag) this.yaw += AUTO_TURN_RAD_PER_MS * dt;
+			return live;
+		}
+		const target = this.hoverCluster !== null ? SWARM_CLOCK_MAX : 0;
+		if (this.swarmClock !== target) {
+			this.swarmClock = target > this.swarmClock ? Math.min(target, this.swarmClock + dt) : Math.max(target, this.swarmClock - dt);
+			if (this.swarmClock <= 0 && this.hoverCluster === null) this.shownCluster = null;
+		}
+		return live || this.swarmClock !== target;
+	}
+
+	/** Cloud: the cluster field under the pointer (its 1.55σ ellipse). */
+	private updateHoverCluster(pos: Pt): void {
+		if (!this.viewGraph) return;
 		const { x: tx, y: ty, k } = this.transform;
-		// THE camera: one transform, then everything is world coordinates.
-		ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty);
+		const idx = clusterAt(clusterGeometry(this.viewGraph), (pos.x - tx) / k, (pos.y - ty) / k);
+		if (idx === this.hoverCluster) return;
+		this.hoverCluster = idx;
+		if (idx !== null) this.shownCluster = idx;
+		this.markDirty();
+	}
 
-		const ratio = zoomRatioOf(this.kFit, k);
-		const nodeAlpha = labelAlpha(ratio, settings.labelZoom);
-		const regionAlpha = 1 - nodeAlpha;
-		const { nodeR, glowOuter } = this.world;
-
-		// 1. Cluster regions: one tiny world-space bitmap blit. The upscale
-		//    blur is the region softness; adjacent cluster tints blend
-		//    source-over where they overlap (decided: multiply is invisible
-		//    on the dark background).
-		if (this.regionCanvas && this.regionRect) {
-			const { minX, minY, w, h } = this.regionRect;
-			ctx.imageSmoothingEnabled = true;
-			ctx.drawImage(this.regionCanvas, minX, minY, w, h);
+	/** The node under a screen point in whichever view is showing. */
+	private pickView(px: number, py: number): CanvasNode | null {
+		if (this.settings?.view === "neural" && this.neural && this.viewGraph) {
+			const i = neuralTopicAt(this.neural, this.neuralProj, px, py);
+			return i === null ? null : this.viewGraph.topics[i]!.node;
 		}
+		return this.pickAt(px, py);
+	}
 
-		// 3. Edges: shafts + arrowheads from cached paths; width constant on
-		// screen (÷ k), geometry in world units (scales with the graph).
-		// Supports shafts: a second, thinner stroke (owner, 2026-09-29) —
-		// heads share the one fill at full geometry (shaft-only ruling).
-		// A true 0-width stroke is undefined on canvas: the ratio's 0 end
-		// floors to a hairline (0.5px on screen — hiding is the toggle's).
-		if (settings.edgeWidth > 0) {
-			ctx.strokeStyle = data.colors.edge;
-			ctx.fillStyle = data.colors.edge;
-			ctx.lineWidth = settings.edgeWidth / k;
-			ctx.lineCap = "round";
-			ctx.stroke(this.shaftsPath);
-			ctx.fill(this.headsPath);
+	private onNeuralDown(e: PointerEvent): void {
+		const pos = this.eventPos(e);
+		this.neuralDrag = { ox: pos.x, oy: pos.y, lx: pos.x, ly: pos.y, moved: false };
+		this.pressed = this.hoverTopicIdx !== null;
+		try {
+			this.canvas.setPointerCapture(e.pointerId);
+		} catch {
+			/* capture is best-effort */
 		}
+		this.canvas.style.cursor = "grabbing";
+		this.markDirty();
+	}
 
-		// 4. Nodes: one cached Path2D, one fill.
-		ctx.fillStyle = data.colors.node;
-		ctx.fill(this.nodesPath);
-
-		// 6. Node labels — one global gate, faded together. World-scaled
-		// with the graph (they grow as you zoom in, Obsidian-style).
-		if (nodeAlpha > 0.01) {
-			ctx.save();
-			ctx.globalAlpha = nodeAlpha;
-			ctx.font = this.worldLabelFont;
-			for (const [id, lines] of this.labelLines) {
-				const n = this.nodeById.get(id);
-				if (!n) continue;
-				drawNameLines(ctx, n.x, n.y, lines, this.world, data.colors.label);
-			}
-			ctx.restore();
+	private onNeuralMove(pos: Pt): void {
+		const d = this.neuralDrag;
+		if (d) {
+			if (Math.hypot(pos.x - d.ox, pos.y - d.oy) > CLICK_SLOP) d.moved = true;
+			this.yaw += (pos.x - d.lx) * DRAG_RAD_PER_PX;
+			this.pitch = Math.min(Math.max(this.pitch + (pos.y - d.ly) * DRAG_RAD_PER_PX, -MAX_PITCH), MAX_PITCH);
+			d.lx = pos.x;
+			d.ly = pos.y;
+			this.markDirty();
+			return;
 		}
-
-		// 7. Hover glow (topmost): halo in the node's color + the brightened
-		// name, both on the SAME fade factor. World units like everything
-		// else. Shows even when labels are zoomed out (hover is its own
-		// affordance, not a label).
-		if (this.hoverNode && this.hoverFade > 0.02) {
-			const n = this.visible && !this.visible.has(this.hoverNode.id)
-				? null // filtered out by search — no glow on hidden nodes
-				: this.hoverNode;
-			if (n) {
-				const glow = ctx.createRadialGradient(n.x, n.y, nodeR, n.x, n.y, glowOuter);
-				glow.addColorStop(0, rgbaFromHex(data.colors.node, GLOW_ALPHA * this.hoverFade));
-				glow.addColorStop(1, rgbaFromHex(data.colors.node, 0));
-				ctx.fillStyle = glow;
-				ctx.beginPath();
-				ctx.arc(n.x, n.y, glowOuter, 0, Math.PI * 2);
-				ctx.arc(n.x, n.y, nodeR, 0, Math.PI * 2, true);
-				ctx.fill("evenodd");
-				ctx.save();
-				ctx.globalAlpha = this.hoverFade;
-				ctx.font = this.worldLabelFont;
-				drawNameLines(ctx, n.x, n.y, this.labelLines.get(n.id) ?? [], this.world, data.colors.hoverText);
-				ctx.restore();
-			}
-		}
-
-		// 8. Cluster region labels — THE TOPMOST layer (user 2026-09-16:
-		// node labels and hover names drew over them before; region labels
-		// must never be occluded by content). Inverse-gated on THE zoom
-		// control (visible zoomed-out, fading as node labels come in).
-		// Viewer-relative by design (UI, not graph content): drawn at the
-		// world centroid with a font of clusterLabelSize / k — a constant
-		// size on screen at any zoom (user-tunable since 2026-09-16).
-		// Wave 7: labels are session names / file paths — pre-wrapped at
-		// the geometry build (cap + ellipsis), drawn centered on the
-		// centroid line by line.
-		if (settings.clusterLabels && regionAlpha > 0.01) {
-			ctx.save();
-			ctx.globalAlpha = regionAlpha;
-			ctx.font = `${LABEL_WEIGHT} ${settings.clusterLabelSize / k}px ${data.fontFamily}`;
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			// Screen px ÷ k = world units — the lines stay evenly spaced
-			// at a constant on-screen pitch at any zoom.
-			const lineH = (settings.clusterLabelSize * REGION_LABEL_LINE_HEIGHT) / k;
-			for (const rm of this.regionMeta) {
-				if (!rm.lines) continue;
-				ctx.fillStyle = `hsla(${rm.hue}, 55%, 78%, 0.85)`;
-				const firstOffset = (-(rm.lines.length - 1) / 2) * lineH;
-				for (let i = 0; i < rm.lines.length; i++) {
-					ctx.fillText(rm.lines[i]!, rm.cx, rm.cy + firstOffset + i * lineH);
-				}
-			}
-			ctx.restore();
+		const i = this.neural ? neuralTopicAt(this.neural, this.neuralProj, pos.x, pos.y) : null;
+		if (i !== this.hoverTopicIdx) {
+			this.hoverTopicIdx = i;
+			this.canvas.style.cursor = i !== null ? "pointer" : "grab";
+			this.markDirty();
 		}
 	}
+
+	private onNeuralUp(e: PointerEvent): void {
+		const d = this.neuralDrag;
+		this.neuralDrag = null;
+		this.pressed = false;
+		try {
+			this.canvas.releasePointerCapture(e.pointerId);
+		} catch {
+			/* already released */
+		}
+		this.canvas.style.cursor = this.hoverTopicIdx !== null ? "pointer" : "grab";
+		if (d && !d.moved) {
+			const pos = this.eventPos(e);
+			const node = this.pickView(pos.x, pos.y);
+			if (node) this.callbacks.onSelect(node.id, pos);
+			else this.callbacks.onStageClick();
+		}
+		this.markDirty();
+	}
+
+	/** Double-click resets the Neural view (turn, tilt and zoom). */
+	private onDblClick = () => {
+		if (this.settings?.view !== "neural") return;
+		this.yaw = 0;
+		this.pitch = START_PITCH;
+		this.fit();
+		this.markDirty();
+	};
+
+	/** Arrow keys turn the cube 10° a press — never while typing. */
+	private onKeyDown = (e: KeyboardEvent) => {
+		if (this.settings?.view !== "neural" || e.metaKey || e.ctrlKey || e.altKey) return;
+		const t = e.target as HTMLElement | null;
+		if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+		if (e.key === "ArrowLeft") this.yaw -= KEY_TURN_RAD;
+		else if (e.key === "ArrowRight") this.yaw += KEY_TURN_RAD;
+		else if (e.key === "ArrowUp") this.pitch = Math.max(this.pitch - KEY_TURN_RAD, -MAX_PITCH);
+		else if (e.key === "ArrowDown") this.pitch = Math.min(this.pitch + KEY_TURN_RAD, MAX_PITCH);
+		else return;
+		e.preventDefault();
+		this.markDirty();
+	};
+
+	private onWindowFocus = () => {
+		this.focused = true;
+		this.markDirty();
+	};
+	private onWindowBlur = () => {
+		this.focused = false;
+	};
+	private onVisibility = () => {
+		if (!document.hidden) this.markDirty();
+	};
 }

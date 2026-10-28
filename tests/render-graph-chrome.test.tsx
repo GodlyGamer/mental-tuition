@@ -47,14 +47,15 @@ describe("GraphChromeRow — the empty-graph ruling (owner, 2026-09-25)", () => 
 		assert.ok(!html.includes("graph-chrome-fade-in"), "nothing gated = nothing fading in");
 	});
 
-	it("POPULATED graph: all four render, the gated trio carries the fade", () => {
+	it("POPULATED graph: all four render, the gated quartet carries the fade", () => {
 		const html = renderToStaticMarkup(createElement(GraphChromeRow, { ...PROPS, isEmpty: false }));
 		assert.ok(html.includes('data-testid="import-notes"'));
 		assert.ok(html.includes("Search nodes…"));
 		assert.ok(html.includes("lucide-settings"), "the settings gear renders");
 		assert.ok(html.includes('data-testid="open-chain-table"'), "the chains entry renders");
-		// the appear-once fade rides exactly the three gated controls, never Import Notes
-		assert.equal(html.split("graph-chrome-fade-in").length - 1, 3, "three fade carriers: search + chains + settings");
+		// the appear-once fade rides exactly the four gated controls, never Import Notes
+		assert.equal(html.split("graph-chrome-fade-in").length - 1, 4, "four fade carriers: search + chains + view switch + settings");
+		assert.ok(html.includes('data-testid="graph-view-switch"'), "the Cloud / Neural switch renders");
 	});
 
 	it("the no-match note renders only when the wrapper says so (its truth stays upstream)", () => {

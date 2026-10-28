@@ -482,179 +482,42 @@ function GraphSettingsControl({
 				// distance from the panel's right border.
 				<div className="absolute right-0 top-full mt-2 flex max-h-[60vh] w-72 flex-col rounded-xl border bg-card/85 p-2.5 shadow-lg backdrop-blur">
 					<div className="flex flex-col gap-2 overflow-y-auto pr-2.5">
-							{/* Size/zoom/region sliders: LADDER-mapped 0-100, step 10 (11
-							    stops, every DEFAULT dead-center at 50, every value a nice
-							    number — src/core/render-settings.ts). Physics keeps the
-							    fine-grained log sliders (step 5). */}
-							<SettingSlider
-								label="Node size"
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.nodeSize, NODE_SIZE_LADDER)}
-								display={sizeDisplay(settings.nodeSize)}
-								onChange={(p) =>
-									changeSettings((cur) => ({ ...cur, nodeSize: fromLadderPosition(p, NODE_SIZE_LADDER) }))}
-							/>
-							<SettingSlider
-								label="Edge width"
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.edgeWidth, EDGE_WIDTH_LADDER)}
-								display={sizeDisplay(settings.edgeWidth)}
-								onChange={(p) =>
-									changeSettings((cur) => ({ ...cur, edgeWidth: fromLadderPosition(p, EDGE_WIDTH_LADDER) }))}
-							/>
-							<SettingSlider
-								label="Arrowhead size"
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.arrowLength, ARROW_LENGTH_LADDER)}
-								display={sizeDisplay(settings.arrowLength)}
-								onChange={(p) =>
-									changeSettings((cur) => ({ ...cur, arrowLength: fromLadderPosition(p, ARROW_LENGTH_LADDER) }))}
-							/>
-							<SettingSlider
-								label="Label size"
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.labelSize, LABEL_SIZE_LADDER)}
-								display={sizeDisplay(settings.labelSize)}
-								onChange={(p) =>
-									changeSettings((cur) => ({ ...cur, labelSize: fromLadderPosition(p, LABEL_SIZE_LADDER) }))}
-							/>
-							{/* Display is absolute (ratio / 0.5): "1×" is the default, dead-center (owner, 2026-10-07). */}
-							<SettingSlider
-								label="Labels until zoom"
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.labelZoom, LABEL_ZOOM_LADDER)}
-								display={labelZoomDisplay(settings.labelZoom)}
-								onChange={(p) =>
-									changeSettings((cur) => ({ ...cur, labelZoom: fromLadderPosition(p, LABEL_ZOOM_LADDER) }))}
-							/>
-							{/* Regions: the blurred cluster tints. Sliders + a fixed-set
-						    dropdown for the bitmap resolution (it's a discrete
-						    choice, not a free number). Server-persisted like the
-						    sizes; every range end was sweep-validated on the real
-						    graph. The enable switch is a COMPUTE switch: off skips
-						    the whole build (splat/blur/readback/blit), not just
-						    the paint. */}
-						<div className="mt-1.5 flex flex-col gap-1.5 border-t pt-1.5">
-							<span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-								Regions
-							</span>
-							<label className="flex cursor-pointer items-center justify-between text-[11px] text-muted-foreground">
-								<span>Background colors</span>
-								<input
-									type="checkbox"
-									checked={settings.regions.enabled}
-									onChange={(e) =>
-										changeSettings((cur) => ({
-											...cur,
-											regions: { ...cur.regions, enabled: e.target.checked },
-										}))}
+							{/* Hot Glass (owner, 2026-10-27): the Cloud and Neural views replaced
+							    the size / zoom / region sliders — nothing they tuned is drawn any
+							    more. What stays: the point density (Standard is the scaled-and-
+							    capped budget, Lighter the gentler one for slower machines), the
+							    cluster-name switch, and the physics below. */}
+							<div className="flex flex-col gap-1.5">
+								<span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Display</span>
+								<div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+									<span>Point density</span>
+									<div role="group" aria-label="Point density" data-testid="graph-density" className="mt-tray flex items-center gap-0.5 rounded-full p-0.5">
+										{(["standard", "lighter"] as const).map((d) => (
+											<button
+												key={d}
+												type="button"
+												data-testid={`density-${d}`}
+												aria-pressed={settings.density === d}
+												onClick={() => changeSettings((cur) => ({ ...cur, density: d }))}
+												className={`rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em] ${
+													settings.density === d ? "mt-btn text-foreground" : "text-muted-foreground transition-colors hover:text-foreground"
+												}`}
+											>
+												{d}
+											</button>
+										))}
+									</div>
+								</div>
+								<label className="flex cursor-pointer items-center justify-between text-[11px] text-muted-foreground">
+									<span>Cluster names</span>
+									<input
+										type="checkbox"
+										checked={settings.clusterLabels}
+										onChange={(e) => changeSettings((cur) => ({ ...cur, clusterLabels: e.target.checked }))}
 										className="accent-primary"
-								/>
-							</label>
-							<SettingSlider
-								label="Dilation"
-								disabled={!regionTuning.enabled}
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(regionTuning.dilation, REGION_DILATION_LADDER)}
-								display={sizeDisplay(regionTuning.dilation)}
-								onChange={(p) =>
-									changeSettings((cur) => ({
-										...cur,
-										regions: { ...cur.regions, dilation: fromLadderPosition(p, REGION_DILATION_LADDER) },
-									}))}
-							/>
-							<SettingSlider
-								label="Blur"
-								disabled={!regionTuning.enabled}
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(regionTuning.blur, REGION_BLUR_LADDER)}
-								display={sizeDisplay(regionTuning.blur)}
-								onChange={(p) =>
-									changeSettings((cur) => ({
-										...cur,
-										regions: { ...cur.regions, blur: fromLadderPosition(p, REGION_BLUR_LADDER) },
-									}))
-								}
-							/>
-							<SettingSlider
-								label="Edge alpha"
-								disabled={!regionTuning.enabled}
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(regionTuning.edgeAlpha, REGION_EDGE_ALPHA_LADDER)}
-								display={sizeDisplay(regionTuning.edgeAlpha)}
-								onChange={(p) =>
-									changeSettings((cur) => ({
-										...cur,
-										regions: { ...cur.regions, edgeAlpha: fromLadderPosition(p, REGION_EDGE_ALPHA_LADDER) },
-									}))}
-							/>
-							<label
-								className={`flex items-center justify-between gap-2 text-[11px] text-muted-foreground${!regionTuning.enabled ? " opacity-40" : ""}`}
-							>
-								<span>Bitmap resolution</span>
-								<select
-									disabled={!regionTuning.enabled}
-									className="rounded-md border bg-background px-1.5 py-0.5 text-xs tabular-nums text-foreground"
-									value={regionTuning.bitmap}
-									onChange={(e) =>
-										changeSettings((cur) => ({
-											...cur,
-											regions: { ...cur.regions, bitmap: Number(e.target.value) },
-										}))
-									}
-								>
-									{REGION_BITMAP_OPTIONS.map((o) => (
-										<option key={o} value={o}>
-											{o}
-										</option>
-									))}
-								</select>
-							</label>
-							{/* Cluster labels moved here 2026-09-16 (user: cluster
-							    stuff lives in the regions section). Decoupled from
-							    the Background colors switch above — labels follow
-							    their own clusterLabels toggle. Size is screen px
-							    (constant at any zoom, unlike node labels). */}
-							<label className="flex cursor-pointer items-center justify-between text-[11px] text-muted-foreground">
-								<span>Cluster labels</span>
-								<input
-									type="checkbox"
-									checked={settings.clusterLabels}
-									onChange={(e) => changeSettings((cur) => ({ ...cur, clusterLabels: e.target.checked }))}
-									className="accent-primary"
-								/>
-							</label>
-							<SettingSlider
-								label="Cluster label size"
-								disabled={!settings.clusterLabels}
-								min={0}
-								max={100}
-								step={10}
-								value={toLadderPosition(settings.clusterLabelSize, CLUSTER_LABEL_SIZE_LADDER)}
-								display={sizeDisplay(settings.clusterLabelSize)}
-								onChange={(p) =>
-									changeSettings((cur) => ({
-										...cur,
-										clusterLabelSize: fromLadderPosition(p, CLUSTER_LABEL_SIZE_LADDER),
-									}))}
-							/>
-						</div>
+									/>
+								</label>
+							</div>
 						{/* Physics: the live sim's forces. Every value feeds the SAME
 						    engine the server settle runs (createGraphSimulation);
 						    changing one rebuilds the sim from the current positions —
@@ -934,6 +797,9 @@ export function GraphChromeRow({
 				</Hint>
 			</div>
 			{!isEmpty && (
+				<GraphViewSwitch view={settings.view} onChange={(view) => changeSettings((cur) => ({ ...cur, view }))} />
+			)}
+			{!isEmpty && (
 				// Rendering settings — own component; the gear toggles it. The
 				// gear sits at the far right (owner, round 3) so its panel drops
 				// at the very right edge, over less of the graph. The fade wrapper
@@ -944,6 +810,34 @@ export function GraphChromeRow({
 				</div>
 			)}
 		</>
+	);
+}
+
+/** The Cloud / Neural glass segmented switch (SPEC §10), top right. The
+ *  choice persists with the other graph render settings. */
+function GraphViewSwitch({ view, onChange }: { view: GraphRenderSettings["view"]; onChange: (v: GraphRenderSettings["view"]) => void }) {
+	return (
+		<div
+			role="group"
+			aria-label="Graph view"
+			data-testid="graph-view-switch"
+			className="mt-panel graph-chrome-fade-in flex shrink-0 items-center gap-0.5 rounded-full p-1"
+		>
+			{(["cloud", "neural"] as const).map((v) => (
+				<button
+					key={v}
+					type="button"
+					data-testid={`view-${v}`}
+					aria-pressed={view === v}
+					onClick={() => onChange(v)}
+					className={`flex h-7 items-center rounded-full px-3 text-xs ${
+						view === v ? "mt-btn text-foreground" : "mt-iri text-muted-foreground hover:text-foreground"
+					}`}
+				>
+					{v === "cloud" ? "Cloud" : "Neural"}
+				</button>
+			))}
+		</div>
 	);
 }
 
