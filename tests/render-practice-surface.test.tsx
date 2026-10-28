@@ -63,6 +63,21 @@ describe("PracticeDock", () => {
 		assert.match(html, /disabled/);
 	});
 
+	it("the Dictate pill rides the submit row, left of Send (owner, 2026-10-28)", () => {
+		const html = renderToStaticMarkup(
+			<PracticeDock
+				problemCallId="call_p1"
+				input={{ statement: "Show that the sum is even." }}
+				expanded={true}
+				onExpand={() => {}}
+				onSubmit={() => {}}
+				dictationSlot={<span data-testid="dictate-slot" />}
+			/>,
+		);
+		const slot = html.indexOf('data-testid="dictate-slot"');
+		assert.ok(slot > 0 && slot < html.indexOf('data-testid="practice-send"'));
+	});
+
 	it("collapsed: the slim bar carries the statement excerpt", () => {
 		const html = renderToStaticMarkup(
 			<PracticeDock

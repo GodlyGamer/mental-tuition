@@ -30,7 +30,7 @@ import { useEnterSubmits } from "@/components/enter-submits";
 import { blurAfterPointerClick } from "@/components/focus-hygiene";
 import { dockStateKey } from "@/components/dock-state-key";
 import { QueuedSteersBody, type QueuedSteerLine } from "@/components/queued-steers";
-import { finishDictation, joinDictation, useDictation } from "@/components/dictation";
+import { DictatePill, finishDictation, joinDictation, useDictation } from "@/components/dictation";
 import { useFieldCycle } from "@/components/field-cycle";
 import { ArtifactPlacementContext, JobsContext, artifactPlacement } from "@/components/jobs-context";
 import { SessionStats } from "@/components/stats-bar";
@@ -1628,6 +1628,7 @@ export function Chat({
 					turns={turns}
 					onReserve={setDockReserve}
 					dictationCancel={dictation.cancel}
+					dictationSlot={<DictatePill dictation={dictation} />}
 					queuedSteers={visibleQueuedSteers(steerQueue, nativeMessages)}
 					setupCta={
 						zeroKeys ? (
@@ -1853,6 +1854,7 @@ function DockOverlay({
 	plan,
 	onOpenPlan,
 	dictationCancel,
+	dictationSlot,
 	setupCta,
 	queuedSteers,
 }: {
@@ -1883,6 +1885,8 @@ function DockOverlay({
 	/** Esc in a pending question's field stops dictation (the pill is the
 	 *  composer's; the stop belongs to the page-owned hook, threaded down). */
 	dictationCancel?: () => void;
+	/** The Dictate pill for the question and practice cards' bottom rows. */
+	dictationSlot?: React.ReactNode;
 	/** The queued-steer indicator's lines (composer steering, 2026-10-03):
 	 *  already filtered by visibleQueuedSteers — only undrained steers. */
 	queuedSteers: QueuedSteerLine[];
@@ -2256,6 +2260,7 @@ function DockOverlay({
 									onExpand={expandAndReveal}
 									onSubmit={onSubmitAnswer}
 									onEscape={dictationCancel}
+									dictationSlot={dictationSlot}
 									compactionRunning={compactionRunning}
 								/>
 							) : practice ? (
@@ -2269,6 +2274,7 @@ function DockOverlay({
 									}}
 									onSubmit={onSubmitThinking}
 									onEscape={dictationCancel}
+									dictationSlot={dictationSlot}
 									compactionRunning={compactionRunning}
 								/>
 							) : (

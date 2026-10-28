@@ -2,7 +2,7 @@
 
 import { PhotoStrip, PlusMenu } from "@/components/composer";
 import { useChatPhotos } from "@/components/photo-utils";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { finishDictation, isDictationActive, joinDictation, useDictationTarget } from "@/components/dictation";
@@ -70,6 +70,10 @@ export interface QuestionDockProps {
 	/** Escape in a question field stops dictation (STT wave) — threaded
 	 *  from the page that owns the dictation hook. */
 	onEscape?: () => void;
+	/** The Dictate pill (owner, 2026-10-28: it lives in the card's bottom
+	 *  row, as the composer's tray carries it — the card replaces the
+	 *  composer in the slab). Rendered by the page that owns the hook. */
+	dictationSlot?: ReactNode;
 	/** The keyboard machine (wave B) is armed only while the dock is
 	 *  expanded — the collapsed bar keeps its native Enter-to-expand. */
 	active?: boolean;
@@ -91,6 +95,7 @@ export function QuestionDock({
 	onExpand,
 	onSubmit,
 	onEscape,
+	dictationSlot,
 	phase = "probe",
 	compactionRunning = false,
 }: QuestionDockProps) {
@@ -144,6 +149,7 @@ export function QuestionDock({
 					active={expanded}
 					onSubmit={onSubmit}
 					onEscape={onEscape}
+					dictationSlot={dictationSlot}
 					compactionRunning={compactionRunning}
 				/>
 			</div>
@@ -213,6 +219,7 @@ function QuestionDockForm({
 	active,
 	onSubmit,
 	onEscape,
+	dictationSlot,
 	compactionRunning = false,
 }: Omit<QuestionDockProps, "expanded" | "onExpand">) {
 	const kind = toolQuestionKind(toolName);
@@ -886,6 +893,7 @@ function QuestionDockForm({
 					)}
 					<div className="flex items-center justify-between gap-2 p-1">
 						<PlusMenu onAddPhotos={addPhotos} size="sm" />
+						{dictationSlot}
 						<span aria-hidden className="mr-auto text-xs text-muted-foreground">
 								{compactionRunning ? "compacting session…" : "↵ submits · ⇧↵ newline"}
 						</span>

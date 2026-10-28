@@ -228,6 +228,24 @@ describe("render smoke tests", () => {
 		assert.ok(probe.includes("min-h-10"), "probe: one quiet row");
 	});
 
+	it("the Dictate pill rides the bottom row, after the + (owner, 2026-10-28)", () => {
+		const html = renderToStaticMarkup(
+			<QuestionDock
+				toolName="quiz"
+				toolCallId="t1"
+				input={quizInput as never}
+				expanded={true}
+				onExpand={() => {}}
+				onSubmit={() => {}}
+				dictationSlot={<span data-testid="dictate-slot" />}
+			/>,
+		);
+		const plus = html.indexOf('data-testid="composer-plus"');
+		const slot = html.indexOf('data-testid="dictate-slot"');
+		assert.ok(plus > 0 && slot > plus, "the pill follows the + button");
+		assert.ok(slot < html.indexOf("Submit answer"), "and sits left of Submit");
+	});
+
 	it("text-mode asks keep Enter-to-submit and the answer label", () => {
 		const html = renderDock({
 			toolName: "ask_user_question",
