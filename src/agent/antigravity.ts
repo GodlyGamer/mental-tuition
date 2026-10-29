@@ -53,7 +53,7 @@ import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
 import { LOCAL_ROOT } from "../../config.ts";
-import { TRANSCRIPT_NOTE_PROSE, transcriptBlocks } from "./claude-code.ts";
+import { TRANSCRIPT_NOTE, transcriptBlocks } from "./claude-code.ts";
 import type { ReportedUsage } from "../core/compaction.ts";
 
 export const ANTIGRAVITY_PROVIDER_ID = "antigravity";
@@ -461,7 +461,7 @@ async function run(
 		const session = (await server.request("session/new", {
 			cwd,
 			mcpServers: tools.length ? [{ type: "http", name: "mt", url: toolServer.url, headers: [] }] : [],
-			_meta: { antigravity: { systemPrompt: { append: ANTIGRAVITY_TEACHER_PREAMBLE + getCurrentSystemPrompt(context.messages) + TRANSCRIPT_NOTE_PROSE } } },
+			_meta: { antigravity: { systemPrompt: { append: ANTIGRAVITY_TEACHER_PREAMBLE + getCurrentSystemPrompt(context.messages) + TRANSCRIPT_NOTE } } },
 		})) as { sessionId?: string };
 		if (!session.sessionId) throw new Error("Antigravity did not start a session");
 		const sid = session.sessionId;
@@ -495,7 +495,7 @@ async function run(
 		const thinking = thinkingFor(options?.reasoning);
 		if (thinking) await live.request("session/set_config_option", { sessionId: sid, configId: "thinking_level", value: thinking }).catch(() => {});
 
-		const prompt = transcriptBlocks(context.messages, "prose").map((b) =>
+		const prompt = transcriptBlocks(context.messages).map((b) =>
 			b.type === "text" ? { type: "text", text: b.text } : { type: "image", data: b.source.data, mimeType: b.source.media_type },
 		);
 		const result = (await live.request("session/prompt", { sessionId: sid, prompt })) as {
