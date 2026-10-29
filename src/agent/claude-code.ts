@@ -14,11 +14,18 @@
  *     whole instruction set;
  *   - the transcript so far is replayed as one user message (the SDK takes
  *     no prior assistant turns), with each earlier message in its own
- *     content block. Nothing follows the newest message, so every request
- *     extends the previous one and Claude Code's cache breakpoint on the
- *     last block is read back on the next call (2026-10-28: a closing
- *     trailer block used to end each request, so only the system prompt
- *     and tools ever hit the cache).
+ *     content block. Nothing of ours follows the newest message, so every
+ *     request extends the previous one and the cache carries the history
+ *     forward (2026-10-28: a closing trailer block used to end each
+ *     request, so only the system prompt and tools ever hit the cache).
+ *     The CLI itself still appends a ~340-token "# Environment" system
+ *     message after the transcript and puts its breakpoint there; that
+ *     tail is re-written every step and no SDK option turns it off
+ *     (2026-10-29, checked against the captured request body).
+ *
+ * Refusals (2026-10-29): a step a safety classifier declines ends as an
+ * error naming the classifier's category, with its partial reply dropped,
+ * so a tool call cut off mid-stream never runs or opens as a question.
  * Stream events (text, thinking, tool calls) are mapped onto pi's
  * AssistantMessageEvent protocol, so every agent and the UI bridge work
  * unchanged.
@@ -72,6 +79,9 @@ const SUBSCRIPTION_MODEL_IDS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-
  *  the host sets CLAUDE_AGENT_SDK_MCP_NO_PREFIX). */
 const MCP_SERVER = "mt";
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`;
+
+/** A fixed session title (sessions are never persisted; see query()). */
+const SESSION_TITLE = "Mental Tuition";
 
 /** What replaces a call written as text in a replayed earlier reply. */
 export const LEAKED_CALL_NOTE =
@@ -385,6 +395,8 @@ interface CallTokens {
 interface CallResult {
 	finished: boolean;
 	refused: boolean;
+	/** The classifier that declined (stop_details.category), when named. */
+	refusalCategory?: string;
 	stopReason: ReturnType<typeof mapStop>;
 	/** Runs of call markup taken out of its text blocks. */
 	leaked: string[];
@@ -448,7 +460,12 @@ async function run(
 	}
 	if (!ok(result)) {
 		output.stopReason = "error";
-		output.errorMessage = result.refused ? "Claude declined this request." : (fallbackError ?? "Claude Code returned no response");
+		if (result.refused) {
+			// A declined reply is withheld whole: a tool call cut off by the
+			// classifier must not run or open as a question.
+			output.content = [];
+			output.errorMessage = `Claude declined this request${result.refusalCategory ? ` (${result.refusalCategory})` : ""}.`;
+		} else output.errorMessage = fallbackError ?? "Claude Code returned no response";
 		start();
 		stream.push({ type: "error", reason: "error", error: output });
 		return;
@@ -500,6 +517,9 @@ async function run(
 					strictMcpConfig: true,
 					settingSources: [],
 					persistSession: false,
+					// Without a title the CLI spends a second model call per step
+					// naming the session from the transcript.
+					title: SESSION_TITLE,
 					maxTurns: 1,
 					includePartialMessages: true,
 					thinking: { type: "adaptive", display: "summarized" },
@@ -624,7 +644,10 @@ async function run(
 				case "message_delta": {
 					if (e.usage) applyUsage(e.usage);
 					r.stopReason = mapStop(e.delta?.stop_reason);
-					if (e.delta?.stop_reason === "refusal") r.refused = true;
+					if (e.delta?.stop_reason === "refusal") {
+						r.refused = true;
+						r.refusalCategory = e.delta.stop_details?.category ?? undefined;
+					}
 					break;
 				}
 				case "message_stop":
@@ -669,5 +692,5 @@ type RawEvent =
 				| { type: "input_json_delta"; partial_json: string };
 	  }
 	| { type: "content_block_stop"; index: number }
-	| { type: "message_delta"; delta?: { stop_reason?: string | null }; usage?: RawUsage }
+	| { type: "message_delta"; delta?: { stop_reason?: string | null; stop_details?: { category?: string | null } | null }; usage?: RawUsage }
 	| { type: "message_stop" };

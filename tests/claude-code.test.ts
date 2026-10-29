@@ -337,3 +337,62 @@ describe("calls written as text, live", () => {
 		assert.deepEqual(final.content, [{ type: "text", text }]);
 	});
 });
+
+/** A reply a classifier stops mid-stream: some text, then a quiz call cut
+ *  off inside its arguments (chat_mvu3w0p9, 2026-10-29). */
+function refusedCall(category: string | null): Raw[] {
+	return [
+		{ type: "message_start", message: { usage: { input_tokens: 2, cache_read_input_tokens: 100, cache_creation_input_tokens: 10 } } },
+		{ type: "content_block_start", index: 0, content_block: { type: "text" } },
+		{ type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "First a full calculation." } },
+		{ type: "content_block_stop", index: 0 },
+		{ type: "content_block_start", index: 1, content_block: { type: "tool_use", id: "toolu_cut", name: "mcp__mt__quiz" } },
+		{ type: "content_block_delta", index: 1, delta: { type: "input_json_delta", partial_json: '{"question":"Find $\\\\int_C' } },
+		{ type: "message_delta", delta: { stop_reason: "refusal", stop_details: category === null ? null : { type: "refusal", category } }, usage: { output_tokens: 40 } },
+		{ type: "message_stop" },
+	];
+}
+
+describe("refusals", () => {
+	it("drop the partial reply and name the classifier", async () => {
+		const { final, calls } = await runGuard([refusedCall("reasoning_extraction")]);
+		assert.equal(calls, 1);
+		assert.equal(final.stopReason, "error");
+		assert.equal(final.errorMessage, "Claude declined this request (reasoning_extraction).");
+		assert.deepEqual(final.content, []);
+		assert.equal(final.usage.output, 40);
+	});
+
+	it("say only that Claude declined when no category comes back", async () => {
+		const { final } = await runGuard([refusedCall(null)]);
+		assert.equal(final.errorMessage, "Claude declined this request.");
+		assert.deepEqual(final.content, []);
+	});
+
+	it("replay as nothing, so the next step's blocks still extend this one's", () => {
+		const before: Message[] = [{ role: "user", content: "Go.", timestamp: 0 }];
+		const refused = { role: "assistant", content: [], api: "claude-agent-sdk", provider: CLAUDE_CODE_PROVIDER_ID, model: "claude-opus-5-5", usage: {}, stopReason: "error", timestamp: 0 } as unknown as Message;
+		assert.deepEqual(transcriptBlocks([...before, refused]), transcriptBlocks(before));
+	});
+});
+
+describe("query options", () => {
+	it("give the session a title, so the CLI makes no extra call to name it", async () => {
+		const model = piModels().getModels(CLAUDE_CODE_PROVIDER_ID).find((m) => m.id === "claude-opus-5-5")!;
+		const context = normalizeContext({ systemPrompt: "Teach.", tools: TOOLS, messages: [{ role: "user", content: "Go.", timestamp: 0 }] });
+		const q = fakeQuery([textCall("Hi.")]);
+		let options: { title?: string } | undefined;
+		const real = claudeQuery.current;
+		claudeQuery.current = ((params: { options: { title?: string } }) => {
+			options = params.options;
+			return q.fn(params as never);
+		}) as unknown as typeof claudeQuery.current;
+		try {
+			for await (const _ of streamClaudeCode(model, context) as AsyncIterable<AssistantMessageEvent>);
+		} finally {
+			claudeQuery.current = real;
+		}
+		assert.equal(typeof options?.title, "string");
+		assert.ok(options!.title!.length > 0);
+	});
+});
